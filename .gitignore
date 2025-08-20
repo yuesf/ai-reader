@@ -1,0 +1,18 @@
+HELP.md
+reader/target/
+ui-vue3/node_modules/
+
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+
+### VS Code ###
+

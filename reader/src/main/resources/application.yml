@@ -1,0 +1,59 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: reader
+  
+  datasource:
+    driver-class-name: org.sqlite.JDBC
+    url: jdbc:sqlite:reader.db
+    username: 
+    password: 
+  
+  jackson:
+    date-format: yyyy-MM-dd
+    time-zone: GMT+8
+    default-property-inclusion: non_null
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql
+      continue-on-error: true
+
+mybatis:
+  mapper-locations: classpath*:mappers/*.xml
+  type-aliases-package: com.yuesf.aireader.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+
+logging:
+  level:
+    com.yuesf.aireader: DEBUG
+    org.springframework.web: INFO
+    org.apache.ibatis: DEBUG
+    jdbc.sqlonly: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+app:
+  api:
+    version: v1
+    base-url: https://wx.example.com/v1
+  
+  # 阿里云OSS配置
+  oss:
+    endpoint: https://oss-cn-hangzhou.aliyuncs.com
+    access-key-id: your-access-key-id
+    access-key-secret: your-access-key-secret
+    bucket-name: your-bucket-name
+    # 文件上传配置
+    upload:
+      max-file-size: 100MB
+      allowed-extensions: jpg,jpeg,png,gif,pdf,doc,docx,xls,xlsx,ppt,pptx
+      base-url: https://your-bucket-name.oss-cn-hangzhou.aliyuncs.com

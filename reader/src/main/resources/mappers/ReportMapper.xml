@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yuesf.aireader.mapper.ReportMapper">
+
+    <resultMap id="ReportResult" type="com.yuesf.aireader.entity.Report">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="summary" property="summary"/>
+        <result column="source" property="source"/>
+        <result column="category" property="category"/>
+        <result column="pages" property="pages"/>
+        <result column="file_size" property="fileSize"/>
+        <result column="publish_date" property="publishDate"/>
+        <result column="update_date" property="updateDate"/>
+        <result column="thumbnail" property="thumbnail"/>
+        <result column="download_count" property="downloadCount"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="is_free" property="isFree"/>
+        <result column="price" property="price"/>
+        <result column="report_file_url" property="reportFileUrl"/>
+        <result column="report_file_name" property="reportFileName"/>
+        <result column="report_file_size" property="reportFileSize"/>
+    </resultMap>
+
+    <sql id="BaseFrom">
+        FROM reports r
+    </sql>
+
+    <sql id="Where">
+        <where>
+            <!-- 必须有条件：有keyword，否则默认近30天 -->
+            <choose>
+                <when test="keyword != null and keyword != ''">
+                    (
+                        lower(r.title) like lower('%' || #{keyword} || '%')
+                        or lower(r.summary) like lower('%' || #{keyword} || '%')
+                        or exists (
+                            select 1 from report_tags t
+                            where t.report_id = r.id and lower(t.tag) like lower('%' || #{keyword} || '%')
+                        )
+                    )
+                </when>
+                <otherwise>
+                    r.publish_date between date('now', '-30 day') and date('now')
+                </otherwise>
+            </choose>
+
+            <if test="category != null and category != ''">
+                and r.category = #{category}
+            </if>
+            <if test="source != null and source != ''">
+                and r.source = #{source}
+            </if>
+            <if test="startDate != null">
+                and r.publish_date &gt;= #{startDate}
+            </if>
+            <if test="endDate != null">
+                and r.publish_date &lt;= #{endDate}
+            </if>
+            <if test="categories != null and categories.size > 0">
+                and r.category in
+                <foreach collection="categories" item="c" open="(" close=")" separator=",">
+                    #{c}
+                </foreach>
+            </if>
+            <if test="sources != null and sources.size > 0">
+                and r.source in
+                <foreach collection="sources" item="s" open="(" close=")" separator=",">
+                    #{s}
+                </foreach>
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectReports" resultMap="ReportResult">
+        SELECT r.*
+        <include refid="BaseFrom"/>
+        <include refid="Where"/>
+        <choose>
+            <when test="sortBy != null and sortBy != ''">
+                ORDER BY
+                <choose>
+                    <when test="sortBy == 'publishDate'"> r.publish_date </when>
+                    <when test="sortBy == 'updateDate'"> r.update_date </when>
+                    <when test="sortBy == 'title'"> r.title </when>
+                    <when test="sortBy == 'downloadCount'"> r.download_count </when>
+                    <when test="sortBy == 'viewCount'"> r.view_count </when>
+                    <when test="sortBy == 'price'"> r.price </when>
+                    <when test="sortBy == 'pages'"> r.pages </when>
+                    <when test="sortBy == 'fileSize'"> r.file_size </when>
+                    <otherwise> r.publish_date </otherwise>
+                </choose>
+                <choose>
+                    <when test="sortOrder != null and (sortOrder == 'asc' or sortOrder == 'ASC')"> ASC </when>
+                    <otherwise> DESC </otherwise>
+                </choose>
+            </when>
+            <otherwise>
+                ORDER BY r.publish_date DESC
+            </otherwise>
+        </choose>
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countReports" resultType="long">
+        SELECT COUNT(1)
+        <include refid="BaseFrom"/>
+        <include refid="Where"/>
+    </select>
+
+    <select id="selectById" resultMap="ReportResult">
+        SELECT r.*
+        <include refid="BaseFrom"/>
+        WHERE r.id = #{id}
+    </select>
+
+    <insert id="insertReport" parameterType="com.yuesf.aireader.entity.Report">
+        INSERT INTO reports (
+            id, title, summary, source, category, pages, file_size,
+            publish_date, update_date, thumbnail, download_count, view_count,
+            is_free, price, report_file_url, report_file_name, report_file_size
+        ) VALUES (
+            #{id}, #{title}, #{summary}, #{source}, #{category}, #{pages}, #{fileSize},
+            #{publishDate}, #{updateDate}, #{thumbnail}, #{downloadCount}, #{viewCount},
+            #{isFree}, #{price}, #{reportFileUrl}, #{reportFileName}, #{reportFileSize}
+        )
+    </insert>
+
+    <insert id="insertReportTags">
+        INSERT INTO report_tags (report_id, tag)
+        VALUES
+        <foreach collection="tags" item="t" separator=",">
+            (#{reportId}, #{t})
+        </foreach>
+    </insert>
+
+    <delete id="deleteById">
+        DELETE FROM reports WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteTagsByReportId">
+        DELETE FROM report_tags WHERE report_id = #{id}
+    </delete>
+
+    <delete id="batchDeleteByIds">
+        DELETE FROM reports WHERE id IN
+        <foreach collection="ids" item="i" open="(" close=")" separator=",">
+            #{i}
+        </foreach>
+    </delete>
+
+    <delete id="batchDeleteTagsByIds">
+        DELETE FROM report_tags WHERE report_id IN
+        <foreach collection="ids" item="i" open="(" close=")" separator=",">
+            #{i}
+        </foreach>
+    </delete>
+</mapper>
