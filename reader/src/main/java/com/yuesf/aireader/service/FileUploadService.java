@@ -1,10 +1,13 @@
 package com.yuesf.aireader.service;
 
 import com.aliyun.oss.OSS;
+import com.aliyun.oss.model.ObjectMetadata;
 import com.aliyun.oss.model.PutObjectRequest;
 import com.aliyun.oss.model.PutObjectResult;
 import com.yuesf.aireader.config.OssConfig.OssProperties;
+import com.yuesf.aireader.entity.FileInfo;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,13 +26,17 @@ public class FileUploadService {
     @Autowired
     private OssProperties ossProperties;
 
+    @Autowired
+    private FileInfoService fileInfoService;
+
     /**
-     * 上传文件到阿里云OSS
+     * 上传文件到阿里云OSS并保存文件信息
      * @param file 上传的文件
      * @param folder 存储文件夹，如 "reports", "images" 等
-     * @return 文件访问URL
+     * @param uploadUserId 上传用户ID
+     * @return 文件信息对象
      */
-    public String uploadFile(MultipartFile file, String folder) throws IOException {
+    public FileInfo uploadFile(MultipartFile file, String folder, String uploadUserId) throws IOException {
         // 验证文件
         validateFile(file);
         
@@ -38,30 +45,69 @@ public class FileUploadService {
         String extension = FilenameUtils.getExtension(originalFilename);
         String fileName = generateFileName(folder, extension);
         
+        // 设置对象元数据
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentLength(file.getSize());
+        // 设置ACL为私有
+        metadata.setObjectAcl(com.aliyun.oss.model.CannedAccessControlList.Private);
+        
         // 上传到OSS
         PutObjectRequest putObjectRequest = new PutObjectRequest(
                 ossProperties.getBucketName(),
                 fileName,
-                file.getInputStream()
+                file.getInputStream(),
+                metadata
         );
         
         PutObjectResult result = ossClient.putObject(putObjectRequest);
         
-        if (result.getResponse().isSuccessful()) {
-            // 返回文件访问URL
-            return ossProperties.getUpload().getBaseUrl() + "/" + fileName;
+        if (null != result && StringUtils.isNotBlank(result.getRequestId())) {
+            // 创建文件信息对象
+            FileInfo fileInfo = new FileInfo();
+            fileInfo.setFileName(fileName); // 存储文件路径
+            fileInfo.setOriginalName(originalFilename);
+            fileInfo.setFileSize(file.getSize());
+            fileInfo.setFileType(extension);
+            fileInfo.setFolder(folder);
+            fileInfo.setUploadUserId(uploadUserId);
+            fileInfo.setRequestId(result.getResponse().getRequestId()); // 存储请求ID
+            
+            // 保存文件信息到数据库
+            return fileInfoService.saveFileInfo(fileInfo);
         } else {
             throw new RuntimeException("文件上传失败");
         }
     }
 
     /**
+     * 上传文件到阿里云OSS（兼容旧版本）
+     * @param file 上传的文件
+     * @param folder 存储文件夹，如 "reports", "images" 等
+     * @return 文件访问URL
+     */
+    public String uploadFile(MultipartFile file, String folder) throws IOException {
+        FileInfo fileInfo = uploadFile(file, folder, null);
+        return generatePresignedUrl(fileInfo.getFileName(), 3600); // 返回临时访问链接
+    }
+
+    /**
      * 上传报告相关文件
+     * @param file 上传的文件
+     * @param uploadUserId 上传用户ID
+     * @return 文件信息对象
+     */
+    public FileInfo uploadReportFile(MultipartFile file, String uploadUserId) throws IOException {
+        return uploadFile(file, "reports", uploadUserId);
+    }
+
+    /**
+     * 上传报告相关文件（兼容旧版本）
      * @param file 上传的文件
      * @return 文件访问URL
      */
     public String uploadReportFile(MultipartFile file) throws IOException {
-        return uploadFile(file, "reports");
+        FileInfo fileInfo = uploadReportFile(file, null);
+        return generatePresignedUrl(fileInfo.getFileName(), 3600); // 返回临时访问链接
     }
 
     /**
@@ -70,7 +116,8 @@ public class FileUploadService {
      * @return 图片访问URL
      */
     public String uploadImage(MultipartFile file) throws IOException {
-        return uploadFile(file, "images");
+        FileInfo fileInfo = uploadFile(file, "images", null);
+        return generatePresignedUrl(fileInfo.getFileName(), 3600); // 返回临时访问链接
     }
 
     /**
@@ -82,6 +129,17 @@ public class FileUploadService {
             String objectKey = fileUrl.substring(ossProperties.getUpload().getBaseUrl().length() + 1);
             ossClient.deleteObject(ossProperties.getBucketName(), objectKey);
         }
+    }
+
+    /**
+     * 生成私有文件的临时访问URL
+     * @param objectKey OSS对象键
+     * @param expiration 过期时间（秒）
+     * @return 临时访问URL
+     */
+    public String generatePresignedUrl(String objectKey, int expiration) {
+        java.util.Date expirationDate = new java.util.Date(new java.util.Date().getTime() + expiration * 1000);
+        return ossClient.generatePresignedUrl(ossProperties.getBucketName(), objectKey, expirationDate).toString();
     }
 
     /**
@@ -113,7 +171,7 @@ public class FileUploadService {
      * @return 生成的文件名
      */
     private String generateFileName(String folder, String extension) {
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String uuid = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 8);
         return String.format("%s/%s/%s.%s", folder, timestamp, uuid, extension);
     }

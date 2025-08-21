@@ -1,6 +1,7 @@
 package com.yuesf.aireader.controller;
 
 import com.yuesf.aireader.dto.ApiResponse;
+import com.yuesf.aireader.entity.FileInfo;
 import com.yuesf.aireader.service.FileUploadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +34,26 @@ public class FileUploadController {
             result.put("filename", file.getOriginalFilename());
             result.put("size", String.valueOf(file.getSize()));
             return ApiResponse.success(result);
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.error(400, e.getMessage());
+        } catch (IOException e) {
+            return ApiResponse.error(500, "文件上传失败: " + e.getMessage());
+        } catch (Exception e) {
+            return ApiResponse.error(500, "服务器内部错误: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 上传报告文件并返回文件信息（新建报告专用）
+     * POST /upload/report/info
+     */
+    @PostMapping("/upload/report/info")
+    public ApiResponse<FileInfo> uploadReportFileWithInfo(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "uploadUserId", required = false) String uploadUserId) {
+        try {
+            FileInfo fileInfo = fileUploadService.uploadReportFile(file, uploadUserId);
+            return ApiResponse.success(fileInfo);
         } catch (IllegalArgumentException e) {
             return ApiResponse.error(400, e.getMessage());
         } catch (IOException e) {

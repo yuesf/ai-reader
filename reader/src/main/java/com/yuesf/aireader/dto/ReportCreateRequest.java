@@ -20,6 +20,7 @@ public class ReportCreateRequest {
     private Integer price;
     
     // 文件上传相关字段
+    private String reportFileId; // 报告文件ID（必填）
     private String reportFileUrl; // 报告文件URL（从OSS上传后获得）
     private String reportFileName; // 报告文件名
     private String reportFileSize; // 报告文件大小
@@ -144,6 +145,14 @@ public class ReportCreateRequest {
 
     public void setReportFileSize(String reportFileSize) {
         this.reportFileSize = reportFileSize;
+    }
+
+    public String getReportFileId() {
+        return reportFileId;
+    }
+
+    public void setReportFileId(String reportFileId) {
+        this.reportFileId = reportFileId;
     }
 }
 

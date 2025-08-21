@@ -5,6 +5,7 @@ import com.yuesf.aireader.dto.ReportCreateRequest;
 import com.yuesf.aireader.dto.ReportBatchDeleteRequest;
 import com.yuesf.aireader.dto.ReportListResponse;
 import com.yuesf.aireader.entity.Report;
+import com.yuesf.aireader.entity.FileInfo;
 import com.yuesf.aireader.mapper.ReportMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,9 @@ public class ReportService {
 
     @Autowired
     private ReportMapper reportMapper;
+
+    @Autowired
+    private FileInfoService fileInfoService;
 
     public ReportListResponse getReportList(ReportListRequest request) {
         int page = (request.getPage() == null || request.getPage() < 1) ? 1 : request.getPage();
@@ -77,6 +81,17 @@ public class ReportService {
         if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
             throw new IllegalArgumentException("标题不能为空");
         }
+        
+        // 验证报告文件ID
+        if (request.getReportFileId() == null || request.getReportFileId().trim().isEmpty()) {
+            throw new IllegalArgumentException("报告文件ID不能为空，必须上传报告文件");
+        }
+        
+        // 验证文件信息是否存在且有效
+        FileInfo fileInfo = fileInfoService.getFileInfoById(request.getReportFileId());
+        if (fileInfo == null || !"ACTIVE".equals(fileInfo.getStatus())) {
+            throw new IllegalArgumentException("报告文件信息不存在或已失效，请重新上传文件");
+        }
 
         Report report = new Report();
         report.setId(UUID.randomUUID().toString().replaceAll("-", ""));
@@ -96,9 +111,10 @@ public class ReportService {
         report.setPrice(request.getPrice() != null ? request.getPrice() : 0);
         
         // 设置文件上传相关字段
-        report.setReportFileUrl(request.getReportFileUrl());
-        report.setReportFileName(request.getReportFileName());
-        report.setReportFileSize(request.getReportFileSize());
+        report.setReportFileId(request.getReportFileId());
+        report.setReportFileUrl(fileInfo.getFileName()); // 使用fileName字段存储OSS文件路径
+        report.setReportFileName(fileInfo.getOriginalName());
+        report.setReportFileSize(String.valueOf(fileInfo.getFileSize()));
 
         reportMapper.insertReport(report);
         if (request.getTags() != null && !request.getTags().isEmpty()) {

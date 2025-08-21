@@ -49,6 +49,12 @@ public class AuthController {
         }
         return ApiResponse.success("ok");
     }
+
+    @PostMapping("/logout")
+    public ApiResponse<String> logout() {
+        // 基于JWT的无状态登出：前端删除本地token即可
+        return ApiResponse.success("ok");
+    }
 }
 
 

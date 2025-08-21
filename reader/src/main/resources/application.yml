@@ -7,6 +7,12 @@ spring:
   application:
     name: reader
   
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 100MB
+  
   datasource:
     driver-class-name: org.sqlite.JDBC
     url: jdbc:sqlite:reader.db
@@ -49,11 +55,11 @@ app:
   # 阿里云OSS配置
   oss:
     endpoint: https://oss-cn-hangzhou.aliyuncs.com
-    access-key-id: your-access-key-id
-    access-key-secret: your-access-key-secret
-    bucket-name: your-bucket-name
+    access-key-id: ${OSS_ACCESS_KEY_ID}
+    access-key-secret: ${OSS_ACCESS_KEY_SECRET}
+    bucket-name: ai-doc-low
     # 文件上传配置
     upload:
-      max-file-size: 100MB
+      max-file-size: 500MB
       allowed-extensions: jpg,jpeg,png,gif,pdf,doc,docx,xls,xlsx,ppt,pptx
-      base-url: https://your-bucket-name.oss-cn-hangzhou.aliyuncs.com
+      base-url: https://ai-doc-low.oss-cn-hangzhou.aliyuncs.com

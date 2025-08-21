@@ -22,7 +22,7 @@ import { ElMessage } from 'element-plus';
 import { login } from '../api';
 
 const router = useRouter();
-const form = reactive({ username: 'admin', password: 'admin123' });
+const form = reactive({ username: '', password: '' });
 const loading = ref(false);
 
 async function onSubmit() {

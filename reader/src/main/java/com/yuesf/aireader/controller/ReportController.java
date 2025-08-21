@@ -7,6 +7,7 @@ import com.yuesf.aireader.dto.ReportCreateRequest;
 import com.yuesf.aireader.dto.ReportBatchDeleteRequest;
 import com.yuesf.aireader.entity.Report;
 import com.yuesf.aireader.service.ReportService;
+import com.yuesf.aireader.service.FileUploadService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,9 @@ public class ReportController {
 
     @Autowired
     private ReportService reportService;
+    
+    @Autowired
+    private FileUploadService fileUploadService;
 
     /**
      * 获取/搜索报告列表
@@ -93,6 +97,39 @@ public class ReportController {
     }
 
     /**
+     * 获取私有文件的临时访问URL
+     * GET /reports/file/{id}
+     */
+    @GetMapping("/reports/file/{id}")
+    public ApiResponse<String> getReportFileUrl(@PathVariable String id) {
+        try {
+            if (id == null || id.trim().isEmpty()) {
+                return ApiResponse.error(400, "报告ID不能为空");
+            }
+            
+            Report report = reportService.getReportById(id);
+            if (report == null) {
+                return ApiResponse.error(404, "报告不存在");
+            }
+            
+            if (report.getReportFileId() == null || report.getReportFileId().trim().isEmpty()) {
+                return ApiResponse.error(404, "报告文件不存在");
+            }
+            
+            // 从文件URL中提取对象键
+            String baseUrl = report.getReportFileUrl();
+            String objectKey = baseUrl.substring(baseUrl.lastIndexOf("/") + 1);
+            objectKey = "reports/" + objectKey;
+            
+            String presignedUrl = fileUploadService.generatePresignedUrl(objectKey, 3600);
+            return ApiResponse.success(presignedUrl);
+            
+        } catch (Exception e) {
+            return ApiResponse.error(500, "服务器内部错误: " + e.getMessage());
+        }
+    }
+
+    /**
      * 健康检查接口
      */
     @GetMapping("/health")
@@ -121,7 +158,7 @@ public class ReportController {
 
     /**
      * 批量删除报告
-     * POST /reports/batch-delete
+     * POST /reports/delete
      */
     @PostMapping("/reports/delete")
     public ApiResponse<Integer> batchDelete(@RequestBody ReportBatchDeleteRequest request) {

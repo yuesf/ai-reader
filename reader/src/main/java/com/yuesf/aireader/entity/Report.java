@@ -4,11 +4,21 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.List;
 
+import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
 /**
  * 报告实体类
  */
 @Entity
 @Table(name = "reports")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Report {
     @Id
     private String id;
@@ -56,6 +66,9 @@ public class Report {
     private Integer price;
     
     // 文件上传相关字段
+    @Column(name = "report_file_id")
+    private String reportFileId;
+    
     @Column(name = "report_file_url")
     private String reportFileUrl;
     
@@ -65,175 +78,39 @@ public class Report {
     @Column(name = "report_file_size")
     private String reportFileSize;
 
-    // 构造函数
-    public Report() {}
-
-    public Report(String id, String title, String summary, String source, String category,
-                  Integer pages, Long fileSize, LocalDate publishDate, LocalDate updateDate,
-                  String thumbnail, List<String> tags, Integer downloadCount, Integer viewCount,
-                  Boolean isFree, Integer price, String reportFileUrl, String reportFileName, String reportFileSize) {
-        this.id = id;
-        this.title = title;
-        this.summary = summary;
-        this.source = source;
-        this.category = category;
-        this.pages = pages;
-        this.fileSize = fileSize;
-        this.publishDate = publishDate;
-        this.updateDate = updateDate;
-        this.thumbnail = thumbnail;
-        this.tags = tags;
-        this.downloadCount = downloadCount;
-        this.viewCount = viewCount;
-        this.isFree = isFree;
-        this.price = price;
-        this.reportFileUrl = reportFileUrl;
-        this.reportFileName = reportFileName;
-        this.reportFileSize = reportFileSize;
+    /**
+     * 获取报告标题，如果为空则返回默认值
+     * @return 报告标题
+     */
+    public String getTitleWithDefault() {
+        return StringUtils.defaultIfBlank(title, "未命名报告");
     }
 
-    // Getter和Setter方法
-    public String getId() {
-        return id;
+    /**
+     * 检查报告是否免费
+     * @return 是否免费
+     */
+    public boolean isFree() {
+        return Boolean.TRUE.equals(isFree);
     }
 
-    public void setId(String id) {
-        this.id = id;
+    /**
+     * 获取报告摘要，如果为空则返回默认值
+     * @return 报告摘要
+     */
+    public String getSummaryWithDefault() {
+        return StringUtils.defaultIfBlank(summary, "暂无摘要");
     }
 
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getSummary() {
-        return summary;
-    }
-
-    public void setSummary(String summary) {
-        this.summary = summary;
-    }
-
-    public String getSource() {
-        return source;
-    }
-
-    public void setSource(String source) {
-        this.source = source;
-    }
-
-    public String getCategory() {
-        return category;
-    }
-
-    public void setCategory(String category) {
-        this.category = category;
-    }
-
-    public Integer getPages() {
-        return pages;
-    }
-
-    public void setPages(Integer pages) {
-        this.pages = pages;
-    }
-
-    public Long getFileSize() {
-        return fileSize;
-    }
-
-    public void setFileSize(Long fileSize) {
-        this.fileSize = fileSize;
-    }
-
-    public LocalDate getPublishDate() {
-        return publishDate;
-    }
-
-    public void setPublishDate(LocalDate publishDate) {
-        this.publishDate = publishDate;
-    }
-
-    public LocalDate getUpdateDate() {
-        return updateDate;
-    }
-
-    public void setUpdateDate(LocalDate updateDate) {
-        this.updateDate = updateDate;
-    }
-
-    public String getThumbnail() {
-        return thumbnail;
-    }
-
-    public void setThumbnail(String thumbnail) {
-        this.thumbnail = thumbnail;
-    }
-
-    public List<String> getTags() {
-        return tags;
-    }
-
-    public void setTags(List<String> tags) {
-        this.tags = tags;
-    }
-
-    public Integer getDownloadCount() {
-        return downloadCount;
-    }
-
-    public void setDownloadCount(Integer downloadCount) {
-        this.downloadCount = downloadCount;
-    }
-
-    public Integer getViewCount() {
-        return viewCount;
-    }
-
-    public void setViewCount(Integer viewCount) {
-        this.viewCount = viewCount;
-    }
-
-    public Boolean getIsFree() {
-        return isFree;
-    }
-
-    public void setIsFree(Boolean isFree) {
-        this.isFree = isFree;
-    }
-
-    public Integer getPrice() {
-        return price;
-    }
-
-    public void setPrice(Integer price) {
-        this.price = price;
-    }
-
-    public String getReportFileUrl() {
-        return reportFileUrl;
-    }
-
-    public void setReportFileUrl(String reportFileUrl) {
-        this.reportFileUrl = reportFileUrl;
-    }
-
-    public String getReportFileName() {
-        return reportFileName;
-    }
-
-    public void setReportFileName(String reportFileName) {
-        this.reportFileName = reportFileName;
-    }
-
-    public String getReportFileSize() {
-        return reportFileSize;
-    }
-
-    public void setReportFileSize(String reportFileSize) {
-        this.reportFileSize = reportFileSize;
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
+                .append("id", id)
+                .append("title", getTitleWithDefault())
+                .append("source", source)
+                .append("category", category)
+                .append("publishDate", publishDate)
+                .append("isFree", isFree)
+                .toString();
     }
 }

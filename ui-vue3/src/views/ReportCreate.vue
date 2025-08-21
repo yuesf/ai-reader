@@ -42,23 +42,7 @@
         </el-form-item>
         
         <el-form-item label="报告文件">
-          <el-upload
-            class="upload-demo"
-            :action="''"
-            :http-request="handleReportFileUpload"
-            :show-file-list="false"
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
-            style="margin-bottom: 8px;"
-          >
-            <el-button type="primary" size="small">上传报告文件</el-button>
-          </el-upload>
-          <div v-if="form.reportFileUrl" class="file-info">
-            <el-link :href="form.reportFileUrl" target="_blank" type="primary">
-              {{ form.reportFileName || '查看文件' }}
-            </el-link>
-            <span class="file-size">{{ form.reportFileSize }}</span>
-            <el-button type="danger" size="small" link @click="removeReportFile">删除</el-button>
-          </div>
+          <ReportFileUpload v-model="reportFileInfo" />
         </el-form-item>
         
         <el-form-item label="标签">
@@ -82,9 +66,10 @@
  </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
-import { createReport, uploadImage, uploadReportFile } from '../api';
+import { reactive, ref, watch } from 'vue';
+import { createReport, uploadImage } from '../api';
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
+import ReportFileUpload from '../components/ReportFileUpload.vue';
 
 const form = reactive({
   title: '',
@@ -110,6 +95,20 @@ const rules = reactive<FormRules>({
 const tagOptions = ref<string[]>(['AI', '大模型', 'AIGC']);
 const submitting = ref(false);
 const formRef = ref<FormInstance>();
+const reportFileInfo = ref<{
+  url: string;
+  filename: string;
+  size: string;
+} | null>(null);
+
+// 监听表单中的文件信息变化，同步到组件
+watch(() => [form.reportFileUrl, form.reportFileName, form.reportFileSize], ([url, filename, size]) => {
+  if (url && filename && size) {
+    reportFileInfo.value = { url, filename, size };
+  } else {
+    reportFileInfo.value = null;
+  }
+}, { immediate: true });
 
 function normalize() {
   if (form.isFree) {
@@ -132,30 +131,16 @@ async function handleImageUpload(options: any) {
   }
 }
 
-async function handleReportFileUpload(options: any) {
-  try {
-    const { data } = await uploadReportFile(options.file);
-    if (data.code === 200) {
-      form.reportFileUrl = data.data.url;
-      form.reportFileName = data.data.filename;
-      form.reportFileSize = data.data.size;
-      ElMessage.success('报告文件上传成功');
-    } else {
-      ElMessage.error(data.message || '报告文件上传失败');
-    }
-  } catch (error) {
-    ElMessage.error('报告文件上传失败');
-  }
-}
-
-function removeReportFile() {
-  form.reportFileUrl = '';
-  form.reportFileName = '';
-  form.reportFileSize = '';
-}
-
 async function onSubmit() {
   normalize();
+  
+  // 同步报告文件信息到表单
+  if (reportFileInfo.value) {
+    form.reportFileUrl = reportFileInfo.value.url;
+    form.reportFileName = reportFileInfo.value.filename;
+    form.reportFileSize = reportFileInfo.value.size;
+  }
+  
   await formRef.value?.validate(async (valid) => {
     if (!valid) return;
     submitting.value = true;
