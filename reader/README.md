@@ -9,13 +9,13 @@ AI Reader 是一个基于Spring Boot的报告查询和搜索系统，提供RESTf
 ### 架构模式
 - **Controller层**: 处理HTTP请求，参数验证和响应封装
 - **Service层**: 业务逻辑处理，数据过滤和排序
-- **DAO层**: 数据访问层，使用Spring Data JPA操作数据库
+- **Mapper层**: 数据访问层，使用MyBatis操作数据库
 - **Entity层**: 实体类，映射数据库表结构
 
 ### 技术栈
 - **框架**: Spring Boot 3.x
 - **数据库**: SQLite
-- **ORM**: Spring Data JPA + Hibernate
+- **ORM**: MyBatis
 - **构建工具**: Maven
 - **Java版本**: 17
 
@@ -24,26 +24,48 @@ AI Reader 是一个基于Spring Boot的报告查询和搜索系统，提供RESTf
 ```
 src/main/java/com/yuesf/aireader/
 ├── controller/          # 控制器层
-│   └── ReportController.java
-├── service/            # 服务层
-│   └── impl/
-│       └── ReportServiceImpl.java
-├── dao/               # 数据访问层
-│   └── ReportDao.java
-├── entity/            # 实体类
+│   ├── AuthController.java
+│   ├── FileUploadController.java
+│   ├── ReportController.java
+│   └── UserController.java
+├── service/             # 服务层
+│   ├── AuthService.java
+│   ├── FileInfoService.java
+│   ├── FileUploadService.java
+│   ├── ReportService.java
+│   └── UserService.java
+├── mapper/              # 数据访问层
+│   ├── AdminUserMapper.java
+│   ├── FileInfoMapper.java
+│   └── ReportMapper.java
+├── entity/              # 实体类
+│   ├── AdminUser.java
+│   ├── FileInfo.java
 │   └── Report.java
-├── dto/               # 数据传输对象
+├── dto/                 # 数据传输对象
+│   ├── ApiResponse.java
+│   ├── ReportBatchDeleteRequest.java
+│   ├── ReportCreateRequest.java
 │   ├── ReportListRequest.java
-│   └── ReportListResponse.java
-├── config/            # 配置类
-│   └── DatabaseConfig.java
-└── exception/         # 异常处理
+│   ├── ReportListResponse.java
+│   ├── UserListRequest.java
+│   └── UserListResponse.java
+├── config/              # 配置类
+│   ├── AuthInterceptor.java
+│   ├── OssConfig.java
+│   └── WebMvcConfig.java
+├── util/                # 工具类
+│   └── FileUtils.java
+└── exception/           # 异常处理
     └── GlobalExceptionHandler.java
 
 src/main/resources/
-├── application.yml    # 应用配置
-├── schema.sql         # 数据库表结构
-└── data.sql          # 初始数据
+├── mappers/             # MyBatis XML映射文件
+│   ├── FileInfoMapper.xml
+│   └── ReportMapper.xml
+├── application.yml      # 应用配置
+├── schema.sql           # 数据库表结构
+└── data.sql             # 初始数据
 ```
 
 ## 数据库设计
@@ -65,25 +87,99 @@ src/main/resources/
 - `view_count`: 浏览次数
 - `is_free`: 是否免费
 - `price`: 价格
+- `report_file_id`: 报告文件ID（关联[file_info](file:///d:/projects/ai-reader/reader/src/main/resources/schema.sql#L15-L15)表）
+- `report_file_url`: 报告文件URL
+- `report_file_name`: 报告文件名
+- `report_file_size`: 报告文件大小
+
+#### file_info 表（文件信息表）
+- `id`: 文件唯一标识
+- `file_name`: 存储文件名（OSS中的路径）
+- `original_name`: 原始文件名
+- `file_size`: 文件大小（字节）
+- `file_type`: 文件类型
+- `folder`: 存储文件夹
+- `upload_time`: 上传时间
+- `upload_user_id`: 上传用户ID
+- `status`: 文件状态（ACTIVE/DELETED）
+- `request_id`: OSS请求ID
 
 #### report_tags 表
 - `report_id`: 报告ID（外键）
 - `tag`: 标签名称
 
+#### admin_users 表
+- `id`: 用户ID
+- `username`: 用户名
+- `password`: 密码（明文存储，生产环境应使用加盐哈希）
+- `display_name`: 显示名称
+- `status`: 用户状态
+- `create_time`: 创建时间
+
 ## API接口
 
-### 1. 获取/搜索报告列表
-- **接口**: `POST /v1/reports`
-- **功能**: 支持基础查询和高级搜索
-- **参数**: 分页、关键词、分类、来源、日期范围、排序等
+### 1. 认证与鉴权
+- **登录**：`POST /v1/auth/login`
+- **Token 校验**：`GET /v1/auth/verify`
+- **退出**：`POST /v1/auth/logout`
 
-### 2. 获取报告详情
-- **接口**: `GET /v1/reports/{id}`
-- **功能**: 根据ID获取报告详细信息
+### 2. 报告管理
+- **获取/搜索报告列表**：`POST /v1/reports`
+- **获取报告详情**：`GET /v1/reports/{id}`
+- **创建报告**：`POST /v1/reports/create`
+- **删除报告**：`DELETE /v1/reports/{id}`
+- **批量删除报告**：`POST /v1/reports/delete`
 
-### 3. 健康检查
-- **接口**: `GET /v1/health`
-- **功能**: 服务健康状态检查
+### 3. 文件上传
+- **上传报告文件**：`POST /v1/upload/report`
+- **上传报告文件并返回文件信息**：`POST /v1/upload/report/info`
+- **上传图片文件**：`POST /v1/upload/image`
+- **通用上传**：`POST /v1/upload/file`
+- **删除文件**：`DELETE /v1/upload/file`
+
+### 4. 用户管理
+- **获取用户列表**：`POST /v1/users`
+- **删除用户**：`DELETE /v1/users/{id}`
+
+### 5. 健康检查
+- **接口**：`GET /v1/health`
+
+## 文件上传与报告关联功能说明
+
+### 新增文件信息管理模块
+
+**主要功能：**
+- 文件信息的增删改查
+- 文件状态管理（ACTIVE/DELETED）
+- 文件验证（检查文件是否存在且有效）
+
+### 改造文件上传服务
+
+**新增方法：**
+```java
+// 上传文件并保存文件信息
+public FileInfo uploadFile(MultipartFile file, String folder, String uploadUserId)
+
+// 上传报告文件并保存文件信息
+public FileInfo uploadReportFile(MultipartFile file, String uploadUserId)
+```
+
+**改造要点：**
+- 文件上传到OSS后，自动创建文件信息记录
+- 返回完整的文件信息对象，包含文件ID
+- 保持向后兼容，原有方法仍然可用
+
+### 改造报告创建流程
+
+**验证逻辑：**
+- 必须提供 `report_file_id`
+- 验证文件信息是否存在且有效
+- 自动填充文件相关信息（URL、名称、大小）
+
+**数据流程：**
+1. 用户上传报告文件 → 获得文件信息（包含文件ID）
+2. 创建报告时提供文件ID → 系统验证文件有效性
+3. 自动关联文件信息 → 完成报告创建
 
 ## 运行说明
 
@@ -99,43 +195,3 @@ src/main/resources/
 
 ### 数据库初始化
 - 项目启动时会自动创建SQLite数据库文件 `reader.db`
-- 自动执行 `schema.sql` 创建表结构
-- 自动执行 `data.sql` 插入初始测试数据
-
-## 配置说明
-
-### 数据库配置
-- 数据库类型: SQLite
-- 数据库文件: `reader.db` (项目根目录)
-- 连接配置: `application.yml`
-
-### JPA配置
-- 方言: SQLiteDialect
-- DDL策略: create-drop (开发环境)
-- SQL日志: 启用
-
-## 开发说明
-
-### 添加新的查询方法
-1. 在 `ReportDao` 中添加新的查询方法
-2. 在 `ReportServiceImpl` 中实现业务逻辑
-3. 在 `ReportController` 中添加新的接口
-
-### 数据库迁移
-- 修改 `schema.sql` 文件
-- 重启应用或手动执行SQL脚本
-
-## 注意事项
-
-1. SQLite数据库文件会在项目根目录自动创建
-2. 开发环境使用 `create-drop` 模式，每次启动会重建表结构
-3. 生产环境建议修改为 `update` 模式
-4. 标签使用独立的表存储，支持一对多关系
-5. 所有日期使用 `LocalDate` 类型，格式为 `YYYY-MM-DD`
-
-## 性能优化建议
-
-1. 为常用查询字段添加数据库索引
-2. 实现查询结果缓存机制
-3. 使用分页查询避免大量数据返回
-4. 优化JPA查询，避免N+1问题

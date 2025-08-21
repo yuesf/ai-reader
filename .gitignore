@@ -1,6 +1,6 @@
-HELP.md
 reader/target/
 ui-vue3/node_modules/
+reader.db
 
 !**/src/main/**/target/
 !**/src/test/**/target/
