@@ -28,12 +28,19 @@ CREATE TABLE IF NOT EXISTS report_tags (
     FOREIGN KEY (report_id) REFERENCES reports(id) ON DELETE CASCADE
 );
 
--- 创建索引
-CREATE INDEX IF NOT EXISTS idx_reports_category ON reports(category);
-CREATE INDEX IF NOT EXISTS idx_reports_source ON reports(source);
-CREATE INDEX IF NOT EXISTS idx_reports_publish_date ON reports(publish_date);
-CREATE INDEX IF NOT EXISTS idx_reports_keyword ON reports(title, summary);
-CREATE INDEX IF NOT EXISTS idx_report_tags_tag ON report_tags(tag);
+-- 文件信息表
+CREATE TABLE IF NOT EXISTS file_info (
+    id VARCHAR(50) PRIMARY KEY,
+    file_name VARCHAR(500) NOT NULL,
+    original_name VARCHAR(255) NOT NULL,
+    file_size BIGINT NOT NULL,
+    file_type VARCHAR(50),
+    folder VARCHAR(100),
+    upload_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    upload_user_id VARCHAR(50),
+    status VARCHAR(20) DEFAULT 'ACTIVE', -- ACTIVE, DELETED
+    request_id VARCHAR(100)
+);
 
 -- 后台用户表（简单账号密码，实际生产请使用加盐哈希）
 CREATE TABLE IF NOT EXISTS admin_users (
