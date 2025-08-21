@@ -28,10 +28,9 @@
     <div v-if="fileInfo" class="file-result">
       <el-result icon="success" title="上传成功">
         <template #extra>
-          <el-link :href="fileInfo.url" target="_blank" type="primary">
-            {{ fileInfo.filename }}
-          </el-link>
           <div class="file-meta">
+            <span>文件Id: {{ fileInfo.fileId }}</span>
+            <span>名称: {{ fileInfo.filename }}</span>
             <span>大小: {{ fileInfo.size }}</span>
             <el-button type="danger" size="small" @click="removeFile">删除</el-button>
           </div>
@@ -48,7 +47,7 @@ import { ElMessage } from 'element-plus';
 import { UploadFilled } from '@element-plus/icons-vue';
 
 interface FileInfo {
-  url: string;
+  fileId: string;
   filename: string;
   size: string;
 }
@@ -143,9 +142,9 @@ async function handleReportUpload(options: any) {
 }
 
 async function removeFile() {
-  if (fileInfo.value?.url) {
+  if (fileInfo.value?.fileId) {
     try {
-      await deleteFile(fileInfo.value.url);
+      await deleteFile(fileInfo.value.fileId);
       fileInfo.value = null;
       ElMessage.success('文件删除成功');
     } catch (error) {

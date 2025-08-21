@@ -83,7 +83,7 @@ const form = reactive({
   tags: [] as string[],
   isFree: true,
   price: 0,
-  reportFileUrl: '',
+  reportFileId: '',
   reportFileName: '',
   reportFileSize: ''
 });
@@ -96,15 +96,15 @@ const tagOptions = ref<string[]>(['AI', '大模型', 'AIGC']);
 const submitting = ref(false);
 const formRef = ref<FormInstance>();
 const reportFileInfo = ref<{
-  url: string;
+  fileId: string;
   filename: string;
   size: string;
 } | null>(null);
 
 // 监听表单中的文件信息变化，同步到组件
-watch(() => [form.reportFileUrl, form.reportFileName, form.reportFileSize], ([url, filename, size]) => {
-  if (url && filename && size) {
-    reportFileInfo.value = { url, filename, size };
+watch(() => [form.reportFileId, form.reportFileName, form.reportFileSize], ([fileId, filename, size]) => {
+  if (fileId && filename && size) {
+    reportFileInfo.value = { fileId, filename, size };
   } else {
     reportFileInfo.value = null;
   }
@@ -136,7 +136,7 @@ async function onSubmit() {
   
   // 同步报告文件信息到表单
   if (reportFileInfo.value) {
-    form.reportFileUrl = reportFileInfo.value.url;
+    form.reportFileId = reportFileInfo.value.fileId;
     form.reportFileName = reportFileInfo.value.filename;
     form.reportFileSize = reportFileInfo.value.size;
   }

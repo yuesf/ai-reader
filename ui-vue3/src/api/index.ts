@@ -132,8 +132,8 @@ export function uploadFile(file: File, folder?: string) {
   return axios.post<ApiResponse<{url: string, filename: string, size: string, folder: string}>>('/v1/upload/file', formData);
 }
 
-export function deleteFile(url: string) {
-  return axios.delete<ApiResponse<string>>('/v1/upload/file', { params: { url } });
+export function deleteFile(fileId: string) {
+  return axios.delete<ApiResponse<string>>('/v1/upload/file', { params: { fileId } });
 }
 
 // 鉴权相关

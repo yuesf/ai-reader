@@ -28,9 +28,10 @@ public class FileUploadController {
     @PostMapping("/upload/report")
     public ApiResponse<Map<String, String>> uploadReportFile(@RequestParam("file") MultipartFile file) {
         try {
-            String fileUrl = fileUploadService.uploadReportFile(file);
+            FileInfo fileInfo = fileUploadService.uploadReportFile(file, null);
+//            String fileUrl = fileUploadService.uploadReportFile(file);
             Map<String, String> result = new HashMap<>();
-            result.put("url", fileUrl);
+            result.put("fileId", fileInfo.getId());
             result.put("filename", file.getOriginalFilename());
             result.put("size", String.valueOf(file.getSize()));
             return ApiResponse.success(result);
@@ -94,9 +95,10 @@ public class FileUploadController {
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "folder", defaultValue = "files") String folder) {
         try {
-            String fileUrl = fileUploadService.uploadFile(file, folder);
+            FileInfo fileInfo = fileUploadService.uploadFile(file, folder, null);
+//            String fileUrl = fileUploadService.uploadFile(file, folder);
             Map<String, String> result = new HashMap<>();
-            result.put("url", fileUrl);
+            result.put("fileId", fileInfo.getId());
             result.put("filename", file.getOriginalFilename());
             result.put("size", String.valueOf(file.getSize()));
             result.put("folder", folder);

@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS reports (
     view_count INTEGER DEFAULT 0,
     is_free BOOLEAN DEFAULT FALSE,
     price INTEGER DEFAULT 0,
+    report_file_id VARCHAR(50),
     report_file_url VARCHAR(500),
     report_file_name VARCHAR(255),
     report_file_size VARCHAR(50)

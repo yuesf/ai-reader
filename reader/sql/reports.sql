@@ -20,10 +20,4 @@ CREATE TABLE IF NOT EXISTS reports (
     report_file_size VARCHAR(50)
 );
 
--- 索引
-CREATE INDEX IF NOT EXISTS idx_reports_category ON reports(category);
-CREATE INDEX IF NOT EXISTS idx_reports_source ON reports(source);
-CREATE INDEX IF NOT EXISTS idx_reports_publish_date ON reports(publish_date);
-CREATE INDEX IF NOT EXISTS idx_reports_keyword ON reports(title, summary);
-
 

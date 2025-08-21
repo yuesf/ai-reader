@@ -37,10 +37,6 @@ CREATE TABLE file_info (
 ALTER TABLE reports ADD COLUMN report_file_id VARCHAR(50);
 ```
 
-**新增索引：**
-```sql
-CREATE INDEX idx_reports_file_id ON reports(report_file_id);
-```
 
 ### 3. 新增文件信息管理模块
 
@@ -79,7 +75,7 @@ public FileInfo uploadReportFile(MultipartFile file, String uploadUserId)
 ### 6. 改造报告创建流程
 
 **验证逻辑：**
-- 必须提供 `reportFileId`
+- 必须提供 `fileId`
 - 验证文件信息是否存在且有效
 - 自动填充文件相关信息（URL、名称、大小）
 

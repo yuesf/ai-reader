@@ -17,6 +17,7 @@
         <result column="view_count" property="viewCount"/>
         <result column="is_free" property="isFree"/>
         <result column="price" property="price"/>
+        <result column="report_file_id" property="reportFileId"/>
         <result column="report_file_url" property="reportFileUrl"/>
         <result column="report_file_name" property="reportFileName"/>
         <result column="report_file_size" property="reportFileSize"/>
@@ -118,11 +119,11 @@
         INSERT INTO reports (
             id, title, summary, source, category, pages, file_size,
             publish_date, update_date, thumbnail, download_count, view_count,
-            is_free, price, report_file_url, report_file_name, report_file_size
+            is_free, price, report_file_id, report_file_url, report_file_name, report_file_size
         ) VALUES (
             #{id}, #{title}, #{summary}, #{source}, #{category}, #{pages}, #{fileSize},
             #{publishDate}, #{updateDate}, #{thumbnail}, #{downloadCount}, #{viewCount},
-            #{isFree}, #{price}, #{reportFileUrl}, #{reportFileName}, #{reportFileSize}
+            #{isFree}, #{price}, #{reportFileId}, #{reportFileUrl}, #{reportFileName}, #{reportFileSize}
         )
     </insert>
 

@@ -110,10 +110,9 @@
         <div v-if="generalFile" class="file-result">
           <el-result icon="success" title="上传成功">
             <template #extra>
-              <el-link :href="generalFile.url" target="_blank" type="primary">
-                {{ generalFile.filename }}
-              </el-link>
               <div class="file-meta">
+                <span>文件Id: {{ generalFile.fileId }}</span>
+                <span>名称: {{ generalFile.filename }}</span>
                 <span>大小: {{ generalFile.size }}</span>
                 <span>文件夹: {{ generalFile.folder }}</span>
                 <el-button type="danger" size="small" @click="removeGeneralFile">删除</el-button>
@@ -207,9 +206,9 @@ async function removeImageFile() {
 }
 
 async function removeGeneralFile() {
-  if (generalFile.value?.url) {
+  if (generalFile.value?.fileId) {
     try {
-      await deleteFile(generalFile.value.url);
+      await deleteFile(generalFile.value.fileId);
       generalFile.value = null;
       ElMessage.success('文件删除成功');
     } catch (error) {

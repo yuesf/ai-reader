@@ -72,6 +72,9 @@ public class ReportService {
         return new ReportListResponse(total, page, pageSize, list);
     }
 
+    public FileInfo getFileById(String id) {
+        return fileInfoService.getFileInfoById(id);
+    }
     public Report getReportById(String id) {
         return reportMapper.selectById(id);
     }
