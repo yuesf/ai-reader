@@ -1,9 +1,5 @@
 <template>
   <div class="report-file-upload">
-    <!-- 测试按钮 -->
-    <div style="margin-bottom: 16px;">
-      <el-button type="info" size="small" @click="testApi">测试API连接</el-button>
-    </div>
     
     <el-upload
       class="upload-demo"

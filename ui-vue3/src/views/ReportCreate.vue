@@ -2,6 +2,11 @@
   <div class="page">
     <el-card>
       <el-form :model="form" label-width="100px" :rules="rules" ref="formRef">
+        <!-- 报告文件放在第一行 -->
+        <el-form-item label="报告文件">
+          <ReportFileUpload v-model="reportFileInfo" />
+        </el-form-item>
+
         <el-form-item label="标题" prop="title">
           <el-input v-model="form.title" maxlength="200" show-word-limit />
         </el-form-item>
@@ -22,7 +27,7 @@
           <el-input-number v-model="form.pages" :min="1" />
         </el-form-item>
         <el-form-item label="文件大小">
-          <el-input-number v-model="form.fileSize" :min="0" />
+          <el-input v-model="form.fileSize" disabled />
         </el-form-item>
         <el-form-item label="发布日期">
           <el-date-picker v-model="form.publishDate" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" />
@@ -39,10 +44,6 @@
           >
             <el-button type="primary" size="small">上传封面</el-button>
           </el-upload>
-        </el-form-item>
-        
-        <el-form-item label="报告文件">
-          <ReportFileUpload v-model="reportFileInfo" />
         </el-form-item>
         
         <el-form-item label="标签">
@@ -63,7 +64,7 @@
       </el-form>
     </el-card>
   </div>
- </template>
+</template>
 
 <script setup lang="ts">
 import { reactive, ref, watch } from 'vue';
@@ -76,16 +77,14 @@ const form = reactive({
   summary: '',
   source: '',
   category: '',
-  pages: undefined as unknown as number,
-  fileSize: undefined as unknown as number,
-  publishDate: '',
+  pages: undefined as unknown as string,
+  fileSize: undefined as unknown as string,
+  publishDate: new Date().toISOString().split('T')[0], // 默认当天
   thumbnail: '',
   tags: [] as string[],
   isFree: true,
   price: 0,
-  reportFileId: '',
-  reportFileName: '',
-  reportFileSize: ''
+  reportFileId: ''
 });
 
 const rules = reactive<FormRules>({
@@ -102,13 +101,22 @@ const reportFileInfo = ref<{
 } | null>(null);
 
 // 监听表单中的文件信息变化，同步到组件
-watch(() => [form.reportFileId, form.reportFileName, form.reportFileSize], ([fileId, filename, size]) => {
+watch(() => [form.reportFileId, form.title, form.fileSize], ([fileId, filename, size]) => {
   if (fileId && filename && size) {
     reportFileInfo.value = { fileId, filename, size };
   } else {
     reportFileInfo.value = null;
   }
 }, { immediate: true });
+
+// 监听reportFileInfo变化，同步到form中
+watch(reportFileInfo, (newVal) => {
+  if (newVal) {
+    form.reportFileId = newVal.fileId;
+    form.title = newVal.filename; // 文件名赋值到标题
+    form.fileSize = newVal.size;  // 文件大小赋值到文件大小字段
+  }
+}, { deep: true });
 
 function normalize() {
   if (form.isFree) {
@@ -131,14 +139,13 @@ async function handleImageUpload(options: any) {
   }
 }
 
+
 async function onSubmit() {
   normalize();
   
   // 同步报告文件信息到表单
   if (reportFileInfo.value) {
     form.reportFileId = reportFileInfo.value.fileId;
-    form.reportFileName = reportFileInfo.value.filename;
-    form.reportFileSize = reportFileInfo.value.size;
   }
   
   await formRef.value?.validate(async (valid) => {
@@ -175,5 +182,3 @@ async function onSubmit() {
   font-size: 12px;
 }
 </style>
-
-

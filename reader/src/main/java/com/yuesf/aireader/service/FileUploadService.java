@@ -119,12 +119,15 @@ public class FileUploadService {
     /**
      * 删除OSS上的文件
      *
-     * @param fileUrl 文件URL
+     * @param fileId 文件URL
      */
-    public void deleteFile(String fileUrl) {
-        if (fileUrl != null && fileUrl.startsWith(ossProperties.getUpload().getBaseUrl())) {
-            String objectKey = fileUrl.substring(ossProperties.getUpload().getBaseUrl().length() + 1);
+    public void deleteFile(String fileId) {
+        FileInfo fileInfo = fileInfoService.getFileInfoById(fileId);
+
+        if (fileInfo != null && StringUtils.isNotBlank(fileInfo.getFileName())) {
+            String objectKey = fileInfo.getFileName();
             ossClient.deleteObject(ossProperties.getBucketName(), objectKey);
+            fileInfoService.deleteFileInfo(fileId);
         }
     }
 

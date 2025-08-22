@@ -13,8 +13,8 @@ export interface ReportItem {
   summary?: string;
   source?: string;
   category?: string;
-  pages?: number;
-  fileSize?: number;
+  pages?: string;
+  fileSize?: string;
   publishDate?: string;
   updateDate?: string;
   thumbnail?: string;

@@ -117,9 +117,9 @@ public class FileUploadController {
      * DELETE /upload/file
      */
     @DeleteMapping("/upload/file")
-    public ApiResponse<String> deleteFile(@RequestParam("url") String fileUrl) {
+    public ApiResponse<String> deleteFile(@RequestParam("fileId") String fileId) {
         try {
-            fileUploadService.deleteFile(fileUrl);
+            fileUploadService.deleteFile(fileId);
             return ApiResponse.success("文件删除成功");
         } catch (Exception e) {
             return ApiResponse.error(500, "文件删除失败: " + e.getMessage());
