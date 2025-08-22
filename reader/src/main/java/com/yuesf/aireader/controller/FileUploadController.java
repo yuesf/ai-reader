@@ -71,11 +71,12 @@ public class FileUploadController {
     @PostMapping("/upload/image")
     public ApiResponse<Map<String, String>> uploadImage(@RequestParam("file") MultipartFile file) {
         try {
-            String fileUrl = fileUploadService.uploadImage(file);
+            FileInfo fileInfo = fileUploadService.uploadImage(file);
             Map<String, String> result = new HashMap<>();
-            result.put("url", fileUrl);
-            result.put("filename", file.getOriginalFilename());
-            result.put("size", String.valueOf(file.getSize()));
+            result.put("fileId", fileInfo.getId());
+            result.put("filename", fileInfo.getFileName());
+            // 返回后端代理访问URL，避免将带签名的OSS地址暴露给前端
+            result.put("thumbnail", "/v1/images/" + fileInfo.getId());
             return ApiResponse.success(result);
         } catch (IllegalArgumentException e) {
             return ApiResponse.error(400, e.getMessage());
@@ -83,6 +84,30 @@ public class FileUploadController {
             return ApiResponse.error(500, "文件上传失败: " + e.getMessage());
         } catch (Exception e) {
             return ApiResponse.error(500, "服务器内部错误: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 公开访问图片：通过后端从OSS读取并回写响应，避免暴露带AK的签名URL
+     * GET /images/{id}
+     */
+    @GetMapping("/images/{id}")
+    public void getImage(@PathVariable("id") String id, jakarta.servlet.http.HttpServletResponse response) {
+        try {
+            FileInfo fileInfo = fileUploadService.getFileInfoById(id);
+            if (fileInfo == null) {
+                response.setStatus(404);
+                return;
+            }
+
+            // 通过服务读取OSS对象并写回
+            fileUploadService.writeObjectToResponse(fileInfo.getFileName(), response);
+        } catch (Exception e) {
+            try {
+                response.setStatus(500);
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"code\":500,\"message\":\"图片获取失败\"}");
+            } catch (Exception ignored) {}
         }
     }
 

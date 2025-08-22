@@ -30,7 +30,7 @@
       
       <!-- 报告缩略图 -->
       <view class="report-thumbnail">
-        <image class="thumbnail-img" src="{{item.thumbnail}}" mode="aspectFill"></image>
+        <image class="thumbnail-img" src="{{item.thumbnailFull}}" mode="aspectFill"></image>
       </view>
       
       <!-- 报告信息 -->

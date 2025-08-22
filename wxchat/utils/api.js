@@ -1,5 +1,6 @@
 // api.js - API服务文件
-const BASE_URL = 'https://api.example.com/v1'
+// 将基础URL指向后端服务（根据实际部署环境修改为域名/内网地址）
+const BASE_URL = 'http://wx.yuesf.cn'
 
 /**
  * 通用请求方法
@@ -71,7 +72,8 @@ const reportAPI = {
    * @returns {Promise} 报告列表
    */
   getReports: (params = {}) => {
-    return get('/reports', params)
+    // 后端接口为 POST /v1/reports
+    return post('/v1/reports', params)
   },
 
   /**
@@ -80,7 +82,7 @@ const reportAPI = {
    * @returns {Promise} 搜索结果
    */
   searchReports: (searchParams) => {
-    return post('/reports/search', searchParams)
+    return post('/reports', searchParams)
   },
 
   /**
@@ -160,5 +162,6 @@ module.exports = {
   // 通用请求方法
   request,
   get,
-  post
+  post,
+  BASE_URL
 }

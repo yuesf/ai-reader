@@ -34,16 +34,16 @@
         </el-form-item>
         <el-form-item label="封面">
           <el-input v-model="form.thumbnail" placeholder="图片URL" />
-          <el-upload
-            class="upload-demo"
-            :action="''"
-            :http-request="handleImageUpload"
-            :show-file-list="false"
-            accept="image/*"
-            style="margin-top: 8px;"
-          >
-            <el-button type="primary" size="small">上传封面</el-button>
-          </el-upload>
+          <div class="paste-upload-area" 
+               @paste="handlePasteImage" 
+               @click="focusPasteArea"
+               :class="{ 'has-image': form.thumbnail }">
+            <div v-if="!form.thumbnail" class="paste-placeholder">
+              <el-icon><Picture /></el-icon>
+              <span>粘贴图片到此处</span>
+            </div>
+            <img v-else :src="form.thumbnail" class="preview-image" />
+          </div>
         </el-form-item>
         
         <el-form-item label="标签">
@@ -71,6 +71,7 @@ import { reactive, ref, watch } from 'vue';
 import { createReport, uploadImage } from '../api';
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
 import ReportFileUpload from '../components/ReportFileUpload.vue';
+import { Picture } from '@element-plus/icons-vue';
 
 const form = reactive({
   title: '',
@@ -81,6 +82,7 @@ const form = reactive({
   fileSize: undefined as unknown as string,
   publishDate: new Date().toISOString().split('T')[0], // 默认当天
   thumbnail: '',
+  thumbnailId: '',
   tags: [] as string[],
   isFree: true,
   price: 0,
@@ -124,19 +126,36 @@ function normalize() {
   }
 }
 
-// 文件上传方法
-async function handleImageUpload(options: any) {
-  try {
-    const { data } = await uploadImage(options.file);
-    if (data.code === 200) {
-      form.thumbnail = data.data.url;
-      ElMessage.success('封面上传成功');
-    } else {
-      ElMessage.error(data.message || '封面上传失败');
+// 粘贴图片处理方法
+async function handlePasteImage(event: ClipboardEvent) {
+  const items = event.clipboardData?.items;
+  if (!items) return;
+  
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].type.indexOf('image') !== -1) {
+      const file = items[i].getAsFile();
+      if (file) {
+        try {
+          const { data } = await uploadImage(file);
+          if (data.code === 200) {
+            form.thumbnail = data.data.thumbnail;
+            form.thumbnailId = data.data.fileId;
+            ElMessage.success('封面粘贴上传成功');
+          } else {
+            ElMessage.error(data.message || '封面粘贴上传失败');
+          }
+        } catch (error) {
+          ElMessage.error('封面粘贴上传失败');
+        }
+      }
+      break;
     }
-  } catch (error) {
-    ElMessage.error('封面上传失败');
   }
+}
+
+// 聚焦粘贴区域
+function focusPasteArea() {
+  // 可以添加一些视觉反馈
 }
 
 
@@ -168,6 +187,7 @@ async function onSubmit() {
 
 <style scoped>
 .page { padding: 16px; }
+
 .file-info {
   display: flex;
   align-items: center;
@@ -177,8 +197,53 @@ async function onSubmit() {
   background: #f5f7fa;
   border-radius: 4px;
 }
+
 .file-size {
   color: #909399;
   font-size: 12px;
+}
+
+.paste-upload-area {
+  margin-top: 8px;
+  width: 200px;
+  height: 120px;
+  border: 2px dashed #d9d9d9;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  background: #fafafa;
+}
+
+.paste-upload-area:hover {
+  border-color: #409eff;
+  background: #f0f9ff;
+}
+
+.paste-upload-area.has-image {
+  border-style: solid;
+  border-color: #67c23a;
+  background: #f0f9ff;
+}
+
+.paste-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: #909399;
+}
+
+.paste-placeholder .el-icon {
+  font-size: 24px;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
 }
 </style>

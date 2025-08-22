@@ -120,7 +120,7 @@ export function uploadReportFile(file: File) {
 export function uploadImage(file: File) {
   const formData = new FormData();
   formData.append('file', file);
-  return axios.post<ApiResponse<{url: string, filename: string, size: string}>>('/v1/upload/image', formData);
+  return axios.post<ApiResponse<{fileId: string, thumbnail: string}>>('/v1/upload/image', formData);
 }
 
 export function uploadFile(file: File, folder?: string) {

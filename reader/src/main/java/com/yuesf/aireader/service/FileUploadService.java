@@ -91,7 +91,7 @@ public class FileUploadService {
      * @return 文件信息对象
      */
     public FileInfo uploadReportFile(MultipartFile file, String uploadUserId) throws IOException {
-        return uploadFile(file, "reports", uploadUserId);
+        return uploadFile(file, ossProperties.getFolder().getReports(), uploadUserId);
     }
 
     /**
@@ -111,11 +111,9 @@ public class FileUploadService {
      * @param file 上传的图片
      * @return 图片访问URL
      */
-    public String uploadImage(MultipartFile file) throws IOException {
-        FileInfo fileInfo = uploadFile(file, "images", null);
-        return generatePresignedUrl(fileInfo.getFileName(), 3600); // 返回临时访问链接
+    public FileInfo uploadImage(MultipartFile file) throws IOException {
+        return uploadFile(file, ossProperties.getFolder().getImages(), null);
     }
-
     /**
      * 删除OSS上的文件
      *
@@ -132,6 +130,49 @@ public class FileUploadService {
     }
 
     /**
+     * 通过ID获取文件信息
+     */
+    public FileInfo getFileInfoById(String id) {
+        return fileInfoService.getFileInfoById(id);
+    }
+
+    /**
+     * 从OSS读取对象并写入HTTP响应，隐藏真实带签名的URL
+     */
+    public void writeObjectToResponse(String objectKey, jakarta.servlet.http.HttpServletResponse response) throws IOException {
+        com.aliyun.oss.model.OSSObject ossObject = null;
+        java.io.InputStream inputStream = null;
+        try {
+            ossObject = ossClient.getObject(ossProperties.getBucketName(), objectKey);
+            inputStream = ossObject.getObjectContent();
+
+            // 简单根据扩展名设置Content-Type
+            String ext = org.apache.commons.io.FilenameUtils.getExtension(objectKey).toLowerCase();
+            String contentType = switch (ext) {
+                case "png" -> "image/png";
+                case "jpg", "jpeg" -> "image/jpeg";
+                case "gif" -> "image/gif";
+                case "webp" -> "image/webp";
+                default -> "application/octet-stream";
+            };
+            response.setContentType(contentType);
+            // 可选缓存控制（根据业务需要设置）
+            response.setHeader("Cache-Control", "public, max-age=31536000");
+
+            java.io.OutputStream out = response.getOutputStream();
+            byte[] buffer = new byte[8192];
+            int len;
+            while ((len = inputStream.read(buffer)) != -1) {
+                out.write(buffer, 0, len);
+            }
+            out.flush();
+        } finally {
+            if (inputStream != null) try { inputStream.close(); } catch (Exception ignored) {}
+            if (ossObject != null) try { ossObject.close(); } catch (Exception ignored) {}
+        }
+    }
+
+    /**
      * 生成私有文件的临时访问URL
      *
      * @param objectKey  OSS对象键
@@ -142,6 +183,15 @@ public class FileUploadService {
         java.util.Date expirationDate = new java.util.Date(new java.util.Date().getTime() + expiration * 1000);
         return ossClient.generatePresignedUrl(ossProperties.getBucketName(), objectKey, expirationDate).toString();
     }
+    public String generateUrl(String objectKey, int expiration) {
+        java.util.Date expirationDate = new java.util.Date(new java.util.Date().getTime() + expiration * 1000);
+        String signedUrl = ossClient.generatePresignedUrl(ossProperties.getBucketName(), objectKey, expirationDate).toString();
+        // 替换为CDN域名（关键步骤！）
+        return signedUrl.toString()
+                .replace(ossProperties.getUpload().getBaseUrl(), ossProperties.getUpload().getCdnDomain());
+
+    }
+
 
     /**
      * 验证文件

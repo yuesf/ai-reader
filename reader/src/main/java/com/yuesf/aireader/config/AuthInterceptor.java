@@ -21,7 +21,10 @@ public class AuthInterceptor implements HandlerInterceptor {
         System.out.println("拦截器处理请求: " + method + " " + uri);
         
         // 公开接口直接放行
-        if (uri.startsWith("/v1/auth/") || uri.startsWith("/v1/health") || ("GET".equals(method) && uri.startsWith("/v1/reports"))) {
+        if (uri.startsWith("/v1/auth/")
+                || uri.startsWith("/v1/health")
+                || "/v1/reports".equals(uri)
+                || ("GET".equals(method) && uri.startsWith("/v1/images/"))) {
             System.out.println("公开接口，直接放行");
             return true;
         }

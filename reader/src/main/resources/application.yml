@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 80
   servlet:
     context-path: /
 
@@ -63,3 +63,4 @@ app:
       max-file-size: 500MB
       allowed-extensions: jpg,jpeg,png,gif,pdf,doc,docx,xls,xlsx,ppt,pptx
       base-url: https://ai-doc-low.oss-cn-hangzhou.aliyuncs.com
+      cdn-domain: https://oss.yuesf.cn

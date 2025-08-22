@@ -1,5 +1,5 @@
 // index.js
-const { mockAPI } = require('../../utils/api.js')
+const { reportAPI, BASE_URL } = require('../../utils/api.js')
 
 Page({
   data: {
@@ -27,12 +27,20 @@ Page({
     this.setData({ loading: true })
     
     try {
-      const result = await mockAPI.getReports()
+      const result = await reportAPI.getReports({
+        page: this.data.page,
+        pageSize: this.data.pageSize,
+        keyword: this.data.searchKeyword
+      })
       
       if (result.code === 200) {
+        const list = (result.data.list || []).map(item => ({
+          ...item,
+          thumbnailFull: item.thumbnail ? `${BASE_URL}${item.thumbnail}` : ''
+        }))
         this.setData({
-          reports: result.data.list,
-          filteredReports: result.data.list,
+          reports: list,
+          filteredReports: list,
           total: result.data.total,
           page: result.data.page,
           pageSize: result.data.pageSize,
@@ -88,11 +96,19 @@ Page({
     this.setData({ loading: true })
     
     try {
-      const result = await mockAPI.searchReports(keyword)
+      const result = await reportAPI.searchReports({
+        page: 1,
+        pageSize: this.data.pageSize,
+        keyword
+      })
       
       if (result.code === 200) {
+        const list = (result.data.list || []).map(item => ({
+          ...item,
+          thumbnailFull: item.thumbnail ? `${BASE_URL}${item.thumbnail}` : ''
+        }))
         this.setData({
-          filteredReports: result.data.list,
+          filteredReports: list,
           total: result.data.total
         })
       } else {
@@ -169,13 +185,18 @@ Page({
     try {
       // 模拟分页加载
       const nextPage = this.data.page + 1
-      const result = await mockAPI.getReports({
+      const result = await reportAPI.getReports({
         page: nextPage,
-        pageSize: this.data.pageSize
+        pageSize: this.data.pageSize,
+        keyword: this.data.searchKeyword
       })
       
       if (result.code === 200 && result.data.list.length > 0) {
-        const newReports = [...this.data.reports, ...result.data.list]
+        const list = (result.data.list || []).map(item => ({
+          ...item,
+          thumbnailFull: item.thumbnail ? `${BASE_URL}${item.thumbnail}` : ''
+        }))
+        const newReports = [...this.data.reports, ...list]
         this.setData({
           reports: newReports,
           filteredReports: newReports,
