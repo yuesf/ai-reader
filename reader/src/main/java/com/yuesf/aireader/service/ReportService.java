@@ -2,11 +2,14 @@ package com.yuesf.aireader.service;
 
 import com.yuesf.aireader.dto.ReportListRequest;
 import com.yuesf.aireader.dto.ReportCreateRequest;
+import com.yuesf.aireader.dto.ReportUpdateRequest;
 import com.yuesf.aireader.dto.ReportBatchDeleteRequest;
 import com.yuesf.aireader.dto.ReportListResponse;
 import com.yuesf.aireader.entity.Report;
 import com.yuesf.aireader.entity.FileInfo;
 import com.yuesf.aireader.mapper.ReportMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,10 +17,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * 报告业务逻辑类（MyBatis XML 查询）
  */
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 public class ReportService {
@@ -79,6 +84,12 @@ public class ReportService {
         return reportMapper.selectById(id);
     }
 
+    @Autowired
+    private ReportProcessingService reportProcessingService;
+
+    @Autowired
+    private AITextSummaryService aiTextSummaryService;
+
     @Transactional
     public Report createReport(ReportCreateRequest request) {
         if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
@@ -119,11 +130,208 @@ public class ReportService {
         report.setReportFileName(fileInfo.getOriginalName());
         report.setReportFileSize(String.valueOf(fileInfo.getFileSize()));
 
+        // 如果未提供缩略图，基于PDF首图生成并回填
+        try {
+            if (StringUtils.isBlank(report.getThumbnail())) {
+                FileInfo newFileInfo = reportProcessingService.generateAndUploadThumbnailFromPdf(fileInfo);
+                String newThumbnailKey = "/v1/images/" + newFileInfo.getId();
+                report.setThumbnail(newThumbnailKey);
+            }
+        } catch (Exception e) {
+            // 不中断创建流程，但记录错误
+            log.error("生成缩略图失败: " + e.getMessage());
+        }
+
+        // 若未提供摘要，异步生成
+        if (request.getSummary() == null || request.getSummary().isBlank()) {
+            try {
+                // 异步生成摘要，不阻塞报告创建
+                CompletableFuture<String> summaryFuture = aiTextSummaryService.summarizeAsync(fileInfo.getOriginalName());
+                summaryFuture.thenAccept(summary -> {
+                    if (summary != null && !summary.isBlank()) {
+                        updateReportSummary(report.getId(), summary);
+                    }
+                }).exceptionally(throwable -> {
+                    log.error("异步生成摘要失败: " + throwable.getMessage());
+                    return null;
+                });
+            } catch (Exception e) {
+                log.error("启动异步摘要生成失败: " + e.getMessage());
+            }
+        }
+
         reportMapper.insertReport(report);
         if (request.getTags() != null && !request.getTags().isEmpty()) {
             reportMapper.insertReportTags(report.getId(), request.getTags());
         }
         return reportMapper.selectById(report.getId());
+    }
+
+    /**
+     * 更新报告
+     */
+    @Transactional
+    public Report updateReport(ReportUpdateRequest request) {
+        if (request.getId() == null || request.getId().trim().isEmpty()) {
+            throw new IllegalArgumentException("报告ID不能为空");
+        }
+        
+        if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
+            throw new IllegalArgumentException("标题不能为空");
+        }
+        
+        // 检查报告是否存在
+        Report existingReport = reportMapper.selectById(request.getId());
+        if (existingReport == null) {
+            throw new IllegalArgumentException("报告不存在");
+        }
+        
+        // 更新基本信息
+        existingReport.setTitle(request.getTitle());
+        existingReport.setSummary(request.getSummary());
+        existingReport.setSource(request.getSource());
+        existingReport.setCategory(request.getCategory());
+        existingReport.setPages(request.getPages());
+        existingReport.setFileSize(request.getFileSize());
+        existingReport.setPublishDate(request.getPublishDate() != null && !request.getPublishDate().isBlank() ? LocalDate.parse(request.getPublishDate()) : null);
+        existingReport.setUpdateDate(LocalDate.now()); // 自动设置更新时间为当前时间
+        existingReport.setThumbnail(request.getThumbnail());
+        existingReport.setIsFree(request.getIsFree() != null ? request.getIsFree() : existingReport.getIsFree());
+        existingReport.setPrice(request.getPrice() != null ? request.getPrice() : existingReport.getPrice());
+        
+        // 如果提供了新的文件ID，更新文件信息
+        if (request.getReportFileId() != null && !request.getReportFileId().isBlank()) {
+            FileInfo fileInfo = fileInfoService.getFileInfoById(request.getReportFileId());
+            if (fileInfo == null || !"ACTIVE".equals(fileInfo.getStatus())) {
+                throw new IllegalArgumentException("报告文件信息不存在或已失效，请重新上传文件");
+            }
+            
+            existingReport.setReportFileId(request.getReportFileId());
+            existingReport.setReportFileUrl(fileInfo.getFileName());
+            existingReport.setReportFileName(fileInfo.getOriginalName());
+            existingReport.setReportFileSize(String.valueOf(fileInfo.getFileSize()));
+            
+            // 如果更换了文件，重新生成缩略图
+            if (!request.getReportFileId().equals(existingReport.getReportFileId())) {
+                try {
+                    FileInfo newFileInfo = reportProcessingService.generateAndUploadThumbnailFromPdf(fileInfo);
+                    String newThumbnailKey = "/v1/images/" + newFileInfo.getId();
+                    existingReport.setThumbnail(newThumbnailKey);
+                } catch (Exception e) {
+                    log.error("重新生成缩略图失败: " + e.getMessage());
+                }
+            }
+        }
+        
+        // 更新标签
+        if (request.getTags() != null) {
+            // 先删除旧标签
+            reportMapper.deleteTagsByReportId(existingReport.getId());
+            // 插入新标签
+            if (!request.getTags().isEmpty()) {
+                reportMapper.insertReportTags(existingReport.getId(), request.getTags());
+            }
+        }
+        
+        // 更新报告
+        reportMapper.updateReport(existingReport);
+        
+        return reportMapper.selectById(existingReport.getId());
+    }
+
+    /**
+     * 更新报告摘要
+     */
+    @Transactional
+    public void updateReportSummary(String reportId, String summary) {
+        Report report = reportMapper.selectById(reportId);
+        if (report != null) {
+            report.setSummary(summary);
+            reportMapper.updateReport(report);
+        }
+    }
+
+    /**
+     * 生成报告摘要
+     */
+    @Transactional
+    public String generateReportSummary(String reportId) {
+        try {
+            Report report = reportMapper.selectById(reportId);
+            if (report == null) {
+                log.error("报告不存在，ID: {}", reportId);
+                return null;
+            }
+            
+            // 检查是否有报告文件
+            if (report.getReportFileId() == null || report.getReportFileId().isBlank()) {
+                log.error("报告没有关联文件，无法生成摘要，ID: {}", reportId);
+                return null;
+            }
+            
+            FileInfo fileInfo = fileInfoService.getFileInfoById(report.getReportFileId());
+            if (fileInfo == null) {
+                log.error("报告文件信息不存在，ID: {}", reportId);
+                return null;
+            }
+            
+            // 生成摘要
+            String summary = aiTextSummaryService.summarize(fileInfo.getOriginalName());
+            if (summary != null && !summary.isBlank()) {
+                // 更新报告摘要
+                report.setSummary(summary);
+                reportMapper.updateReport(report);
+                log.info("报告摘要生成并更新成功，ID: {}", reportId);
+                return summary;
+            } else {
+                log.error("AI摘要生成失败，ID: {}", reportId);
+                return null;
+            }
+            
+        } catch (Exception e) {
+            log.error("生成报告摘要失败，ID: {}", reportId, e);
+            return null;
+        }
+    }
+
+    /**
+     * 删除报告缩略图
+     */
+    @Transactional
+    public void deleteReportThumbnail(String reportId) {
+        Report report = reportMapper.selectById(reportId);
+        if (report != null && report.getThumbnail() != null && !report.getThumbnail().isBlank()) {
+            try {
+                reportProcessingService.deleteThumbnail(report.getThumbnail());
+                report.setThumbnail(null);
+                reportMapper.updateReport(report);
+            } catch (Exception e) {
+                log.error("删除报告缩略图失败: " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * 重新生成报告缩略图
+     */
+    @Transactional
+    public String regenerateReportThumbnail(String reportId) {
+        Report report = reportMapper.selectById(reportId);
+        if (report != null && report.getReportFileId() != null) {
+            try {
+                FileInfo fileInfo = fileInfoService.getFileInfoById(report.getReportFileId());
+                if (fileInfo != null) {
+                    FileInfo newFileInfo = reportProcessingService.regenerateThumbnail(fileInfo, report.getThumbnail());
+                    String newThumbnailKey = "/v1/images/" + newFileInfo.getId();
+                    report.setThumbnail(newThumbnailKey);
+                    reportMapper.updateReport(report);
+                    return newThumbnailKey;
+                }
+            } catch (Exception e) {
+                log.error("重新生成报告缩略图失败: " + e.getMessage());
+            }
+        }
+        return null;
     }
 
     @Transactional

@@ -1,22 +1,27 @@
 package com.yuesf.aireader.controller;
 
+import com.yuesf.aireader.annotation.RequireAuth;
 import com.yuesf.aireader.dto.ApiResponse;
 import com.yuesf.aireader.dto.ReportListRequest;
 import com.yuesf.aireader.dto.ReportListResponse;
 import com.yuesf.aireader.dto.ReportCreateRequest;
+import com.yuesf.aireader.dto.ReportUpdateRequest;
 import com.yuesf.aireader.dto.ReportBatchDeleteRequest;
 import com.yuesf.aireader.entity.Report;
 import com.yuesf.aireader.service.ReportService;
 import com.yuesf.aireader.service.FileUploadService;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * 报告查询接口控制器
+ * 报告查询接口控制器（后台管理使用）
  */
+@Slf4j
 @RestController
 @RequestMapping("/v1")
+@RequireAuth(requireAdmin = true) // 整个控制器需要管理员权限
 public class ReportController {
 
     @Autowired
@@ -33,6 +38,8 @@ public class ReportController {
     @PostMapping("/reports")
     public ApiResponse<ReportListResponse> getReportList(@RequestBody ReportListRequest request) {
         try {
+            log.info("后台请求报告列表，参数: {}", request);
+            
             // 参数验证
             if (request.getPage() == null || request.getPage() < 1) {
                 request.setPage(1);
@@ -50,9 +57,12 @@ public class ReportController {
             }
             
             ReportListResponse response = reportService.getReportList(request);
+            log.info("后台报告列表查询成功，返回 {} 条记录", response.getTotal());
+            
             return ApiResponse.success(response);
             
         } catch (Exception e) {
+            log.error("后台报告列表查询失败", e);
             return ApiResponse.error(500, "服务器内部错误: " + e.getMessage());
         }
     }
@@ -64,6 +74,8 @@ public class ReportController {
     @GetMapping("/reports/{id}")
     public ApiResponse<Report> getReportById(@PathVariable String id) {
         try {
+            log.info("后台请求报告详情，ID: {}", id);
+            
             if (id == null || id.trim().isEmpty()) {
                 return ApiResponse.error(400, "报告ID不能为空");
             }
@@ -73,9 +85,11 @@ public class ReportController {
                 return ApiResponse.error(404, "报告不存在");
             }
             
+            log.info("后台报告详情查询成功，ID: {}", id);
             return ApiResponse.success(report);
             
         } catch (Exception e) {
+            log.error("后台报告详情查询失败，ID: {}", id, e);
             return ApiResponse.error(500, "服务器内部错误: " + e.getMessage());
         }
     }
@@ -87,11 +101,50 @@ public class ReportController {
     @PostMapping("/reports/create")
     public ApiResponse<Report> createReport(@RequestBody ReportCreateRequest request) {
         try {
+            log.info("后台创建报告，标题: {}", request.getTitle());
+            
             Report created = reportService.createReport(request);
+            log.info("后台报告创建成功，ID: {}", created.getId());
+            
             return ApiResponse.success(created);
         } catch (IllegalArgumentException e) {
+            log.warn("后台报告创建参数错误: {}", e.getMessage());
             return ApiResponse.error(400, e.getMessage());
         } catch (Exception e) {
+            log.error("后台报告创建失败", e);
+            return ApiResponse.error(500, "服务器内部错误: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 更新报告
+     * PUT /reports/{id}
+     */
+    @PutMapping("/reports/{id}")
+    public ApiResponse<Report> updateReport(@PathVariable String id, @RequestBody ReportUpdateRequest request) {
+        try {
+            log.info("后台更新报告，ID: {}", id);
+            
+            if (id == null || id.trim().isEmpty()) {
+                return ApiResponse.error(400, "报告ID不能为空");
+            }
+            
+            // 设置ID到请求对象中
+            request.setId(id);
+            
+            Report updated = reportService.updateReport(request);
+            if (updated != null) {
+                log.info("后台报告更新成功，ID: {}", id);
+                return ApiResponse.success(updated);
+            } else {
+                log.error("后台报告更新失败，ID: {}", id);
+                return ApiResponse.error(500, "更新失败");
+            }
+        } catch (IllegalArgumentException e) {
+            log.warn("后台报告更新参数错误: {}", e.getMessage());
+            return ApiResponse.error(400, e.getMessage());
+        } catch (Exception e) {
+            log.error("后台报告更新失败，ID: {}", id, e);
             return ApiResponse.error(500, "服务器内部错误: " + e.getMessage());
         }
     }
@@ -103,6 +156,8 @@ public class ReportController {
     @GetMapping("/reports/file/{id}")
     public ApiResponse<String> getReportFileUrl(@PathVariable String id) {
         try {
+            log.info("后台请求报告文件URL，ID: {}", id);
+            
             if (id == null || id.trim().isEmpty()) {
                 return ApiResponse.error(400, "报告ID不能为空");
             }
@@ -112,62 +167,89 @@ public class ReportController {
                 return ApiResponse.error(404, "报告不存在");
             }
             
-            if (report.getReportFileId() == null || report.getReportFileId().trim().isEmpty()) {
-                return ApiResponse.error(404, "报告文件不存在");
-            }
+            String fileUrl = fileUploadService.generatePresignedUrl(report.getReportFileUrl(), 3600);
+            log.info("后台报告文件URL生成成功，ID: {}", id);
             
-            // 从文件URL中提取对象键
-            String baseUrl = report.getReportFileUrl();
-            String objectKey = baseUrl.substring(baseUrl.lastIndexOf("/") + 1);
-            objectKey = "reports/" + objectKey;
-            
-            String presignedUrl = fileUploadService.generatePresignedUrl(objectKey, 3600);
-            return ApiResponse.success(presignedUrl);
+            return ApiResponse.success(fileUrl);
             
         } catch (Exception e) {
+            log.error("后台报告文件URL生成失败，ID: {}", id, e);
             return ApiResponse.error(500, "服务器内部错误: " + e.getMessage());
         }
     }
 
     /**
-     * 健康检查接口
+     * 删除报告缩略图
+     * DELETE /reports/{id}/thumbnail
      */
-    @GetMapping("/health")
-    public ApiResponse<String> health() {
-        return ApiResponse.success("服务运行正常");
+    @DeleteMapping("/reports/{id}/thumbnail")
+    public ApiResponse<Void> deleteReportThumbnail(@PathVariable String id) {
+        try {
+            log.info("后台删除报告缩略图，ID: {}", id);
+            
+            if (id == null || id.trim().isEmpty()) {
+                return ApiResponse.error(400, "报告ID不能为空");
+            }
+            
+            reportService.deleteReportThumbnail(id);
+            log.info("后台报告缩略图删除成功，ID: {}", id);
+            
+            return ApiResponse.success(null);
+            
+        } catch (Exception e) {
+            log.error("后台报告缩略图删除失败，ID: {}", id, e);
+            return ApiResponse.error(500, "服务器内部错误: " + e.getMessage());
+        }
     }
 
     /**
-     * 删除报告（单个）
-     * DELETE /reports/{id}
+     * 重新生成报告缩略图
+     * POST /reports/{id}/thumbnail/regenerate
      */
-    @DeleteMapping("/reports/{id}")
-    public ApiResponse<Integer> deleteReport(@PathVariable String id) {
+    @PostMapping("/reports/{id}/thumbnail/regenerate")
+    public ApiResponse<String> regenerateReportThumbnail(@PathVariable String id) {
         try {
-            int affected = reportService.deleteById(id);
-            if (affected == 0) {
-                return ApiResponse.error(404, "报告不存在");
+            log.info("后台重新生成报告缩略图，ID: {}", id);
+            
+            if (id == null || id.trim().isEmpty()) {
+                return ApiResponse.error(400, "报告ID不能为空");
             }
-            return ApiResponse.success(affected);
-        } catch (IllegalArgumentException e) {
-            return ApiResponse.error(400, e.getMessage());
+            
+            String newThumbnailKey = reportService.regenerateReportThumbnail(id);
+            if (newThumbnailKey != null) {
+                log.info("后台报告缩略图重新生成成功，ID: {}, 新缩略图: {}", id, newThumbnailKey);
+                return ApiResponse.success(newThumbnailKey);
+            } else {
+                log.error("后台报告缩略图重新生成失败，ID: {}", id);
+                return ApiResponse.error(500, "重新生成缩略图失败");
+            }
+            
         } catch (Exception e) {
+            log.error("后台报告缩略图重新生成失败，ID: {}", id, e);
             return ApiResponse.error(500, "服务器内部错误: " + e.getMessage());
         }
     }
 
     /**
      * 批量删除报告
-     * POST /reports/delete
+     * POST /reports/batch-delete
      */
-    @PostMapping("/reports/delete")
-    public ApiResponse<Integer> batchDelete(@RequestBody ReportBatchDeleteRequest request) {
+    @PostMapping("/reports/batch-delete")
+    public ApiResponse<Void> batchDeleteReports(@RequestBody ReportBatchDeleteRequest request) {
         try {
-            int affected = reportService.batchDelete(request);
-            return ApiResponse.success(affected);
-        } catch (IllegalArgumentException e) {
-            return ApiResponse.error(400, e.getMessage());
+            log.info("后台批量删除报告，数量: {}", request.getIds().size());
+            
+            if (request.getIds() == null || request.getIds().isEmpty()) {
+                return ApiResponse.error(400, "报告ID列表不能为空");
+            }
+            
+            reportService.batchDelete(request);
+            log.info("后台批量删除报告成功，数量: {}", request.getIds().size());
+            
+            return ApiResponse.success(null);
+            
         } catch (Exception e) {
+            log.error("后台批量删除报告失败", e);
             return ApiResponse.error(500, "服务器内部错误: " + e.getMessage());
         }
     }

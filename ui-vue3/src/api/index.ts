@@ -1,6 +1,9 @@
 import axios from 'axios';
 import router from '../router';
 
+// 定义BASE_URL
+const BASE_URL = 'http://api.yuesf.cn';
+
 export interface ApiResponse<T> {
   code: number;
   message: string;
@@ -82,11 +85,26 @@ axios.interceptors.response.use((resp) => resp, (error) => {
 });
 
 export function fetchReports(body: ReportListRequest) {
-  return axios.post<ApiResponse<ReportListResponse>>('/v1/reports', body);
+  return axios.post<ApiResponse<ReportListResponse>>('/v1/reports', body).then(response => {
+    // 处理缩略图URL，添加BASE_URL前缀
+    if (response.data.data?.list) {
+      response.data.data.list = response.data.data.list.map(item => {
+        if (item.thumbnail && (!item.thumbnail.startsWith('http') || !item.thumbnail.startsWith('https'))) {
+          item.thumbnail = BASE_URL + item.thumbnail;
+        }
+        return item;
+      });
+    }
+    return response;
+  });
 }
 
 export function createReport(body: Partial<ReportItem>) {
   return axios.post<ApiResponse<ReportItem>>('/v1/reports/create', body);
+}
+
+export function updateReport(id: string, body: Partial<ReportItem>) {
+  return axios.put<ApiResponse<ReportItem>>(`/v1/reports/${id}`, body);
 }
 
 export function deleteReport(id: string) {
@@ -95,6 +113,10 @@ export function deleteReport(id: string) {
 
 export function batchDelete(ids: string[]) {
   return axios.post<ApiResponse<number>>('/v1/reports/delete', { ids });
+}
+
+export function generateSummary(id: string) {
+  return axios.post<ApiResponse<string>>(`/v1/reports/${id}/generate-summary`);
 }
 
 // 文件上传相关接口

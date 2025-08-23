@@ -50,6 +50,12 @@ page {
   padding: 20rpx;
 }
 
+.thumb-tip {
+  padding: 10rpx 20rpx;
+  color: #999;
+  font-size: 24rpx;
+}
+
 /* 加载状态样式 */
 .loading-container {
   display: flex;
@@ -91,13 +97,17 @@ page {
   padding: 30rpx;
   margin-bottom: 20rpx;
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
-  position: relative;
 }
 
 .report-item:active {
   background-color: #f8f8f8;
+}
+
+.report-main {
+  display: flex;
+  align-items: flex-start;
 }
 
 /* 缩略图样式 */
@@ -185,13 +195,12 @@ page {
 
 /* 发布时间样式 */
 .report-date {
-  position: absolute;
-  top: 30rpx;
-  right: 30rpx;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   color: #999;
   font-size: 24rpx;
+  margin-top: 12rpx;
 }
 
 .date-icon {
@@ -255,7 +264,6 @@ page {
   }
   
   .report-date {
-    position: static;
     margin-top: 20rpx;
     justify-content: flex-end;
   }

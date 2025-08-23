@@ -143,18 +143,20 @@ Page({
     const report = this.data.reports.find(item => item.id === reportId)
     
     if (report) {
-      wx.showModal({
-        title: '报告详情',
-        content: `${report.title}\n\n来源：${report.source}\n分类：${report.category}\n页数：${report.pages}页\n发布时间：${report.publishDate}\n\n${report.summary}`,
-        showCancel: false,
-        confirmText: '确定'
-      })
-    }
+      // wx.showModal({
+      //   title: '报告详情',
+      //   content: `${report.title}\n\n来源：${report.source}\n分类：${report.category}\n页数：${report.pages}页\n发布时间：${report.publishDate}\n\n${report.summary}`,
+      //   showCancel: false,
+      //   confirmText: '确定'
+      // })
+
     
-    // 这里可以添加跳转到报告详情页的逻辑
-    // wx.navigateTo({
-    //   url: `../report-detail/report-detail?id=${reportId}`
-    // })
+    }
+      // 这里可以添加跳转到报告详情页的逻辑
+      wx.navigateTo({
+       url: `../reportDetail/reportDetail?id=${reportId}`
+     })
+    
   },
 
   /**

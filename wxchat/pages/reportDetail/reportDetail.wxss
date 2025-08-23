@@ -1,0 +1,72 @@
+/* ... existing code ... */
+.report-container {
+  padding: 20rpx;
+}
+
+.report-header {
+  text-align: center;
+  margin-bottom: 20rpx;
+}
+
+.report-title {
+  font-size: 36rpx;
+  color: #333;
+}
+
+.report-subtitle {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.report-date {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20rpx;
+}
+
+.tab-button {
+  padding: 10rpx 20rpx;
+  margin: 0 10rpx;
+  border-radius: 5rpx;
+  background-color: #f0f0f0;
+}
+
+.tab-button.active {
+  background-color: #007aff;
+  color: white;
+}
+
+.content {
+  min-height: 300rpx;
+  border: 1px solid #ddd;
+  padding: 20rpx;
+}
+
+.download-button-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20rpx;
+  background-color: #fff; /* 背景颜色与页面背景一致 */
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1); /* 添加阴影效果 */
+}
+
+.download-button {
+  width: 80%; /* 调整宽度以适应不同屏幕尺寸 */
+  height: 80rpx;
+  line-height: 80rpx;
+  background-color: #007aff;
+  color: white;
+  font-size: 32rpx;
+  border-radius: 10rpx;
+}
+/* ... existing code ... */

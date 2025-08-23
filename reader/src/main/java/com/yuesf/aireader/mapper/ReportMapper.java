@@ -40,6 +40,8 @@ public interface ReportMapper {
 
     int insertReportTags(@Param("reportId") String reportId, @Param("tags") java.util.List<String> tags);
 
+    int updateReport(Report report);
+
     int deleteById(@Param("id") String id);
 
     int deleteTagsByReportId(@Param("id") String id);

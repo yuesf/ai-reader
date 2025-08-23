@@ -40,8 +40,14 @@
         <el-table-column prop="publishDate" label="发布日期" width="120" />
         <el-table-column prop="viewCount" label="浏览" width="90" />
         <el-table-column prop="downloadCount" label="下载" width="90" />
-        <el-table-column label="操作" width="160" fixed="right">
+        <el-table-column label="操作" width="280" fixed="right">
           <template #default="{ row }">
+            <el-button type="primary" link @click="onGenerateSummary(row)" :loading="generatingSummaryIds.has(row.id)">
+              生成摘要
+            </el-button>
+            <el-button type="warning" link @click="onEdit(row)">
+              编辑
+            </el-button>
             <el-popconfirm title="确认删除该报告？" @confirm="() => onDelete(row)">
               <template #reference>
                 <el-button type="danger" link>删除</el-button>
@@ -64,18 +70,111 @@
         />
       </div>
     </el-card>
+
+    <!-- 编辑报告对话框 -->
+    <el-dialog v-model="editDialogVisible" title="编辑报告" width="800px" :close-on-click-modal="false">
+      <el-form :model="editForm" :rules="editRules" ref="editFormRef" label-width="100px">
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="标题" prop="title">
+              <el-input v-model="editForm.title" placeholder="请输入报告标题" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="分类" prop="category">
+              <el-select v-model="editForm.category" placeholder="请选择分类" style="width: 100%">
+                <el-option v-for="c in categories" :key="c" :label="c" :value="c" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="来源" prop="source">
+              <el-select v-model="editForm.source" placeholder="请选择来源" style="width: 100%">
+                <el-option v-for="s in sources" :key="s" :label="s" :value="s" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="页数" prop="pages">
+              <el-input-number v-model="editForm.pages" :min="1" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="发布日期" prop="publishDate">
+              <el-date-picker v-model="editForm.publishDate" type="date" placeholder="选择发布日期" style="width: 100%" format="YYYY-MM-DD" value-format="YYYY-MM-DD" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="是否免费" prop="isFree">
+              <el-switch v-model="editForm.isFree" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        
+        <el-row :gutter="20" v-if="!editForm.isFree">
+          <el-col :span="12">
+            <el-form-item label="价格" prop="price">
+              <el-input-number v-model="editForm.price" :min="0" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        
+        <el-form-item label="摘要" prop="summary">
+          <el-input v-model="editForm.summary" type="textarea" :rows="4" placeholder="请输入报告摘要" />
+        </el-form-item>
+        
+        <el-form-item label="标签" prop="tags">
+          <el-select v-model="editForm.tags" multiple filterable allow-create default-first-option placeholder="请输入标签" style="width: 100%">
+            <el-option v-for="tag in editForm.tags" :key="tag" :label="tag" :value="tag" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="editDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="onSaveEdit" :loading="saving">保存</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
-import { fetchReports, deleteReport, batchDelete, type ReportItem, type ReportListRequest } from '../api';
-import { ElMessage } from 'element-plus';
+import { fetchReports, deleteReport, batchDelete, generateSummary, updateReport, type ReportItem, type ReportListRequest } from '../api';
+import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
 
 const query = reactive<ReportListRequest>({ page: 1, pageSize: 10, sortBy: 'publishDate', sortOrder: 'desc' });
 const rows = ref<ReportItem[]>([]);
 const total = ref(0);
 const selection = ref<ReportItem[]>([]);
+const generatingSummaryIds = ref<Set<string>>(new Set());
+
+// 编辑相关状态
+const editDialogVisible = ref(false);
+const editFormRef = ref<FormInstance>();
+const saving = ref(false);
+const editForm = reactive<Partial<ReportItem>>({});
+
+// 表单验证规则
+const editRules: FormRules = {
+  title: [
+    { required: true, message: '请输入报告标题', trigger: 'blur' }
+  ],
+  category: [
+    { required: true, message: '请选择分类', trigger: 'change' }
+  ],
+  source: [
+    { required: true, message: '请选择来源', trigger: 'change' }
+  ]
+};
 
 const categories = ref<string[]>(['行业报告', '技术白皮书', '投研报告']);
 const sources = ref<string[]>(['艾瑞', '麦肯锡', '某咨询']);
@@ -115,6 +214,78 @@ async function onBatchDelete() {
     loadData();
   } else {
     ElMessage.error(data.message || '批量删除失败');
+  }
+}
+
+async function onGenerateSummary(row: ReportItem) {
+  try {
+    // 设置加载状态
+    generatingSummaryIds.value.add(row.id);
+    
+    const { data } = await generateSummary(row.id);
+    if (data.code === 200) {
+      ElMessage.success('摘要生成成功');
+      // 更新本地数据
+      row.summary = data.data;
+      // 重新加载数据以确保数据同步
+      loadData();
+    } else {
+      ElMessage.error(data.message || '摘要生成失败');
+    }
+  } catch (error) {
+    ElMessage.error('摘要生成失败');
+    console.error('生成摘要失败:', error);
+  } finally {
+    // 清除加载状态
+    generatingSummaryIds.value.delete(row.id);
+  }
+}
+
+async function onEdit(row: ReportItem) {
+  // 复制数据到编辑表单
+  Object.assign(editForm, {
+    id: row.id,
+    title: row.title,
+    summary: row.summary,
+    source: row.source,
+    category: row.category,
+    pages: row.pages,
+    fileSize: row.fileSize,
+    publishDate: row.publishDate,
+    updateDate: row.updateDate,
+    thumbnail: row.thumbnail,
+    tags: row.tags ? [...row.tags] : [],
+    isFree: row.isFree,
+    price: row.price
+  });
+  
+  editDialogVisible.value = true;
+}
+
+async function onSaveEdit() {
+  if (!editFormRef.value) return;
+  
+  try {
+    await editFormRef.value.validate();
+    
+    saving.value = true;
+    
+    const { data } = await updateReport(editForm.id!, editForm);
+    if (data.code === 200) {
+      ElMessage.success('更新成功');
+      editDialogVisible.value = false;
+      // 重新加载数据
+      loadData();
+    } else {
+      ElMessage.error(data.message || '更新失败');
+    }
+  } catch (error) {
+    if (error !== false) { // 不是表单验证错误
+      ElMessage.error('更新失败');
+      console.error('更新失败:', error);
+    }
+  } finally {
+    saving.value = false;
   }
 }
 

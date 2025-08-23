@@ -181,7 +181,7 @@ async function testApi() {
     // 测试3: 直接测试后端地址
     console.log('测试3: 直接测试后端地址');
     try {
-      const response = await fetch('http://localhost:8080/v1/health');
+      const response = await fetch('http://api.yuesf.cn/v1/health');
       const data = await response.json();
       console.log('直接后端连接响应:', data);
       ElMessage.success('直接后端连接正常');

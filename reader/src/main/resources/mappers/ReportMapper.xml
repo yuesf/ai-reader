@@ -135,6 +135,28 @@
         </foreach>
     </insert>
 
+    <update id="updateReport" parameterType="com.yuesf.aireader.entity.Report">
+        UPDATE reports SET
+            title = #{title},
+            summary = #{summary},
+            source = #{source},
+            category = #{category},
+            pages = #{pages},
+            file_size = #{fileSize},
+            publish_date = #{publishDate},
+            update_date = #{updateDate},
+            thumbnail = #{thumbnail},
+            download_count = #{downloadCount},
+            view_count = #{viewCount},
+            is_free = #{isFree},
+            price = #{price},
+            report_file_id = #{reportFileId},
+            report_file_url = #{reportFileUrl},
+            report_file_name = #{reportFileName},
+            report_file_size = #{reportFileSize}
+        WHERE id = #{id}
+    </update>
+
     <delete id="deleteById">
         DELETE FROM reports WHERE id = #{id}
     </delete>

@@ -63,35 +63,37 @@ const post = (url, data = {}) => {
 }
 
 /**
- * 报告相关API
+ * 报告相关API（小程序专用接口）
  */
 const reportAPI = {
   /**
-   * 获取报告列表
+   * 获取报告列表（小程序专用）
    * @param {object} params - 查询参数
    * @returns {Promise} 报告列表
    */
   getReports: (params = {}) => {
-    // 后端接口为 POST /v1/reports
-    return post('/v1/reports', params)
+    // 使用小程序专用接口 POST /v1/mini/reports
+    return post('/v1/mini/reports', params)
   },
 
   /**
-   * 搜索报告
+   * 搜索报告（小程序专用）
    * @param {object} searchParams - 搜索参数
    * @returns {Promise} 搜索结果
    */
   searchReports: (searchParams) => {
-    return post('/reports', searchParams)
+    // 使用小程序专用接口 POST /v1/mini/reports
+    return post('/v1/mini/reports', searchParams)
   },
 
   /**
-   * 获取报告详情
+   * 获取报告详情（小程序专用）
    * @param {string} id - 报告ID
    * @returns {Promise} 报告详情
    */
   getReportDetail: (id) => {
-    return get(`/reports/${id}`)
+    // 使用小程序专用接口 GET /v1/mini/reports/{id}
+    return get(`/v1/mini/reports/${id}`)
   }
 }
 
@@ -153,7 +155,7 @@ const mockAPI = {
 
 // 导出API服务
 module.exports = {
-  // 生产环境API
+  // 生产环境API（小程序专用）
   reportAPI,
   
   // Mock数据API（开发环境使用）

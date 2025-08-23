@@ -15,6 +15,10 @@
 
   <!-- 报告列表 -->
   <view class="reports-section">
+    <!-- 缩略图尺寸建议 -->
+    <view class="thumb-tip">
+      <text>缩略图建议尺寸：3:4 比例，例如 600×800 或 750×1000（JPG/PNG，≤200KB）</text>
+    </view>
     <!-- 加载状态 -->
     <view class="loading-container" wx:if="{{loading && reports.length === 0}}">
       <view class="loading-spinner"></view>
@@ -27,27 +31,29 @@
           wx:key="id"
           bindtap="onReportTap"
           data-id="{{item.id}}">
-      
-      <!-- 报告缩略图 -->
-      <view class="report-thumbnail">
-        <image class="thumbnail-img" src="{{item.thumbnailFull}}" mode="aspectFill"></image>
-      </view>
-      
-      <!-- 报告信息 -->
-      <view class="report-info">
-        <view class="report-title">{{item.title}}</view>
-        <view class="report-meta">
-          <text class="report-source">{{item.source}}</text>
-          <text class="report-category">{{item.category}}</text>
-          <text class="report-pages">共{{item.pages}}页</text>
+
+      <view class="report-main">
+        <!-- 报告缩略图 -->
+        <view class="report-thumbnail">
+          <image class="thumbnail-img" src="{{item.thumbnailFull}}" mode="aspectFill"></image>
         </view>
-        <!-- 标签信息 -->
-        <view class="report-tags" wx:if="{{item.tags && item.tags.length > 0}}">
-          <text class="tag" wx:for="{{item.tags}}" wx:key="*this" wx:for-item="tag">{{tag}}</text>
+
+        <!-- 报告信息 -->
+        <view class="report-info">
+          <view class="report-title">{{item.title}}</view>
+          <view class="report-meta">
+            <text class="report-source">{{item.source}}</text>
+            <text class="report-category">{{item.category}}</text>
+            <text class="report-pages">共{{item.pages}}页</text>
+          </view>
+          <!-- 标签信息 -->
+          <view class="report-tags" wx:if="{{item.tags && item.tags.length > 0}}">
+            <text class="tag" wx:for="{{item.tags}}" wx:key="*this" wx:for-item="tag">{{tag}}</text>
+          </view>
         </view>
       </view>
-      
-      <!-- 发布时间 -->
+
+      <!-- 发布时间（单独一行，右对齐） -->
       <view class="report-date">
         <text class="date-icon">🕐</text>
         <text class="date-text">{{item.publishDate}}</text>
