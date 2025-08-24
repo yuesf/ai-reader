@@ -2,18 +2,22 @@ package com.yuesf.aireader.controller;
 
 import com.yuesf.aireader.annotation.RequireAuth;
 import com.yuesf.aireader.dto.ApiResponse;
+import com.yuesf.aireader.dto.ReportBatchDeleteRequest;
+import com.yuesf.aireader.dto.ReportCreateRequest;
 import com.yuesf.aireader.dto.ReportListRequest;
 import com.yuesf.aireader.dto.ReportListResponse;
-import com.yuesf.aireader.dto.ReportCreateRequest;
 import com.yuesf.aireader.dto.ReportUpdateRequest;
-import com.yuesf.aireader.dto.ReportBatchDeleteRequest;
 import com.yuesf.aireader.entity.Report;
 import com.yuesf.aireader.service.ReportService;
-import com.yuesf.aireader.service.FileUploadService;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 报告查询接口控制器（后台管理使用）
@@ -26,9 +30,6 @@ public class ReportController {
 
     @Autowired
     private ReportService reportService;
-    
-    @Autowired
-    private FileUploadService fileUploadService;
 
     /**
      * 获取/搜索报告列表
@@ -149,86 +150,6 @@ public class ReportController {
         }
     }
 
-    /**
-     * 获取私有文件的临时访问URL
-     * GET /reports/file/{id}
-     */
-    @GetMapping("/reports/file/{id}")
-    public ApiResponse<String> getReportFileUrl(@PathVariable String id) {
-        try {
-            log.info("后台请求报告文件URL，ID: {}", id);
-            
-            if (id == null || id.trim().isEmpty()) {
-                return ApiResponse.error(400, "报告ID不能为空");
-            }
-            
-            Report report = reportService.getReportById(id);
-            if (report == null) {
-                return ApiResponse.error(404, "报告不存在");
-            }
-            
-            String fileUrl = fileUploadService.generatePresignedUrl(report.getReportFileUrl(), 3600);
-            log.info("后台报告文件URL生成成功，ID: {}", id);
-            
-            return ApiResponse.success(fileUrl);
-            
-        } catch (Exception e) {
-            log.error("后台报告文件URL生成失败，ID: {}", id, e);
-            return ApiResponse.error(500, "服务器内部错误: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 删除报告缩略图
-     * DELETE /reports/{id}/thumbnail
-     */
-    @DeleteMapping("/reports/{id}/thumbnail")
-    public ApiResponse<Void> deleteReportThumbnail(@PathVariable String id) {
-        try {
-            log.info("后台删除报告缩略图，ID: {}", id);
-            
-            if (id == null || id.trim().isEmpty()) {
-                return ApiResponse.error(400, "报告ID不能为空");
-            }
-            
-            reportService.deleteReportThumbnail(id);
-            log.info("后台报告缩略图删除成功，ID: {}", id);
-            
-            return ApiResponse.success(null);
-            
-        } catch (Exception e) {
-            log.error("后台报告缩略图删除失败，ID: {}", id, e);
-            return ApiResponse.error(500, "服务器内部错误: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 重新生成报告缩略图
-     * POST /reports/{id}/thumbnail/regenerate
-     */
-    @PostMapping("/reports/{id}/thumbnail/regenerate")
-    public ApiResponse<String> regenerateReportThumbnail(@PathVariable String id) {
-        try {
-            log.info("后台重新生成报告缩略图，ID: {}", id);
-            
-            if (id == null || id.trim().isEmpty()) {
-                return ApiResponse.error(400, "报告ID不能为空");
-            }
-            
-            String newThumbnailKey = reportService.regenerateReportThumbnail(id);
-            if (newThumbnailKey != null) {
-                log.info("后台报告缩略图重新生成成功，ID: {}, 新缩略图: {}", id, newThumbnailKey);
-                return ApiResponse.success(newThumbnailKey);
-            } else {
-                log.error("后台报告缩略图重新生成失败，ID: {}", id);
-                return ApiResponse.error(500, "重新生成缩略图失败");
-            }
-            
-        } catch (Exception e) {
-            log.error("后台报告缩略图重新生成失败，ID: {}", id, e);
-            return ApiResponse.error(500, "服务器内部错误: " + e.getMessage());
-        }
-    }
 
     /**
      * 批量删除报告

@@ -40,6 +40,7 @@ public class MiniReportInfo {
      * 报告页数
      */
     private Integer pages;
+    private String reportFileId;
 
     /**
      * 报告发布日期

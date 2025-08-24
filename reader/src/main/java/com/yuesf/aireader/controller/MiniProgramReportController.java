@@ -3,13 +3,17 @@ package com.yuesf.aireader.controller;
 import com.yuesf.aireader.dto.ApiResponse;
 import com.yuesf.aireader.dto.ReportListRequest;
 import com.yuesf.aireader.dto.ReportListResponse;
+import com.yuesf.aireader.service.FileUploadService;
 import com.yuesf.aireader.service.ReportService;
 import com.yuesf.aireader.vo.MiniReportInfo;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 小程序报告查询接口控制器
@@ -22,6 +26,9 @@ public class MiniProgramReportController {
 
     @Autowired
     private ReportService reportService;
+
+    @Autowired
+    private FileUploadService fileUploadService;
 
     /**
      * 获取小程序报告列表（简化版）
@@ -94,12 +101,42 @@ public class MiniProgramReportController {
             miniReport.setPrice(report.getPrice());
             miniReport.setDownloadCount(report.getDownloadCount());
             miniReport.setViewCount(report.getViewCount());
+            miniReport.setReportFileId(report.getReportFileId());
 
             log.info("小程序报告详情查询成功，ID: {}", id);
             return ApiResponse.success(miniReport);
 
         } catch (Exception e) {
             log.error("小程序报告详情查询失败，ID: {}", id, e);
+            return ApiResponse.error(500, "服务器内部错误: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取报告文件的临时访问URL（供小程序使用）
+     * GET /mini/reports/preview/{id}
+     */
+    @GetMapping("/reports/preview/{id}")
+    public ApiResponse<String> getMiniReportFileUrl(@PathVariable String id) {
+        try {
+            log.info("小程序请求报告文件URL，ID: {}", id);
+
+            if (id == null || id.trim().isEmpty()) {
+                return ApiResponse.error(400, "报告ID不能为空");
+            }
+
+            var report = reportService.getReportById(id);
+            if (report == null) {
+                return ApiResponse.error(404, "报告不存在");
+            }
+
+//            String fileUrl = fileUploadService.generatePresignedUrl(report.getReportFileUrl(), 3600);
+//            log.info("小程序报告文件URL生成成功，ID: {}, fileUrl={}", id, fileUrl);
+
+            return ApiResponse.success("/v1/doc/" + report.getId());
+
+        } catch (Exception e) {
+            log.error("小程序报告文件URL生成失败，ID: {}", id, e);
             return ApiResponse.error(500, "服务器内部错误: " + e.getMessage());
         }
     }

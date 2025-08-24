@@ -82,7 +82,6 @@ public class FileUploadService {
     }
 
 
-
     /**
      * 上传报告相关文件
      *
@@ -114,6 +113,7 @@ public class FileUploadService {
     public FileInfo uploadImage(MultipartFile file) throws IOException {
         return uploadFile(file, ossProperties.getFolder().getImages(), null);
     }
+
     /**
      * 删除OSS上的文件
      *
@@ -167,8 +167,14 @@ public class FileUploadService {
             }
             out.flush();
         } finally {
-            if (inputStream != null) try { inputStream.close(); } catch (Exception ignored) {}
-            if (ossObject != null) try { ossObject.close(); } catch (Exception ignored) {}
+            if (inputStream != null) try {
+                inputStream.close();
+            } catch (Exception ignored) {
+            }
+            if (ossObject != null) try {
+                ossObject.close();
+            } catch (Exception ignored) {
+            }
         }
     }
 
@@ -183,6 +189,7 @@ public class FileUploadService {
         java.util.Date expirationDate = new java.util.Date(new java.util.Date().getTime() + expiration * 1000);
         return ossClient.generatePresignedUrl(ossProperties.getBucketName(), objectKey, expirationDate).toString();
     }
+
     public String generateUrl(String objectKey, int expiration) {
         java.util.Date expirationDate = new java.util.Date(new java.util.Date().getTime() + expiration * 1000);
         String signedUrl = ossClient.generatePresignedUrl(ossProperties.getBucketName(), objectKey, expirationDate).toString();
@@ -192,6 +199,19 @@ public class FileUploadService {
 
     }
 
+    /**
+     * 将PDF文件转换为预览图片
+     *
+     * @param fileUrl pdf 文件的URL
+     * @return 预览图片的URL
+     */
+    public String convertPdfToPreviewImage(String fileUrl) {
+        // 这里需要实现PDF fileUrl 转换逻辑
+        // 实际开发中应该调用具体的PDF转换服务
+
+        // 这里返回一个示例URL
+        return "preview.jpg";
+    }
 
     /**
      * 验证文件

@@ -1,37 +1,127 @@
-<!-- ... existing code ... -->
-<view class="report-container">
+<!--reportDetail.wxml-->
+<view class="container">
+  <!-- 报告标题区域 -->
   <view class="report-header">
-    <text class="report-title">{{reportTitle}}</text>
-    <!-- 新增：将标题单独放在一行 -->
-    <view style="height: 20rpx;"></view> <!-- 添加一些间距 -->
-    <text class="report-subtitle">{{reportSubtitle}}</text>
-    <text class="report-date">{{reportDate}}</text>
+    <view class="report-title">{{reportTitle}}</view>
+    <view class="report-subtitle">{{reportSubtitle}}</view>
+    <view class="report-date">{{reportDate}}</view>
   </view>
 
-  <view class="tabs">
-    <button wx:if="{{activeTab === 'description'}}" class="tab-button active">简介</button>
-    <button wx:else class="tab-button" bindtap="handleTabChange" data-tab="description">简介</button>
-    <button wx:if="{{activeTab === 'preview'}}" class="tab-button active">预览</button>
-    <button wx:else class="tab-button" bindtap="handleTabChange" data-tab="preview">预览</button>
+  <!-- 标签页导航 -->
+  <view class="tab-nav">
+    <view class="tab-item {{activeTab === 'description' ? 'active' : ''}}" 
+          bindtap="handleTabChange" data-detail="description">
+      简介
+    </view>
+    <view class="tab-item {{activeTab === 'preview' ? 'active' : ''}}" 
+          bindtap="handleTabChange" data-detail="preview">
+      预览
+    </view>
   </view>
 
-  <view class="content" wx:if="{{activeTab === 'description'}}">
-    <!-- 简介内容 -->
-    {{reportSummary}}
-  </view>
-  <view class="content" wx:if="{{activeTab === 'preview'}}">
-    <!-- 预览内容 -->
+  <!-- 简介标签页内容 -->
+  <view class="tab-content" wx:if="{{activeTab === 'description'}}">
+    <view class="report-summary">
+      <text>{{reportSummary}}</text>
+    </view>
+    
+    <!-- 下载按钮 -->
+    <view class="download-section">
+      <button class="download-btn" bindtap="downloadDocument">
+        {{reportIsFree ? '免费下载' : '付费下载 ' + downloadPrice}}
+      </button>
+    </view>
   </view>
 
-  <!-- 下载文档按钮移动到新的容器中 -->
-  <view class="download-button-container">
-    <button class="download-button" bindtap="downloadDocument" wx:if="{{reportIsFree}}">
-      免费下载文档
-    </button>
-    <button class="download-button" bindtap="downloadDocument" wx:else>
-      {{downloadPrice}} | 下载文档
-    </button>
+  <!-- 预览标签页内容 -->
+  <view class="tab-content" wx:if="{{activeTab === 'preview'}}">
+    <!-- 测试按钮区域 -->
+    <view class="test-section" wx:if="{{showTestButtons}}">
+      <view class="section-title">测试功能</view>
+      <view class="button-group">
+        <button class="test-btn" bindtap="setTestReportId">设置测试报告ID</button>
+        <button class="test-btn" bindtap="testBackendConnection">测试后台连接</button>
+        <button class="test-btn" bindtap="testPdfInfo">测试PDF信息</button>
+        <button class="test-btn" bindtap="testPdfDownload">测试PDF下载</button>
+      </view>
+    </view>
+
+    <!-- 下载进度显示 -->
+    <view class="download-progress" wx:if="{{showDownloadProgress}}">
+      <view class="progress-header">
+        <text class="progress-title">PDF文件下载中...</text>
+        <text class="progress-status">{{downloadStatus === 'downloading' ? '下载中' : 
+                                      downloadStatus === 'paused' ? '已暂停' : 
+                                      downloadStatus === 'completed' ? '已完成' : 
+                                      downloadStatus === 'failed' ? '下载失败' : '等待中'}}</text>
+      </view>
+      
+      <!-- 进度条 -->
+      <view class="progress-bar">
+        <view class="progress-fill" style="width: {{downloadProgress}}%"></view>
+      </view>
+      
+      <!-- 进度信息 -->
+      <view class="progress-info">
+        <text class="progress-text">{{downloadProgress}}%</text>
+        <text class="chunks-info">{{downloadedChunks}}/{{totalChunks}} 分片</text>
+      </view>
+      
+      <!-- 下载控制按钮 -->
+      <view class="download-controls">
+        <button wx:if="{{downloadStatus === 'downloading'}}" 
+                class="control-btn pause-btn" 
+                bindtap="pauseDownload">暂停</button>
+        <button wx:if="{{downloadStatus === 'paused'}}" 
+                class="control-btn resume-btn" 
+                bindtap="resumeDownload">继续</button>
+        <button class="control-btn cancel-btn" 
+                bindtap="cancelDownload">取消</button>
+      </view>
+    </view>
+
+    <!-- PDF预览区域 -->
+    <view class="pdf-preview" wx:if="{{showPdfViewer}}">
+      <view class="preview-header">
+        <text class="preview-title">PDF预览</text>
+        <view class="preview-controls">
+          <button class="control-btn mode-btn" bindtap="switchPreviewMode">
+            {{previewMode === 'fast' ? '快速模式' : '完整模式'}}
+          </button>
+          <button class="control-btn close-btn" bindtap="hidePdfPreview">关闭</button>
+        </view>
+      </view>
+      
+      <!-- PDF.js 预览器 -->
+      <web-view wx:if="{{pdfViewerUrl}}" 
+                src="{{pdfViewerUrl}}" 
+                class="pdf-viewer">
+      </web-view>
+      
+      <!-- 预览错误提示 -->
+      <view wx:if="{{pdfLoadError}}" class="preview-error">
+        <text class="error-text">PDF加载失败，请重试</text>
+        <button class="retry-btn" bindtap="showPdfPreview">重试</button>
+      </view>
+    </view>
+
+    <!-- 预览控制区域 -->
+    <view class="preview-controls" wx:if="{{!showPdfViewer && !showDownloadProgress}}">
+      <button class="preview-btn" bindtap="previewPDF">
+        {{pdfDownloaded ? '重新预览' : '开始预览'}}
+      </button>
+      
+      <button wx:if="{{pdfDownloaded}}" 
+              class="open-btn" 
+              bindtap="openPdfDocument">
+        用其他应用打开
+      </button>
+    </view>
+
+    <!-- 加载状态 -->
+    <view wx:if="{{previewLoading}}" class="loading-container">
+      <view class="loading-spinner"></view>
+      <text class="loading-text">正在准备预览...</text>
+    </view>
   </view>
 </view>
-<!-- ... existing code ... -->
-

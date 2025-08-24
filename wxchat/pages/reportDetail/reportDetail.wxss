@@ -1,72 +1,403 @@
-/* ... existing code ... */
-.report-container {
+/* reportDetail.wxss */
+
+.container {
   padding: 20rpx;
+  background-color: #f5f5f5;
+  min-height: 100vh;
 }
 
+/* 报告标题区域 */
 .report-header {
-  text-align: center;
-  margin-bottom: 20rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 40rpx 30rpx;
+  border-radius: 20rpx;
+  margin-bottom: 30rpx;
+  color: white;
+  box-shadow: 0 8rpx 32rpx rgba(102, 126, 234, 0.3);
 }
 
 .report-title {
   font-size: 36rpx;
-  color: #333;
+  font-weight: bold;
+  margin-bottom: 20rpx;
+  line-height: 1.4;
 }
 
 .report-subtitle {
   font-size: 28rpx;
-  color: #666;
+  opacity: 0.9;
+  margin-bottom: 15rpx;
 }
 
 .report-date {
   font-size: 24rpx;
-  color: #999;
+  opacity: 0.8;
 }
 
-.tabs {
+/* 标签页导航 */
+.tab-nav {
   display: flex;
-  justify-content: center;
+  background: white;
+  border-radius: 16rpx;
+  padding: 8rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
+}
+
+.tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 20rpx 0;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  color: #666;
+  transition: all 0.3s ease;
+}
+
+.tab-item.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4rpx 16rpx rgba(102, 126, 234, 0.4);
+}
+
+/* 标签页内容 */
+.tab-content {
+  background: white;
+  border-radius: 20rpx;
+  padding: 40rpx 30rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 简介内容 */
+.report-summary {
+  font-size: 30rpx;
+  line-height: 1.6;
+  color: #333;
+  margin-bottom: 40rpx;
+}
+
+/* 下载按钮 */
+.download-section {
+  text-align: center;
+}
+
+.download-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 50rpx;
+  padding: 25rpx 60rpx;
+  font-size: 32rpx;
+  font-weight: bold;
+  box-shadow: 0 8rpx 32rpx rgba(102, 126, 234, 0.4);
+  transition: all 0.3s ease;
+}
+
+.download-btn:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 4rpx 16rpx rgba(102, 126, 234, 0.4);
+}
+
+/* 下载进度显示 */
+.download-progress {
+  background: #f8f9fa;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  border: 2rpx solid #e9ecef;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25rpx;
+}
+
+.progress-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.progress-status {
+  font-size: 26rpx;
+  color: #667eea;
+  padding: 8rpx 16rpx;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 20rpx;
+}
+
+/* 进度条 */
+.progress-bar {
+  width: 100%;
+  height: 16rpx;
+  background: #e9ecef;
+  border-radius: 8rpx;
+  overflow: hidden;
   margin-bottom: 20rpx;
 }
 
-.tab-button {
-  padding: 10rpx 20rpx;
-  margin: 0 10rpx;
-  border-radius: 5rpx;
-  background-color: #f0f0f0;
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8rpx;
+  transition: width 0.3s ease;
 }
 
-.tab-button.active {
-  background-color: #007aff;
-  color: white;
-}
-
-.content {
-  min-height: 300rpx;
-  border: 1px solid #ddd;
-  padding: 20rpx;
-}
-
-.download-button-container {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
+/* 进度信息 */
+.progress-info {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  padding: 20rpx;
-  background-color: #fff; /* 背景颜色与页面背景一致 */
-  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1); /* 添加阴影效果 */
+  margin-bottom: 25rpx;
 }
 
-.download-button {
-  width: 80%; /* 调整宽度以适应不同屏幕尺寸 */
-  height: 80rpx;
-  line-height: 80rpx;
-  background-color: #007aff;
-  color: white;
+.progress-text {
   font-size: 32rpx;
-  border-radius: 10rpx;
+  font-weight: bold;
+  color: #667eea;
 }
-/* ... existing code ... */
+
+.chunks-info {
+  font-size: 26rpx;
+  color: #666;
+}
+
+/* 下载控制按钮 */
+.download-controls {
+  display: flex;
+  gap: 20rpx;
+  justify-content: center;
+}
+
+.control-btn {
+  padding: 15rpx 30rpx;
+  border-radius: 25rpx;
+  font-size: 26rpx;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.pause-btn {
+  background: #ffc107;
+  color: #333;
+}
+
+.pause-btn:active {
+  background: #e0a800;
+}
+
+.resume-btn {
+  background: #28a745;
+  color: white;
+}
+
+.resume-btn:active {
+  background: #218838;
+}
+
+.cancel-btn {
+  background: #dc3545;
+  color: white;
+}
+
+.cancel-btn:active {
+  background: #c82333;
+}
+
+/* PDF预览区域 */
+.pdf-preview {
+  background: #f8f9fa;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+}
+
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25rpx;
+}
+
+.preview-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.preview-controls {
+  display: flex;
+  gap: 15rpx;
+}
+
+.mode-btn {
+  background: #17a2b8;
+  color: white;
+  padding: 12rpx 24rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  border: none;
+}
+
+.close-btn {
+  background: #6c757d;
+  color: white;
+  padding: 12rpx 24rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  border: none;
+}
+
+/* PDF查看器 */
+.pdf-viewer {
+  width: 100%;
+  height: 600rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
+  border: 2rpx solid #e9ecef;
+}
+
+/* 预览错误提示 */
+.preview-error {
+  text-align: center;
+  padding: 40rpx 20rpx;
+}
+
+.error-text {
+  display: block;
+  font-size: 28rpx;
+  color: #dc3545;
+  margin-bottom: 25rpx;
+}
+
+.retry-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 25rpx;
+  padding: 15rpx 40rpx;
+  font-size: 28rpx;
+}
+
+/* 预览控制区域 */
+.preview-controls {
+  text-align: center;
+  padding: 40rpx 20rpx;
+}
+
+.preview-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 50rpx;
+  padding: 25rpx 60rpx;
+  font-size: 32rpx;
+  font-weight: bold;
+  margin-bottom: 20rpx;
+  box-shadow: 0 8rpx 32rpx rgba(102, 126, 234, 0.4);
+}
+
+.open-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 50rpx;
+  padding: 20rpx 50rpx;
+  font-size: 28rpx;
+  box-shadow: 0 4rpx 16rpx rgba(40, 167, 69, 0.4);
+}
+
+/* 加载状态 */
+.loading-container {
+  text-align: center;
+  padding: 60rpx 20rpx;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 6rpx solid #f3f3f3;
+  border-top: 6rpx solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20rpx;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #666;
+}
+
+/* 响应式设计 */
+@media (max-width: 750rpx) {
+  .container {
+    padding: 15rpx;
+  }
+  
+  .report-header {
+    padding: 30rpx 20rpx;
+  }
+  
+  .report-title {
+    font-size: 32rpx;
+  }
+  
+  .tab-content {
+    padding: 30rpx 20rpx;
+  }
+  
+  .download-controls {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .control-btn {
+    width: 200rpx;
+  }
+}
+
+/* 测试按钮区域样式 */
+.test-section {
+  margin: 20rpx;
+  padding: 20rpx;
+  background-color: #f8f9fa;
+  border-radius: 12rpx;
+  border: 1rpx solid #e9ecef;
+}
+
+.section-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #495057;
+  margin-bottom: 20rpx;
+  text-align: center;
+}
+
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.test-btn {
+  background-color: #007bff;
+  color: #ffffff;
+  border: none;
+  border-radius: 8rpx;
+  padding: 16rpx 24rpx;
+  font-size: 26rpx;
+  font-weight: 500;
+}
+
+.test-btn:active {
+  background-color: #0056b3;
+}
+
+/* 下载进度显示样式 */

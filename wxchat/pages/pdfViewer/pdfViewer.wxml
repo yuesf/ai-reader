@@ -1,0 +1,39 @@
+<!--pages/pdfViewer/pdfViewer.wxml-->
+<view class="pdf-viewer">
+  <!-- 顶部导航栏 -->
+  <view class="nav-bar">
+    <view class="nav-left" bindtap="onBack">
+      <text class="nav-icon">←</text>
+      <text class="nav-text">返回</text>
+    </view>
+    <view class="nav-title">PDF预览</view>
+    <view class="nav-right" bindtap="onReload">
+      <text class="nav-icon">↻</text>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-container" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">正在加载PDF文件...</text>
+  </view>
+
+  <!-- 错误状态 -->
+  <view class="error-container" wx:if="{{error}}">
+    <view class="error-icon">⚠</view>
+    <text class="error-text">{{errorMessage}}</text>
+    <button class="retry-btn" bindtap="onReload">重试</button>
+  </view>
+
+  <!-- PDF预览区域 -->
+  <view class="pdf-container" wx:if="{{!loading && !error}}">
+    <!-- 使用web-view组件显示PDF -->
+    <web-view wx:if="{{pdfUrl}}" src="{{pdfUrl}}" bindload="onPdfLoadSuccess" binderror="onPdfLoadError"></web-view>
+    
+    <!-- 备用方案：显示下载链接 -->
+    <view class="fallback-container" wx:else>
+      <text class="fallback-text">PDF预览需要外部浏览器支持</text>
+      <button class="download-btn" bindtap="onDownload">下载PDF文件</button>
+    </view>
+  </view>
+</view>

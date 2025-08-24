@@ -1,12 +1,12 @@
 package com.yuesf.aireader.service;
 
-import com.yuesf.aireader.dto.ReportListRequest;
-import com.yuesf.aireader.dto.ReportCreateRequest;
-import com.yuesf.aireader.dto.ReportUpdateRequest;
 import com.yuesf.aireader.dto.ReportBatchDeleteRequest;
+import com.yuesf.aireader.dto.ReportCreateRequest;
+import com.yuesf.aireader.dto.ReportListRequest;
 import com.yuesf.aireader.dto.ReportListResponse;
-import com.yuesf.aireader.entity.Report;
+import com.yuesf.aireader.dto.ReportUpdateRequest;
 import com.yuesf.aireader.entity.FileInfo;
+import com.yuesf.aireader.entity.Report;
 import com.yuesf.aireader.mapper.ReportMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -32,6 +32,15 @@ public class ReportService {
 
     @Autowired
     private FileInfoService fileInfoService;
+    @Autowired
+    private ReportProcessingService reportProcessingService;
+
+    @Autowired
+    private AITextSummaryService aiTextSummaryService;
+
+    @Autowired
+    private FileUploadService fileUploadService;
+
 
     public ReportListResponse getReportList(ReportListRequest request) {
         int page = (request.getPage() == null || request.getPage() < 1) ? 1 : request.getPage();
@@ -80,27 +89,23 @@ public class ReportService {
     public FileInfo getFileById(String id) {
         return fileInfoService.getFileInfoById(id);
     }
+
     public Report getReportById(String id) {
         return reportMapper.selectById(id);
     }
 
-    @Autowired
-    private ReportProcessingService reportProcessingService;
-
-    @Autowired
-    private AITextSummaryService aiTextSummaryService;
 
     @Transactional
     public Report createReport(ReportCreateRequest request) {
         if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
             throw new IllegalArgumentException("标题不能为空");
         }
-        
+
         // 验证报告文件ID
         if (request.getReportFileId() == null || request.getReportFileId().trim().isEmpty()) {
             throw new IllegalArgumentException("报告文件ID不能为空，必须上传报告文件");
         }
-        
+
         // 验证文件信息是否存在且有效
         FileInfo fileInfo = fileInfoService.getFileInfoById(request.getReportFileId());
         if (fileInfo == null || !"ACTIVE".equals(fileInfo.getStatus())) {
@@ -123,7 +128,7 @@ public class ReportService {
         report.setViewCount(0);
         report.setIsFree(request.getIsFree() != null ? request.getIsFree() : Boolean.TRUE);
         report.setPrice(request.getPrice() != null ? request.getPrice() : 0);
-        
+
         // 设置文件上传相关字段
         report.setReportFileId(request.getReportFileId());
         report.setReportFileUrl(fileInfo.getFileName()); // 使用fileName字段存储OSS文件路径
@@ -175,17 +180,17 @@ public class ReportService {
         if (request.getId() == null || request.getId().trim().isEmpty()) {
             throw new IllegalArgumentException("报告ID不能为空");
         }
-        
+
         if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
             throw new IllegalArgumentException("标题不能为空");
         }
-        
+
         // 检查报告是否存在
         Report existingReport = reportMapper.selectById(request.getId());
         if (existingReport == null) {
             throw new IllegalArgumentException("报告不存在");
         }
-        
+
         // 更新基本信息
         existingReport.setTitle(request.getTitle());
         existingReport.setSummary(request.getSummary());
@@ -198,19 +203,19 @@ public class ReportService {
         existingReport.setThumbnail(request.getThumbnail());
         existingReport.setIsFree(request.getIsFree() != null ? request.getIsFree() : existingReport.getIsFree());
         existingReport.setPrice(request.getPrice() != null ? request.getPrice() : existingReport.getPrice());
-        
+
         // 如果提供了新的文件ID，更新文件信息
         if (request.getReportFileId() != null && !request.getReportFileId().isBlank()) {
             FileInfo fileInfo = fileInfoService.getFileInfoById(request.getReportFileId());
             if (fileInfo == null || !"ACTIVE".equals(fileInfo.getStatus())) {
                 throw new IllegalArgumentException("报告文件信息不存在或已失效，请重新上传文件");
             }
-            
+
             existingReport.setReportFileId(request.getReportFileId());
             existingReport.setReportFileUrl(fileInfo.getFileName());
             existingReport.setReportFileName(fileInfo.getOriginalName());
             existingReport.setReportFileSize(String.valueOf(fileInfo.getFileSize()));
-            
+
             // 如果更换了文件，重新生成缩略图
             if (!request.getReportFileId().equals(existingReport.getReportFileId())) {
                 try {
@@ -222,7 +227,7 @@ public class ReportService {
                 }
             }
         }
-        
+
         // 更新标签
         if (request.getTags() != null) {
             // 先删除旧标签
@@ -232,10 +237,10 @@ public class ReportService {
                 reportMapper.insertReportTags(existingReport.getId(), request.getTags());
             }
         }
-        
+
         // 更新报告
         reportMapper.updateReport(existingReport);
-        
+
         return reportMapper.selectById(existingReport.getId());
     }
 
@@ -262,19 +267,19 @@ public class ReportService {
                 log.error("报告不存在，ID: {}", reportId);
                 return null;
             }
-            
+
             // 检查是否有报告文件
             if (report.getReportFileId() == null || report.getReportFileId().isBlank()) {
                 log.error("报告没有关联文件，无法生成摘要，ID: {}", reportId);
                 return null;
             }
-            
+
             FileInfo fileInfo = fileInfoService.getFileInfoById(report.getReportFileId());
             if (fileInfo == null) {
                 log.error("报告文件信息不存在，ID: {}", reportId);
                 return null;
             }
-            
+
             // 生成摘要
             String summary = aiTextSummaryService.summarize(fileInfo.getOriginalName());
             if (summary != null && !summary.isBlank()) {
@@ -287,7 +292,7 @@ public class ReportService {
                 log.error("AI摘要生成失败，ID: {}", reportId);
                 return null;
             }
-            
+
         } catch (Exception e) {
             log.error("生成报告摘要失败，ID: {}", reportId, e);
             return null;
@@ -332,6 +337,28 @@ public class ReportService {
             }
         }
         return null;
+    }
+
+
+    /**
+     * 获取报告预览图片URL
+     *
+     * @param id 报告ID
+     * @return 预览图片URL
+     */
+    public String getReportPreviewUrl(String id) {
+        Report report = reportMapper.selectById(id);
+        if (report == null) {
+            throw new RuntimeException("报告不存在");
+        }
+
+        // 获取PDF文件的OSS路径
+        // pdf 文件临时URL
+        String fileUrl = fileUploadService.generatePresignedUrl(report.getReportFileUrl(), 3600);
+
+
+        // 调用文件上传服务生成预览图片URL
+        return fileUploadService.convertPdfToPreviewImage(fileUrl);
     }
 
     @Transactional

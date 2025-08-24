@@ -98,53 +98,211 @@ wxchat/
 - **分页加载**: 支持上拉加载更多和下拉刷新
 - **错误处理**: 完善的网络请求错误处理
 
+## PDF预览功能
+
+本小程序已集成新的PDF预览功能，使用分片下载服务替代原有的URL直接预览方式，提供更安全、更稳定的PDF查看体验。
+
+### 🔒 安全性提升
+- **消除URL暴露风险**：不再直接返回OSS签名URL，避免AK泄露
+- **分片加密传输**：每个PDF分片使用独立的加密密钥
+- **临时访问控制**：基于文件ID的访问控制，不暴露内部文件路径
+
+### 🚀 性能优化
+- **分片下载**：大文件按1MB分片处理，避免内存溢出
+- **断点续传**：支持下载中断后的续传功能
+- **并发下载**：支持多个分片并发下载，提升下载速度
+- **智能缓存**：自动清理过期缓存，优化内存使用
+
+### 🎯 用户体验
+- **实时进度**：显示下载进度和分片信息
+- **下载控制**：支持暂停、继续、取消下载操作
+- **智能预览**：根据文件大小自动选择预览模式
+- **错误处理**：完善的错误提示和重试机制
+
+### 使用方法
+
+#### 1. 预览PDF文件
+
+##### 方式一：通过预览标签页
+1. 在报告详情页面，点击"预览"标签
+2. 系统自动开始下载PDF文件
+3. 显示下载进度和分片信息
+4. 下载完成后自动显示PDF预览
+
+##### 方式二：通过下载按钮
+1. 在报告详情页面，点击"下载文档"按钮
+2. 确认购买后开始下载PDF文件
+3. 下载完成后可预览或使用其他应用打开
+
+#### 2. 下载控制
+
+##### 暂停下载
+- 在下载过程中，点击"暂停"按钮可暂停下载
+- 暂停后下载状态会保存，支持后续恢复
+
+##### 恢复下载
+- 暂停后，点击"继续"按钮可恢复下载
+- 系统会从上次暂停的位置继续下载
+
+##### 取消下载
+- 点击"取消"按钮可取消当前下载任务
+- 已下载的分片数据会被清理
+
+### 技术架构
+
+#### 后端服务
+- **PdfStreamService**：PDF文件流服务，负责分片加密和流式传输
+- **PdfStreamController**：PDF文件流控制器，提供REST API接口
+- **CacheCleanupService**：缓存清理定时任务服务
+
+#### 小程序端
+- **pdfDownloadService.js**：PDF分片下载服务
+- **reportDetail页面**：集成下载服务的报告详情页面
+- **config.js**：统一配置文件
+
+#### API接口
+```
+GET /v1/pdf/stream/{fileId}          # 获取PDF文件流（支持断点续传）
+GET /v1/pdf/chunk/{fileId}/{chunkIndex}  # 获取PDF文件分片（加密）
+GET /v1/pdf/info/{fileId}            # 获取PDF文件信息
+POST /v1/pdf/cache/cleanup           # 清理过期缓存（管理员）
+```
+
+## 接口调用规范
+
+### 🎯 核心原则
+
+#### 1. **统一使用封装API**
+- 所有接口调用必须使用`utils/api.js`中封装的`reportAPI`方法
+- 禁止直接使用`wx.request`
+- 保持接口调用的统一性和可维护性
+
+#### 2. **异步处理标准**
+- 优先使用`async/await`语法
+- 避免使用`.then()/.catch()`链式调用
+- 确保代码的可读性和错误处理
+
+#### 3. **返回值判断规范**
+- 统一使用`result.code === 200`判断成功
+- 通过`result.data`获取实际数据
+- 通过`result.message`获取错误信息
+
+#### 4. **错误处理完整**
+- 使用`try-catch-finally`结构
+- 提供用户友好的错误提示
+- 记录详细的错误日志
+
+### 📝 标准写法模板
+
+#### 基础模板
+```javascript
+async methodName() {
+  try {
+    // 1. 调用API
+    const result = await reportAPI.methodName(params);
+    
+    // 2. 判断返回值
+    if (result.code === 200) {
+      // 3. 处理成功情况
+      const data = result.data;
+      this.setData({ ... });
+    } else {
+      // 4. 处理业务错误
+      wx.showToast({
+        title: result.message || '操作失败',
+        icon: 'none'
+      });
+    }
+  } catch (error) {
+    // 5. 处理网络错误
+    console.error('操作失败:', error);
+    wx.showToast({
+      title: '操作失败，请重试',
+      icon: 'none'
+    });
+  }
+}
+```
+
+#### 带加载状态模板
+```javascript
+async methodName() {
+  if (this.data.loading) return;
+  
+  this.setData({ loading: true });
+  
+  try {
+    const result = await reportAPI.methodName(params);
+    
+    if (result.code === 200) {
+      const data = result.data;
+      this.setData({ 
+        data: data,
+        loading: false 
+      });
+    } else {
+      wx.showToast({
+        title: result.message || '操作失败',
+        icon: 'none'
+      });
+    }
+  } catch (error) {
+    console.error('操作失败:', error);
+    wx.showToast({
+      title: '操作失败，请重试',
+      icon: 'none'
+    });
+  } finally {
+    this.setData({ loading: false });
+  }
+}
+```
+
+## 问题解决记录
+
+### 🚨 问题描述
+
+在切换预览按钮时出现以下错误：
+```
+开始下载失败: TypeError: pdfDownloadService.startDownload is not a function
+```
+
+### 🔍 问题分析
+
+经过检查发现以下问题：
+
+1. **模块导出问题**：`pdfDownloadService.js`使用了ES6的`export default`语法，但小程序使用CommonJS的`require`语法
+2. **依赖问题**：文件中有未定义的`BASE_URL`引用
+3. **配置依赖**：过度依赖复杂的配置文件，增加了出错概率
+
+### ✅ 解决方案
+
+#### 1. 修复模块导出
+```javascript
+// ❌ 错误的ES6导出
+export default { ... };
+
+// ✅ 正确的CommonJS导出
+module.exports = { ... };
+```
+
+#### 2. 简化依赖关系
+```javascript
+// ❌ 复杂的配置依赖
+const config = require('./config.js');
+url: config.getApiUrl(`/pdf/info/${downloadTask.id}`)
+
+// ✅ 简化的直接引用
+url: `http://wx.yuesf.cn/v1/pdf/info/${downloadTask.id}`
+```
+
+#### 3. 移除未定义的变量
+```javascript
+// ❌ 未定义的BASE_URL引用
+this.BASE_URL = BASE_URL;
+
+// ✅ 移除不必要的引用
+// 直接使用硬编码的baseUrl
+```
+
 ## 使用方法
-
-1. 在微信开发者工具中导入项目
-2. 配置AppID（已在project.config.json中配置）
-3. 编译运行项目
-4. 在搜索框中输入关键词进行搜索
-5. 点击报告项查看详情
-6. 上拉加载更多报告
-
-## 开发配置
-
-### 环境切换
-- **开发环境**: 使用Mock数据服务（`mockAPI`）
-- **生产环境**: 使用真实API服务（`reportAPI`）
-
-### Mock数据
-项目包含10个示例报告，涵盖多个行业：
-- 新能源（光伏储能、新能源汽车）
-- 科技（AI产业、芯片产业链）
-- 数字经济、医疗健康、消费零售等
-
-## 扩展功能
-
-可以进一步扩展的功能：
-- 添加报告详情页面
-- 实现报告收藏功能
-- 添加用户登录系统
-- 集成后端API接口
-- 添加报告分类筛选
-- 实现报告下载功能
-- 添加用户评价和评论
-- 实现个性化推荐
-
-## 开发环境
-
-- 微信开发者工具
-- 微信小程序基础库 2.10.4+
-- 支持ES6语法
-- 使用glass-easel组件框架
-- 支持async/await异步操作
-
-## 注意事项
-
-1. 所有日期格式统一使用ISO 8601标准：YYYY-MM-DD
-2. 价格单位为分，避免浮点数精度问题
-3. 文件大小单位为KB
-4. 分页参数page从1开始计数
-5. 搜索接口支持模糊匹配和精确匹配
-6. 建议实现接口缓存机制，提升性能
-7. Mock数据仅用于开发测试，生产环境需要替换为真实API

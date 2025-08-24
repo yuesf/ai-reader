@@ -30,24 +30,52 @@ public class AITextSummaryService {
     public String summarize(String plainText) {
         try {
             if (plainText == null || plainText.isBlank()) return null;
-            String prompt = "请用中文为以下报告生成150~250字摘要，客观、中性、包含关键信息点：\n" + plainText.substring(0, Math.min(3000, plainText.length()));
-            String body = "{\n" +
-                    "  \"model\": \"" + aiConfig.getSummarize().getModel() + "\",\n" +
-                    "  \"messages\": [ { \"role\": \"user\", \"content\": \"" + escapeJson(prompt) + "\" } ]\n" +
-                    "}";
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(aiConfig.getEndpoint()))
-                    .header("Content-Type", "application/json")
-                    .header("Authorization", "Bearer " + aiConfig.getApiKey())
-                    .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
-                    .build();
-            HttpResponse<String> resp = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-            if (resp.statusCode() >= 200 && resp.statusCode() < 300) {
-                // 兼容OpenAI格式提取
-                String text = extractFirstChoice(resp.body());
-                return text;
-            }
+            
+            // 生成约350字的文档整理摘要
+            String generalPrompt = "请用中文为以下报告生成约350字的整理摘要，要求客观、中性，完整涵盖关键信息点：\n" + 
+                               plainText.substring(0, Math.min(5000, plainText.length()));
+            
+            // 提取目录结构用于章节摘要（假设目录在文档前部）
+            String tableOfContents = extractTableOfContents(plainText);
+            
+            // 生成分章节摘要
+            String chapterPrompt = "请根据以下文档目录结构，对每个章节分别生成约350字的摘要，保持客观、中性，突出各章节的核心内容：\n" + 
+                              "目录结构：\n" + tableOfContents + "\n\n" + 
+                              "文档内容：\n" + 
+                              plainText.substring(0, Math.min(5000, plainText.length()));
+            
+            // 执行两次AI调用并合并结果
+            String generalSummary = callAIForSummary(generalPrompt);
+            String chapterSummary = callAIForSummary(chapterPrompt);
+            
+            return "【文档总览摘要】\n" + generalSummary + "\n\n【章节详细摘要】\n" + chapterSummary;
         } catch (Exception ignored) {}
+        return null;
+    }
+    
+    // 新增辅助方法
+    private String extractTableOfContents(String text) {
+        // 简单实现：提取包含目录/章节信息的部分
+        int start = text.indexOf("目录");
+        if (start < 0) start = 0;
+        return text.substring(start, Math.min(start + 2000, text.length()));
+    }
+    
+    private String callAIForSummary(String prompt) throws Exception {
+        String body = "{\n" + 
+                     "  \"model\": \"" + aiConfig.getSummarize().getModel() + "\",\n" + 
+                     "  \"messages\": [ { \"role\": \"user\", \"content\": \"" + escapeJson(prompt) + "\" } ]\n" + 
+                     "}";
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(aiConfig.getEndpoint()))
+            .header("Content-Type", "application/json")
+            .header("Authorization", "Bearer " + aiConfig.getApiKey())
+            .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
+            .build();
+        HttpResponse<String> resp = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        if (resp.statusCode() >= 200 && resp.statusCode() < 300) {
+            return extractFirstChoice(resp.body());
+        }
         return null;
     }
 

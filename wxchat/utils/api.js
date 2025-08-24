@@ -1,6 +1,6 @@
 // api.js - API服务文件
 // 将基础URL指向后端服务（根据实际部署环境修改为域名/内网地址）
-const BASE_URL = 'http://wx.yuesf.cn'
+const BASE_URL = 'http://api.yuesf.cn'  // 本地测试用，生产环境改为实际域名
 
 /**
  * 通用请求方法
@@ -94,6 +94,67 @@ const reportAPI = {
   getReportDetail: (id) => {
     // 使用小程序专用接口 GET /v1/mini/reports/{id}
     return get(`/v1/mini/reports/${id}`)
+  },
+  
+  /**
+   * 获取报告文件URL（小程序专用）
+   * @param {string} id - 报告ID
+   * @returns {Promise} 报告文件URL
+   */
+  getReportFileUrl: (id) => {
+    // 使用小程序专用接口 GET /v1/mini/reports/{id}/file
+    return get(`/v1/mini/reports/${id}/file`)
+  },
+
+  /**
+   * 获取PDF文件信息（用于分片下载）
+   * @param {string} fileId - 文件ID
+   * @returns {Promise} PDF文件信息
+   */
+  getPdfFileInfo: (fileId) => {
+    // 使用PDF流服务接口 GET /v1/pdf/info/{fileId}
+    return get(`/v1/pdf/info/${fileId}`)
+  },
+
+  /**
+   * 获取PDF文件分片（用于分片下载）
+   * @param {string} fileId - 文件ID
+   * @param {number} chunkIndex - 分片索引
+   * @returns {Promise} PDF文件分片数据
+   */
+  getPdfChunk: (fileId, chunkIndex) => {
+    // 使用PDF流服务接口 GET /v1/pdf/chunk/{fileId}/{chunkIndex}
+    return new Promise((resolve, reject) => {
+      wx.request({
+        url: `${BASE_URL}/v1/pdf/chunk/${fileId}/${chunkIndex}`,
+        method: 'GET',
+        responseType: 'arraybuffer',
+        success: (res) => {
+         
+          if (res.statusCode === 200) {
+            resolve({
+              data: res.data,
+              headers: res.header,
+              code: res.statusCode
+            });
+          } else {
+            reject(new Error(`分片下载失败: ${res.statusCode}`));
+          }
+        },
+        fail: (err) => {
+          reject(new Error(`网络请求失败: ${err.errMsg}`));
+        }
+      });
+    });
+  },
+
+  /**
+   * 获取PDF服务健康状态（用于测试连接）
+   * @returns {Promise} 健康状态信息
+   */
+  getPdfHealth: () => {
+    // 使用PDF流服务接口 GET /v1/pdf/health
+    return get('/v1/pdf/health');
   }
 }
 
