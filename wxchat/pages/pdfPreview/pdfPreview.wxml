@@ -1,0 +1,94 @@
+<!--pages/pdfPreview/pdfPreview.wxml-->
+<view class="container">
+  <!-- 页面标题 -->
+  <view class="page-header">
+    <view class="header-left" bindtap="onBack">
+      <text class="back-icon">←</text>
+      <text class="back-text">返回</text>
+    </view>
+    <view class="header-title">{{title}}</view>
+    <view class="header-right"></view>
+  </view>
+
+  <!-- 下载进度显示 -->
+  <view class="download-progress" wx:if="{{showDownloadProgress}}">
+    <view class="progress-header">
+      <text class="progress-title">PDF文件下载中...</text>
+      <text class="progress-status">{{downloadStatus === 'downloading' ? '下载中' : 
+                                    downloadStatus === 'paused' ? '已暂停' : 
+                                    downloadStatus === 'completed' ? '已完成' : 
+                                    downloadStatus === 'failed' ? '下载失败' : '等待中'}}</text>
+    </view>
+    
+    <!-- 进度条 -->
+    <view class="progress-bar">
+      <view class="progress-fill" style="width: {{downloadProgress}}%"></view>
+    </view>
+    
+    <!-- 进度信息 -->
+    <view class="progress-info">
+      <text class="progress-text">{{downloadProgress}}%</text>
+      <text class="chunks-info">{{downloadedChunks}}/{{totalChunks}} 分片</text>
+    </view>
+    
+    <!-- 下载控制按钮 -->
+    <view class="download-controls">
+      <button wx:if="{{downloadStatus === 'downloading'}}" 
+              class="control-btn pause-btn" 
+              bindtap="pauseDownload">暂停</button>
+      <button wx:if="{{downloadStatus === 'paused'}}" 
+              class="control-btn resume-btn" 
+              bindtap="resumeDownload">继续</button>
+      <button class="control-btn cancel-btn" 
+              bindtap="cancelDownload">取消</button>
+    </view>
+  </view>
+
+  <!-- 小程序内PDF预览区域 -->
+  <view class="inline-pdf-preview" wx:if="{{showInlinePreview && pdfFilePath}}">
+    <view class="preview-header">
+      <text class="preview-title">PDF预览</text>
+      <view class="preview-actions">
+        <button class="action-btn" bindtap="zoomIn">放大</button>
+        <button class="action-btn" bindtap="zoomOut">缩小</button>
+        <button class="action-btn" bindtap="resetZoom">重置</button>
+        <button class="action-btn close-btn" bindtap="hideInlinePreview">关闭</button>
+      </view>
+      
+      <!-- 内容质量检测按钮 -->
+      <view class="content-quality-actions">
+        <button class="quality-btn" bindtap="checkPdfContentQuality">检测内容</button>
+        <button class="quality-btn" bindtap="reparsePdf">重新解析</button>
+      </view>
+    </view>
+    
+    <!-- PDF预览画布 -->
+    <canvas 
+      class="pdf-canvas" 
+      id="pdfCanvas"
+      type="2d"
+      bindtouchstart="onCanvasTouchStart"
+      bindtouchmove="onCanvasTouchMove"
+      bindtouchend="onCanvasTouchEnd"
+      style="width: {{canvasWidth}}px; height: {{canvasHeight}}px;"
+    ></canvas>
+    
+    <!-- 页面导航 -->
+    <view class="page-navigation" wx:if="{{totalPages > 1}}">
+      <button class="nav-btn" bindtap="previousPage" disabled="{{currentPage <= 1}}">上一页</button>
+      <text class="page-info">{{currentPage}} / {{totalPages}}</text>
+      <button class="nav-btn" bindtap="nextPage" disabled="{{currentPage >= totalPages}}">下一页</button>
+    </view>
+    
+    <!-- 预览状态提示 -->
+    <view class="preview-status">
+      <text class="status-text">{{previewStatusText}}</text>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view wx:if="{{!showDownloadProgress && !showInlinePreview}}" class="loading-container">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">正在准备预览...</text>
+  </view>
+</view>

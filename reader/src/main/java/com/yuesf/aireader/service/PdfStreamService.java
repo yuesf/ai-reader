@@ -96,7 +96,7 @@ public class PdfStreamService {
     }
 
     /**
-     * 获取PDF文件分片（加密）
+     * 获取PDF文件分片（不加密）
      */
     public byte[] getPdfChunk(String fileId, int chunkIndex) throws IOException {
         FileInfo fileInfo = fileInfoService.getFileInfoById(fileId);
@@ -104,44 +104,19 @@ public class PdfStreamService {
             throw new BusinessException("文件不存在");
         }
 
+        // 检查文件类型
+        if (!"pdf".equalsIgnoreCase(fileInfo.getFileType())) {
+            throw new BusinessException("文件类型不支持");
+        }
+
         // 计算分片范围
         long startByte = (long) chunkIndex * CHUNK_SIZE;
         long endByte = Math.min(startByte + CHUNK_SIZE - 1, fileInfo.getFileSize() - 1);
         
-        // 获取或生成加密密钥
-        String encryptionKey = getOrGenerateEncryptionKey(fileId);
-        
-        // 从OSS读取分片数据
+        // 从OSS读取分片数据（不加密）
         byte[] chunkData = readChunkFromOss(fileInfo.getFileName(), startByte, endByte);
         
-        // 特殊处理：第一个分片的前5个字节是PDF头("%PDF-")，不能加密这部分
-        if (chunkIndex == 0 && chunkData.length >= 5) {
-            // 检查是否是PDF文件
-            String header = new String(chunkData, 0, 5, StandardCharsets.US_ASCII);
-            if ("%PDF-".equals(header)) {
-                // 对PDF头之后的数据进行加密
-                if (chunkData.length > 5) {
-                    byte[] dataToEncrypt = new byte[chunkData.length - 5];
-                    System.arraycopy(chunkData, 5, dataToEncrypt, 0, dataToEncrypt.length);
-                    byte[] encryptedData = encryptChunk(dataToEncrypt, encryptionKey, chunkIndex);
-                    
-                    // 合并PDF头和加密数据
-                    byte[] result = new byte[5 + encryptedData.length];
-                    System.arraycopy(chunkData, 0, result, 0, 5);
-                    System.arraycopy(encryptedData, 0, result, 5, encryptedData.length);
-                    return result;
-                } else {
-                    // 如果整个分片只有PDF头，直接返回不加密
-                    return chunkData;
-                }
-            } else {
-                // 不是PDF文件，正常加密
-                return encryptChunk(chunkData, encryptionKey, chunkIndex);
-            }
-        } else {
-            // 正常加密
-            return encryptChunk(chunkData, encryptionKey, chunkIndex);
-        }
+        return chunkData;
     }
 
     /**
@@ -188,24 +163,19 @@ public class PdfStreamService {
             inputStream = ossObject.getObjectContent();
             outputStream = response.getOutputStream();
 
-            // 分片读取和加密传输
+            // 分片读取和传输（不加密）
             byte[] buffer = new byte[8192];
             int bytesRead;
             long totalBytesRead = 0;
-            int chunkIndex = 0;
             
             while ((bytesRead = inputStream.read(buffer)) != -1 && totalBytesRead < (endByte - startByte + 1)) {
                 // 截取实际读取的数据
                 byte[] actualData = new byte[bytesRead];
                 System.arraycopy(buffer, 0, actualData, 0, bytesRead);
                 
-                // 加密数据块
-                byte[] encryptedData = encryptChunk(actualData, encryptionKey, chunkIndex);
-                
-                // 写入响应流
-                outputStream.write(encryptedData);
+                // 直接写入响应流（不加密）
+                outputStream.write(actualData);
                 totalBytesRead += bytesRead;
-                chunkIndex++;
                 
                 // 刷新缓冲区
                 if (totalBytesRead % (64 * 1024) == 0) { // 每64KB刷新一次
@@ -262,7 +232,7 @@ public class PdfStreamService {
     }
 
     /**
-     * 加密分片数据
+     * 加密分片数据 (保留方法但不使用)
      */
     private byte[] encryptChunk(byte[] data, String encryptionKey, int chunkIndex) throws IOException {
         try {
@@ -295,7 +265,7 @@ public class PdfStreamService {
     }
 
     /**
-     * 生成分片特定的密钥
+     * 生成分片特定的密钥 (保留方法但不使用)
      */
     private String generateChunkKey(String baseKey, int chunkIndex) throws Exception {
         try {

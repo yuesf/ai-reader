@@ -123,6 +123,11 @@ npm run build
 # 部署 dist 目录到Web服务器
 ```
 
+```bash
+# windows 启动命令
+cmd /c "npm run dev"
+```
+
 ## 贡献指南
 
 欢迎提交 Issue 和 Pull Request 来帮助改进项目。

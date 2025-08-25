@@ -1,8 +1,9 @@
 /* reportDetail.wxss */
 
+/* 页面容器 */
 .container {
-  padding: 20rpx;
-  background-color: #f5f5f5;
+  padding: 0;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
   min-height: 100vh;
 }
 
@@ -10,319 +11,63 @@
 .report-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 40rpx 30rpx;
-  border-radius: 20rpx;
-  margin-bottom: 30rpx;
   color: white;
-  box-shadow: 0 8rpx 32rpx rgba(102, 126, 234, 0.3);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.report-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+  opacity: 0.3;
 }
 
 .report-title {
   font-size: 36rpx;
   font-weight: bold;
   margin-bottom: 20rpx;
-  line-height: 1.4;
+  position: relative;
+  z-index: 1;
 }
 
 .report-subtitle {
   font-size: 28rpx;
   opacity: 0.9;
   margin-bottom: 15rpx;
+  position: relative;
+  z-index: 1;
 }
 
 .report-date {
   font-size: 24rpx;
   opacity: 0.8;
-}
-
-/* 标签页导航 */
-.tab-nav {
-  display: flex;
-  background: white;
-  border-radius: 16rpx;
-  padding: 8rpx;
-  margin-bottom: 30rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
-}
-
-.tab-item {
-  flex: 1;
-  text-align: center;
-  padding: 20rpx 0;
-  border-radius: 12rpx;
-  font-size: 28rpx;
-  color: #666;
-  transition: all 0.3s ease;
-}
-
-.tab-item.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  box-shadow: 0 4rpx 16rpx rgba(102, 126, 234, 0.4);
-}
-
-/* 标签页内容 */
-.tab-content {
-  background: white;
-  border-radius: 20rpx;
-  padding: 40rpx 30rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
-}
-
-/* 简介内容 */
-.report-summary {
-  font-size: 30rpx;
-  line-height: 1.6;
-  color: #333;
-  margin-bottom: 40rpx;
-}
-
-/* 下载按钮 */
-.download-section {
-  text-align: center;
-}
-
-.download-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 50rpx;
-  padding: 25rpx 60rpx;
-  font-size: 32rpx;
-  font-weight: bold;
-  box-shadow: 0 8rpx 32rpx rgba(102, 126, 234, 0.4);
-  transition: all 0.3s ease;
-}
-
-.download-btn:active {
-  transform: translateY(2rpx);
-  box-shadow: 0 4rpx 16rpx rgba(102, 126, 234, 0.4);
-}
-
-/* 下载进度显示 */
-.download-progress {
-  background: #f8f9fa;
-  border-radius: 16rpx;
-  padding: 30rpx;
-  margin-bottom: 30rpx;
-  border: 2rpx solid #e9ecef;
-}
-
-.progress-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 25rpx;
-}
-
-.progress-title {
-  font-size: 30rpx;
-  font-weight: bold;
-  color: #333;
-}
-
-.progress-status {
-  font-size: 26rpx;
-  color: #667eea;
-  padding: 8rpx 16rpx;
-  background: rgba(102, 126, 234, 0.1);
-  border-radius: 20rpx;
-}
-
-/* 进度条 */
-.progress-bar {
-  width: 100%;
-  height: 16rpx;
-  background: #e9ecef;
-  border-radius: 8rpx;
-  overflow: hidden;
-  margin-bottom: 20rpx;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-  border-radius: 8rpx;
-  transition: width 0.3s ease;
-}
-
-/* 进度信息 */
-.progress-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 25rpx;
-}
-
-.progress-text {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #667eea;
-}
-
-.chunks-info {
-  font-size: 26rpx;
-  color: #666;
-}
-
-/* 下载控制按钮 */
-.download-controls {
-  display: flex;
-  gap: 20rpx;
-  justify-content: center;
-}
-
-.control-btn {
-  padding: 15rpx 30rpx;
-  border-radius: 25rpx;
-  font-size: 26rpx;
-  border: none;
-  transition: all 0.3s ease;
-}
-
-.pause-btn {
-  background: #ffc107;
-  color: #333;
-}
-
-.pause-btn:active {
-  background: #e0a800;
-}
-
-.resume-btn {
-  background: #28a745;
-  color: white;
-}
-
-.resume-btn:active {
-  background: #218838;
-}
-
-.cancel-btn {
-  background: #dc3545;
-  color: white;
-}
-
-.cancel-btn:active {
-  background: #c82333;
-}
-
-/* PDF预览区域 */
-.pdf-preview {
-  background: #f8f9fa;
-  border-radius: 16rpx;
-  padding: 30rpx;
-  margin-bottom: 30rpx;
-}
-
-.preview-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 25rpx;
-}
-
-.preview-title {
-  font-size: 30rpx;
-  font-weight: bold;
-  color: #333;
-}
-
-.preview-controls {
-  display: flex;
-  gap: 15rpx;
-}
-
-.mode-btn {
-  background: #17a2b8;
-  color: white;
-  padding: 12rpx 24rpx;
-  border-radius: 20rpx;
-  font-size: 24rpx;
-  border: none;
-}
-
-.close-btn {
-  background: #6c757d;
-  color: white;
-  padding: 12rpx 24rpx;
-  border-radius: 20rpx;
-  font-size: 24rpx;
-  border: none;
-}
-
-/* PDF查看器 */
-.pdf-viewer {
-  width: 100%;
-  height: 600rpx;
-  border-radius: 12rpx;
-  overflow: hidden;
-  border: 2rpx solid #e9ecef;
-}
-
-/* 预览错误提示 */
-.preview-error {
-  text-align: center;
-  padding: 40rpx 20rpx;
-}
-
-.error-text {
-  display: block;
-  font-size: 28rpx;
-  color: #dc3545;
-  margin-bottom: 25rpx;
-}
-
-.retry-btn {
-  background: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 25rpx;
-  padding: 15rpx 40rpx;
-  font-size: 28rpx;
-}
-
-/* 预览控制区域 */
-.preview-controls {
-  text-align: center;
-  padding: 40rpx 20rpx;
-}
-
-.preview-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 50rpx;
-  padding: 25rpx 60rpx;
-  font-size: 32rpx;
-  font-weight: bold;
-  margin-bottom: 20rpx;
-  box-shadow: 0 8rpx 32rpx rgba(102, 126, 234, 0.4);
-}
-
-.open-btn {
-  background: #28a745;
-  color: white;
-  border: none;
-  border-radius: 50rpx;
-  padding: 20rpx 50rpx;
-  font-size: 28rpx;
-  box-shadow: 0 4rpx 16rpx rgba(40, 167, 69, 0.4);
+  position: relative;
+  z-index: 1;
 }
 
 /* 加载状态 */
 .loading-container {
-  text-align: center;
-  padding: 60rpx 20rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 30rpx;
 }
 
 .loading-spinner {
   width: 60rpx;
   height: 60rpx;
-  border: 6rpx solid #f3f3f3;
-  border-top: 6rpx solid #667eea;
+  border: 4rpx solid #f3f3f3;
+  border-top: 4rpx solid #667eea;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 0 auto 20rpx;
+  margin-bottom: 30rpx;
 }
 
 @keyframes spin {
@@ -335,69 +80,309 @@
   color: #666;
 }
 
-/* 响应式设计 */
-@media (max-width: 750rpx) {
-  .container {
-    padding: 15rpx;
-  }
-  
-  .report-header {
-    padding: 30rpx 20rpx;
-  }
-  
-  .report-title {
-    font-size: 32rpx;
-  }
-  
-  .tab-content {
-    padding: 30rpx 20rpx;
-  }
-  
-  .download-controls {
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .control-btn {
-    width: 200rpx;
-  }
-}
-
-/* 测试按钮区域样式 */
-.test-section {
-  margin: 20rpx;
-  padding: 20rpx;
-  background-color: #f8f9fa;
-  border-radius: 12rpx;
-  border: 1rpx solid #e9ecef;
-}
-
-.section-title {
-  font-size: 28rpx;
-  font-weight: bold;
-  color: #495057;
-  margin-bottom: 20rpx;
+/* 错误状态 */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 30rpx;
   text-align: center;
 }
 
-.button-group {
-  display: flex;
-  flex-direction: column;
-  gap: 16rpx;
+.error-icon {
+  font-size: 80rpx;
+  color: #ff6b6b;
+  margin-bottom: 30rpx;
 }
 
-.test-btn {
-  background-color: #007bff;
-  color: #ffffff;
+.error-text {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 40rpx;
+  line-height: 1.5;
+}
+
+.retry-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
   border: none;
-  border-radius: 8rpx;
-  padding: 16rpx 24rpx;
-  font-size: 26rpx;
+  border-radius: 30rpx;
+  padding: 20rpx 40rpx;
+  font-size: 28rpx;
+}
+
+/* 报告内容区域 */
+.report-content {
+  padding: 30rpx;
+}
+
+/* 报告缩略图 */
+.report-thumbnail {
+  margin-bottom: 30rpx;
+  text-align: center;
+}
+
+.thumbnail-image {
+  width: 200rpx;
+  height: 280rpx;
+  border-radius: 16rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.15);
+}
+
+/* 报告基本信息 */
+.report-info {
+  background: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.08);
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  font-size: 28rpx;
+  color: #666;
   font-weight: 500;
 }
 
-.test-btn:active {
-  background-color: #0056b3;
+.info-value {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 600;
 }
 
-/* 下载进度显示样式 */
+.info-value.free {
+  color: #28a745;
+}
+
+.info-value.paid {
+  color: #ff6b6b;
+}
+
+/* 报告标签 */
+.report-tags {
+  background: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.08);
+}
+
+.tags-title {
+  font-size: 28rpx;
+  color: #666;
+  font-weight: 500;
+  margin-bottom: 20rpx;
+  display: block;
+}
+
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15rpx;
+}
+
+.tag-item {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 10rpx 20rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+}
+
+/* 报告摘要 */
+.report-summary {
+  background: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.08);
+}
+
+.summary-title {
+  font-size: 32rpx;
+  color: #333;
+  font-weight: bold;
+  margin-bottom: 20rpx;
+  padding-bottom: 15rpx;
+  border-bottom: 2rpx solid #f0f0f0;
+}
+
+.summary-content {
+  font-size: 28rpx;
+  color: #666;
+  line-height: 1.6;
+  text-align: justify;
+}
+
+/* 报告统计信息 */
+.report-stats {
+  background: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.08);
+  display: flex;
+  justify-content: space-around;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-number {
+  display: block;
+  font-size: 36rpx;
+  color: #667eea;
+  font-weight: bold;
+  margin-bottom: 10rpx;
+}
+
+.stat-label {
+  font-size: 24rpx;
+  color: #666;
+}
+
+/* 报告评论 */
+.report-comments {
+  background: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.08);
+}
+
+.comments-title {
+  font-size: 32rpx;
+  color: #333;
+  font-weight: bold;
+  margin-bottom: 20rpx;
+  padding-bottom: 15rpx;
+  border-bottom: 2rpx solid #f0f0f0;
+}
+
+.comment-item {
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.comment-item:last-child {
+  border-bottom: none;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15rpx;
+}
+
+.comment-user {
+  font-size: 26rpx;
+  color: #667eea;
+  font-weight: 500;
+}
+
+.comment-time {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.comment-content {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.5;
+}
+
+/* 底部操作按钮 */
+.bottom-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  padding: 30rpx;
+  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.1);
+  display: flex;
+  gap: 20rpx;
+  z-index: 100;
+}
+
+.action-btn {
+  flex: 1;
+  height: 88rpx;
+  border: none;
+  border-radius: 44rpx;
+  font-size: 30rpx;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15rpx;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.action-btn:active::before {
+  left: 100%;
+}
+
+.download-btn {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  box-shadow: 0 6rpx 20rpx rgba(40, 167, 69, 0.3);
+}
+
+.download-btn:active {
+  transform: translateY(3rpx);
+  box-shadow: 0 3rpx 12rpx rgba(40, 167, 69, 0.3);
+}
+
+.preview-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 6rpx 20rpx rgba(102, 126, 234, 0.3);
+}
+
+.preview-btn:active {
+  transform: translateY(3rpx);
+  box-shadow: 0 3rpx 12rpx rgba(102, 126, 234, 0.3);
+}
+
+.btn-icon {
+  font-size: 32rpx;
+}
+
+.btn-text {
+  font-size: 30rpx;
+}
+
+/* 为底部按钮留出空间 */
+.report-content {
+  padding-bottom: 150rpx;
+}

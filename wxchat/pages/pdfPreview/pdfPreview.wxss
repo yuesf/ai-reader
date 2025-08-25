@@ -1,0 +1,526 @@
+/* 页面容器 */
+.container {
+  padding: 0;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  min-height: 100vh;
+}
+
+/* 页面标题 */
+.page-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 30rpx;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+  opacity: 0.3;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  position: relative;
+  z-index: 1;
+}
+
+.back-icon {
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+.back-text {
+  font-size: 28rpx;
+}
+
+.header-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  text-align: center;
+}
+
+.header-right {
+  width: 80rpx;
+}
+
+/* 下载进度显示 */
+.download-progress {
+  background: white;
+  border-radius: 20rpx;
+  padding: 40rpx;
+  margin: 30rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.1);
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+}
+
+.progress-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.progress-status {
+  font-size: 26rpx;
+  color: #667eea;
+  padding: 8rpx 16rpx;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 20rpx;
+}
+
+/* 进度条 */
+.progress-bar {
+  width: 100%;
+  height: 16rpx;
+  background: #e9ecef;
+  border-radius: 8rpx;
+  overflow: hidden;
+  margin-bottom: 25rpx;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8rpx;
+  transition: width 0.3s ease;
+}
+
+/* 进度信息 */
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+}
+
+.progress-text {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #667eea;
+}
+
+.chunks-info {
+  font-size: 26rpx;
+  color: #666;
+}
+
+/* 下载控制按钮 */
+.download-controls {
+  display: flex;
+  gap: 20rpx;
+  justify-content: center;
+}
+
+.control-btn {
+  padding: 20rpx 30rpx;
+  border-radius: 25rpx;
+  font-size: 28rpx;
+  border: none;
+  transition: all 0.3s ease;
+  min-width: 120rpx;
+}
+
+.pause-btn {
+  background: #ffc107;
+  color: #333;
+}
+
+.pause-btn:active {
+  background: #e0a800;
+}
+
+.resume-btn {
+  background: #28a745;
+  color: white;
+}
+
+.resume-btn:active {
+  background: #218838;
+}
+
+.cancel-btn {
+  background: #dc3545;
+  color: white;
+}
+
+.cancel-btn:active {
+  background: #c82333;
+}
+
+/* 小程序内PDF预览区域 */
+.inline-pdf-preview {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-radius: 24rpx;
+  padding: 40rpx;
+  margin: 30rpx;
+  border: 2rpx solid #e9ecef;
+  box-shadow: 0 12rpx 40rpx rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.inline-pdf-preview::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6rpx;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
+
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+  padding-bottom: 25rpx;
+  border-bottom: 2rpx solid #f0f0f0;
+  flex-wrap: wrap;
+  gap: 20rpx;
+}
+
+.preview-title {
+  font-size: 34rpx;
+  font-weight: bold;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  position: relative;
+}
+
+.preview-title::after {
+  content: '📄';
+  margin-left: 15rpx;
+  font-size: 28rpx;
+}
+
+.preview-actions {
+  display: flex;
+  gap: 18rpx;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 15rpx 25rpx;
+  border-radius: 30rpx;
+  font-size: 26rpx;
+  font-weight: 500;
+  border: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 6rpx 20rpx rgba(102, 126, 234, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+.action-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.action-btn:active::before {
+  left: 100%;
+}
+
+.action-btn:active {
+  transform: translateY(3rpx);
+  box-shadow: 0 3rpx 12rpx rgba(102, 126, 234, 0.25);
+}
+
+.action-btn.close-btn {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  box-shadow: 0 6rpx 20rpx rgba(255, 107, 107, 0.25);
+}
+
+.action-btn.close-btn:active {
+  box-shadow: 0 3rpx 12rpx rgba(255, 107, 107, 0.25);
+}
+
+/* 内容质量检测按钮 */
+.content-quality-actions {
+  display: flex;
+  justify-content: center;
+  gap: 20rpx;
+  margin-top: 20rpx;
+  padding: 20rpx;
+  width: 100%;
+}
+
+.quality-btn {
+  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+  color: white;
+  border: none;
+  border-radius: 25rpx;
+  padding: 15rpx 30rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 4rpx 16rpx rgba(23, 162, 184, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.quality-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.quality-btn:active::before {
+  left: 100%;
+}
+
+.quality-btn:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 2rpx 8rpx rgba(23, 162, 184, 0.3);
+}
+
+/* PDF预览画布 */
+.pdf-canvas {
+  display: block;
+  margin: 0 auto;
+  border: 3rpx solid #e9ecef;
+  border-radius: 20rpx;
+  background: white;
+  box-shadow: 0 12rpx 40rpx rgba(0, 0, 0, 0.12);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.pdf-canvas::before {
+  content: '';
+  position: absolute;
+  top: -2rpx;
+  left: -2rpx;
+  right: -2rpx;
+  bottom: -2rpx;
+  background: linear-gradient(45deg, #667eea, #764ba2, #667eea);
+  border-radius: 20rpx;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.pdf-canvas:hover::before {
+  opacity: 1;
+}
+
+.pdf-canvas:hover {
+  box-shadow: 0 16rpx 50rpx rgba(0, 0, 0, 0.18);
+  transform: translateY(-3rpx);
+}
+
+/* 页面导航 */
+.page-navigation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 35rpx;
+  margin: 30rpx 0;
+  padding: 30rpx;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 20rpx;
+  border: 2rpx solid #e9ecef;
+  box-shadow: 0 6rpx 25rpx rgba(0, 0, 0, 0.06);
+  position: relative;
+}
+
+.page-navigation::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60rpx;
+  height: 4rpx;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 2rpx;
+}
+
+.nav-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 30rpx;
+  padding: 20rpx 35rpx;
+  font-size: 30rpx;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  box-shadow: 0 6rpx 20rpx rgba(102, 126, 234, 0.3);
+  min-width: 130rpx;
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.nav-btn:active::before {
+  left: 100%;
+}
+
+.nav-btn:active {
+  transform: translateY(3rpx);
+  box-shadow: 0 3rpx 12rpx rgba(102, 126, 234, 0.3);
+}
+
+.nav-btn:disabled {
+  background: linear-gradient(135deg, #cccccc 0%, #999999 100%);
+  color: #ffffff;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.nav-btn:disabled:active {
+  transform: none;
+}
+
+.nav-btn:disabled::before {
+  display: none;
+}
+
+.page-info {
+  font-size: 32rpx;
+  color: #333;
+  font-weight: bold;
+  min-width: 110rpx;
+  text-align: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  padding: 10rpx 20rpx;
+  border-radius: 15rpx;
+  background: rgba(102, 126, 234, 0.1);
+  border: 2rpx solid rgba(102, 126, 234, 0.2);
+}
+
+/* 预览状态提示 */
+.preview-status {
+  text-align: center;
+  padding: 30rpx;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-radius: 20rpx;
+  margin-top: 30rpx;
+  border: 2rpx solid #e9ecef;
+  box-shadow: 0 6rpx 25rpx rgba(0, 0, 0, 0.06);
+  position: relative;
+}
+
+.preview-status::before {
+  content: '💡';
+  position: absolute;
+  top: 20rpx;
+  left: 30rpx;
+  font-size: 24rpx;
+}
+
+.status-text {
+  font-size: 30rpx;
+  color: #667eea;
+  font-weight: 600;
+  padding-left: 40rpx;
+}
+
+/* 加载状态 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 30rpx;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 4rpx solid #f3f3f3;
+  border-top: 4rpx solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 30rpx;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #666;
+}
+
+/* 响应式设计 */
+@media (max-width: 750rpx) {
+  .preview-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .action-btn {
+    font-size: 22rpx;
+    padding: 10rpx 16rpx;
+  }
+  
+  .page-navigation {
+    flex-direction: column;
+    gap: 20rpx;
+  }
+  
+  .nav-btn {
+    width: 200rpx;
+  }
+  
+  .inline-pdf-preview {
+    padding: 20rpx;
+    margin: 20rpx;
+  }
+  
+  .download-progress {
+    margin: 20rpx;
+    padding: 30rpx;
+  }
+}

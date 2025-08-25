@@ -3,7 +3,7 @@
     "pages/index/index",
     "pages/logs/logs",
     "pages/reportDetail/reportDetail",
-    "pages/pdfViewer/pdfViewer"
+    "pages/pdfPreview/pdfPreview"
   ],
   "window": {
     "backgroundTextStyle": "light",
