@@ -3,6 +3,7 @@ package com.yuesf.aireader.controller;
 import com.yuesf.aireader.annotation.RequireAuth;
 import com.yuesf.aireader.dto.ApiResponse;
 import com.yuesf.aireader.service.PdfStreamService;
+import jakarta.servlet.ServletOutputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -47,14 +48,14 @@ public class PdfStreamController {
             log.info("PDF文件流传输完成，文件ID: {}", fileId);
             
         } catch (Exception e) {
-            log.error("PDF文件流传输失败，文件ID: {}", fileId, e);
+            log.error("PDF文件流传输失败，文件ID: {}, {}", fileId, e.getMessage());
             
             try {
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 response.setContentType("application/json;charset=UTF-8");
                 response.getWriter().write("{\"error\":\"文件传输失败: " + e.getMessage() + "\"}");
             } catch (IOException ex) {
-                log.error("写入错误响应失败", ex);
+                log.error("写入错误响应失败, {}", ex.getMessage());
             }
         }
     }
@@ -149,6 +150,52 @@ public class PdfStreamController {
         } catch (Exception e) {
             log.error("PDF流服务健康检查失败", e);
             return ApiResponse.error(500, "PDF流服务异常: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 按页返回PDF渲染图片（PNG）
+     * GET /pdf/page/{fileId}/{page}
+     * 用于小程序端图片化预览
+     */
+    @GetMapping("/page/{fileId}/{page}")
+    public void getPdfPageImage(
+            @PathVariable String fileId,
+            @PathVariable int page,
+            HttpServletResponse response) {
+        ServletOutputStream outputStream = null;
+        try {
+            log.info("请求PDF页图，文件ID: {}, 页码: {}", fileId, page);
+
+            byte[] pngBytes = pdfStreamService.renderPdfPageAsImage(fileId, page);
+
+            response.setContentType("image/png");
+            response.setHeader("Cache-Control", "public, max-age=300");
+            response.setHeader("X-File-Id", fileId);
+            response.setHeader("X-Page", String.valueOf(page));
+            response.setContentLength(pngBytes.length);
+              outputStream = response.getOutputStream();
+            if (null != outputStream ) {
+                outputStream.write(pngBytes);
+
+            }
+        } catch (Exception e) {
+            log.error("PDF页图获取失败，文件ID: {}, 页码: {}", fileId, page, e);
+            try {
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"error\":\"获取页图失败: " + e.getMessage() + "\"}");
+            } catch (IOException ex) {
+                log.error("写入错误响应失败", ex);
+            }
+        } finally {
+            if (null != outputStream) {
+                try {
+                    outputStream.flush();
+                } catch (IOException e) {
+                    log.error("flush error, {}", e.getMessage());
+                }
+            }
         }
     }
 

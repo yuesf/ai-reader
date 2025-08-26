@@ -1,687 +1,215 @@
 // pages/pdfPreview/pdfPreview.js
-const { pdfPreviewService } = require('../../utils/pdfPreviewService.js');
+const pdfImagePreviewService = require('../../utils/pdfImagePreviewService.js');
+const { reportAPI } = require('../../utils/api.js');
 const pdfDownloadService = require('../../utils/pdfDownloadService.js');
+
+const BATCH_SIZE = 5;
 
 Page({
   data: {
-    // 页面参数
     reportId: '',
     fileId: '',
     title: '',
     
-    // PDF下载相关
+    // 下载显示（保留）
     showDownloadProgress: false,
     downloadProgress: 0,
     downloadStatus: '',
-    downloadedChunks: 0,
-    totalChunks: 0,
-    pdfFilePath: '',
-    pdfDownloaded: false,
-    
-    // 小程序内预览相关
-    showInlinePreview: false,
-    canvasWidth: 300,
-    canvasHeight: 400,
-    zoomLevel: 1.0,
+
+    // 图片预览
+    totalPages: 0, // 展示用
+    pageImages: [], // { page, id, src, loaded, error }
+    visiblePages: 0,
+    pageScale: 1.0, // 修改默认缩放比例为1.0
     currentPage: 1,
-    totalPages: 1,
-    isRendering: false,
-    previewStatusText: '准备预览...',
-    
-    // 触摸手势状态
-    touchStartX: null,
-    touchStartY: null,
-    touchStartTime: null
+    scrollIntoViewId: '',
+
+    // 手势
+    touchStartX: 0,
+    touchStartY: 0,
+    touchStartTime: 0,
+
+    // UI
+    loading: true,
+    isLastPage: false,
+
+    // 防重：请求中的页
+    pendingPages: {}
   },
 
-  onLoad(options) {
-    // 获取页面参数
-    const { reportId, fileId, title } = options;
+  async onLoad(options) {
+    const { reportId, fileId, title } = options || {};
     this.setData({
       reportId: reportId || '',
       fileId: fileId || '',
-      title: decodeURIComponent(title || 'PDF预览')
+      title: decodeURIComponent(title || 'PDF预览（图片）')
     });
 
-    // 设置页面标题
-    wx.setNavigationBarTitle({
-      title: this.data.title
-    });
+    wx.setNavigationBarTitle({ title: this.data.title });
 
-    // 传递 fileId 给预览服务，用于服务端渲染兜底
-    try {
-      if (fileId && typeof pdfPreviewService.setFileId === 'function') {
-        pdfPreviewService.setFileId(fileId);
-      }
-    } catch (e) {
-      console.warn('设置fileId到pdfPreviewService失败:', e);
-    }
-
-    // 自动开始下载
-    if (this.data.fileId) {
-      this.startPdfDownload();
-    }
-  },
-
-  /**
-   * 开始PDF下载
-   */
-  async startPdfDownload() {
     if (!this.data.fileId) {
-      wx.showToast({
-        title: '文件ID不存在',
-        icon: 'none'
-      });
+      wx.showToast({ title: '缺少文件ID', icon: 'none' });
       return;
     }
 
-    // 防御性检查，避免服务未正确导入导致报错
-    if (!pdfDownloadService || typeof pdfDownloadService.startDownload !== 'function') {
-      console.error('pdfDownloadService 未正确加载或缺少 startDownload 方法:', pdfDownloadService);
-      wx.showToast({
-        title: '下载服务不可用',
-        icon: 'none'
-      });
-      return;
-    }
+    // 绑定文件
+    pdfImagePreviewService.setFile(this.data.fileId);
 
+    // 初始化尝试加载第1、2页，保证可滑动
     try {
+      await this.tryAppendPage(1);
+      await this.tryAppendPage(2).catch(() => {});
       this.setData({
-        showDownloadProgress: true,
-        downloadStatus: 'downloading',
-        downloadProgress: 0,
-        downloadedChunks: 0,
-        totalChunks: 0
+        loading: false,
+        currentPage: 1,
+        scrollIntoViewId: 'page-1'
       });
-
-      // 使用PDF下载服务
-      const downloadResult = await pdfDownloadService.startDownload(
-        this.data.fileId,
-        `${this.data.title}.pdf`,
-        this.onDownloadProgress.bind(this),
-        this.onDownloadComplete.bind(this),
-        this.onDownloadError.bind(this)
-      );
-
-      console.log('PDF下载开始:', downloadResult);
-      
-    } catch (error) {
-      console.error('PDF下载失败:', error);
-      this.setData({
-        downloadStatus: 'failed',
-        showDownloadProgress: false
-      });
-      
-      wx.showToast({
-        title: '下载失败',
-        icon: 'none'
-      });
+    } catch (e) {
+      this.setData({ loading: false });
+      wx.showToast({ title: '加载失败', icon: 'none' });
     }
   },
 
-  /**
-   * 下载进度回调
-   */
-  onDownloadProgress(progress, downloadedChunks, totalChunks) {
-    this.setData({
-      downloadProgress: progress,
-      downloadedChunks: downloadedChunks,
-      totalChunks: totalChunks
-    });
-  },
+  // 追加一页（探测成功才追加），带防重
+  async tryAppendPage(pageIndex) {
+    if (pageIndex < 1) return Promise.reject(new Error('invalid'));
+    const exists = this.data.pageImages.some(p => p.page === pageIndex);
+    if (exists) return Promise.resolve();
+    if (this.data.pendingPages[pageIndex]) return Promise.resolve();
 
-  /**
-   * 下载完成回调
-   */
-  onDownloadComplete(filePath) {
-    console.log('PDF下载完成:', filePath);
-    
-    this.setData({
-      pdfDownloaded: true,
-      pdfFilePath: filePath,
-      showDownloadProgress: false,
-      downloadStatus: 'completed',
-      downloadProgress: 100
-    });
+    const url = pdfImagePreviewService.getPageImage(pageIndex);
+    this.setData({ [`pendingPages[${pageIndex}]`]: true });
 
-    wx.showToast({
-      title: 'PDF下载完成',
-      icon: 'success',
-      duration: 2000
-    });
-
-    // 自动开始预览
-    setTimeout(() => {
-      this.startInlinePreview();
-    }, 500);
-  },
-
-  /**
-   * 下载错误回调
-   */
-  onDownloadError(error) {
-    console.error('PDF下载错误:', error);
-    
-    this.setData({
-      downloadStatus: 'failed',
-      showDownloadProgress: false
-    });
-
-    wx.showToast({
-      title: `下载失败: ${error.message}`,
-      icon: 'none',
-      duration: 3000
-    });
-  },
-
-  /**
-   * 暂停下载
-   */
-  pauseDownload() {
-    pdfDownloadService.pauseDownload();
-    this.setData({ downloadStatus: 'paused' });
-    
-    wx.showToast({
-      title: '下载已暂停',
-      icon: 'success'
-    });
-  },
-
-  /**
-   * 恢复下载
-   */
-  resumeDownload() {
-    pdfDownloadService.resumeDownload();
-    this.setData({ downloadStatus: 'downloading' });
-    
-    wx.showToast({
-      title: '下载已恢复',
-      icon: 'success'
-    });
-  },
-
-  /**
-   * 取消下载
-   */
-  cancelDownload() {
-    pdfDownloadService.cancelDownload();
-    this.setData({
-      downloadStatus: 'cancelled',
-      showDownloadProgress: false,
-      downloadProgress: 0,
-      downloadedChunks: 0
-    });
-    
-    wx.showToast({
-      title: '下载已取消',
-      icon: 'success'
-    });
-  },
-
-  /**
-   * 开始小程序内预览
-   */
-  startInlinePreview() {
-    if (!this.data.pdfFilePath) {
-      wx.showToast({
-        title: 'PDF文件未准备就绪',
-        icon: 'none'
-      });
-      return;
-    }
-
-    // 确保文件存在
-    wx.getFileSystemManager().access({
-      path: this.data.pdfFilePath,
-      success: () => {
-        console.log('文件存在，开始预览');
-        
-        this.setData({
-          showInlinePreview: true,
-          previewStatusText: '正在解析PDF文件...',
-          isRendering: true
-        });
-
-        // 延迟执行，确保DOM已加载
-        wx.nextTick(() => {
-          this.initCanvas().then((canvasObj) => {
-            console.log('Canvas初始化成功:', canvasObj);
-            
-            // 使用PDF预览服务加载PDF文件
-            pdfPreviewService.loadPdf(this.data.pdfFilePath).then((pdfInfo) => {
-              console.log('PDF加载成功:', pdfInfo);
-              
-              // 更新页面信息
-              this.setData({
-                totalPages: pdfInfo.totalPages,
-                previewStatusText: `PDF解析完成，共${pdfInfo.totalPages}页，版本${pdfInfo.version}`
-              });
-              
-              // 渲染第一页
-              return pdfPreviewService.renderPage(1, canvasObj.canvas);
-            }).then((renderResult) => {
-              console.log('第一页渲染成功:', renderResult);
-              
-              // 获取PDF状态
-              const status = pdfPreviewService.getStatus();
-              const statusText = status.hasRealContent ? 
-                '预览就绪（真实PDF内容）' : 
-                '预览就绪（模拟内容）';
-              
-              this.setData({
-                previewStatusText: statusText,
-                isRendering: false
-              });
-              
-              wx.showToast({
-                title: status.hasRealContent ? 'PDF预览已就绪' : 'PDF预览就绪（显示模拟内容）',
-                icon: 'success',
-                duration: 2000
-              });
-              
-            }).catch((error) => {
-              console.error('PDF预览失败:', error);
-              this.setData({
-                previewStatusText: '预览失败: ' + error.message,
-                isRendering: false
-              });
-              
-              wx.showToast({
-                title: '预览失败',
-                icon: 'none',
-                duration: 3000
-              });
-            });
-            
-          }).catch((error) => {
-            console.error('Canvas初始化失败:', error);
-            this.setData({
-              previewStatusText: '画布初始化失败',
-              isRendering: false
-            });
-            
-            wx.showToast({
-              title: '画布初始化失败',
-              icon: 'none',
-              duration: 3000
-            });
-          });
-        });
+    return new Promise((resolve, reject) => {
+      wx.getImageInfo({
+        src: url,
+        success: () => {
+          const exists2 = this.data.pageImages.find(p => p.page === pageIndex);
+          if (!exists2) {
+            const newItem = { page: pageIndex, id: `page-${pageIndex}`, src: url, loaded: false, error: false };
+            const pageImages = this.data.pageImages.concat(newItem);
+            this.setData({ pageImages, visiblePages: pageImages.length, isLastPage: false });
+          }
+          this.setData({ [`pendingPages[${pageIndex}]`]: false });
+          resolve();
       },
       fail: () => {
-        console.error('文件不存在:', this.data.pdfFilePath);
-        wx.showToast({
-          title: '文件不存在，请重新下载',
-          icon: 'none'
-        });
-      }
+          this.setData({ [`pendingPages[${pageIndex}]`]: false, isLastPage: true });
+          reject(new Error('last-page'));
+        }
+      });
     });
   },
 
-  /**
-   * 隐藏内嵌预览
-   */
-  hideInlinePreview() {
-    this.setData({
-      showInlinePreview: false,
-      isRendering: false
-    });
-    
-    // 清理PDF预览器资源
-    pdfPreviewService.cleanup();
-  },
-
-  /**
-   * 初始化画布
-   */
-  async initCanvas() {
-    return new Promise((resolve, reject) => {
+  // 滚动到底：继续尝试加载后续5页（带防重）
+  async onScrollToLower() {
+    if (this.data.isLastPage) return;
+    const start = (this.data.pageImages[this.data.pageImages.length - 1]?.page || 0) + 1;
+    for (let i = 0; i < BATCH_SIZE; i++) {
+      const p = start + i;
       try {
-        // 确保在页面渲染完成后执行
-        wx.nextTick(() => {
-          const query = wx.createSelectorQuery();
-          // 使用.select()选择Canvas元素
-          query.select('#pdfCanvas').fields({ node: true, size: true })
-            .exec((res) => {
-              console.log('Canvas查询结果:', res);
-              if (res && res[0] && res[0].node) {
-                const canvas = res[0].node;
-                const ctx = canvas.getContext('2d');
-                
-                if (!ctx) {
-                  reject(new Error('无法获取2D绘图上下文'));
-                  return;
-                }
-                
-                // 设置画布尺寸（使用新API）
-                const windowInfo = wx.getWindowInfo ? wx.getWindowInfo() : { pixelRatio: 1, windowWidth: 320 };
-                const canvasWidth = Math.max(100, (windowInfo.windowWidth || 320) - 64); // 左右各32px边距
-                const canvasHeight = Math.max(100, Math.floor(canvasWidth * 1.4)); // 保持PDF比例
-                
-                // 设置实际画布尺寸
-                const dpr = windowInfo.pixelRatio || 1;
-                canvas.width = canvasWidth * dpr;
-                canvas.height = canvasHeight * dpr;
-                
-                // 设置CSS尺寸
-                this.setData({
-                  canvasWidth: canvasWidth,
-                  canvasHeight: canvasHeight
-                });
-                
-                console.log('Canvas初始化成功:', { canvasWidth, canvasHeight, dpr });
-                resolve({ canvas, ctx });
-              } else {
-                console.error('无法获取Canvas节点:', res);
-                reject(new Error('无法获取Canvas节点，请检查Canvas元素是否正确渲染'));
-              }
-            });
-        });
-      } catch (error) {
-        console.error('Canvas初始化异常:', error);
-        reject(error);
+        await this.tryAppendPage(p);
+      } catch (e) {
+        break;
       }
-    });
+    }
   },
 
-  /**
-   * 渲染PDF页面
-   */
-  async renderPdfPage(pageNum) {
-    if (!this.data.pdfFilePath) {
-      throw new Error('PDF文件未初始化');
-    }
-    
-    this.setData({
-      currentPage: pageNum,
-      previewStatusText: `正在渲染第${pageNum}页...`,
-      isRendering: true
-    });
-    
+  // 确保目标页存在（不存在则尝试按需加载）
+  async ensurePageExists(targetPage) {
+    const exists = this.data.pageImages.some(p => p.page === targetPage);
+    if (exists) return true;
+    if (this.data.isLastPage) return false;
     try {
-      // 确保在页面渲染完成后执行
-      wx.nextTick(async () => {
-        // 初始化画布（如果尚未初始化）
-        let canvasObj;
-        try {
-          canvasObj = await this.initCanvas();
-        } catch (initError) {
-          console.error('画布初始化失败:', initError);
-          this.setData({
-            previewStatusText: '画布初始化失败',
-            isRendering: false
-          });
-          throw initError;
-        }
-        
-        if (canvasObj && canvasObj.canvas) {
-          const canvas = canvasObj.canvas;
-          console.log('获取到Canvas节点:', canvas);
-          
-          // 使用PDF预览服务渲染页面
-          try {
-            const result = await pdfPreviewService.renderPage(pageNum, canvas);
-            if (result.success) {
-              this.setData({
-                previewStatusText: `第${pageNum}页`,
-                isRendering: false
-              });
-              
-              // 更新缩放级别
-              const status = pdfPreviewService.getStatus();
-              this.setData({ zoomLevel: status.scale });
-            } else {
-              throw new Error('页面渲染失败');
-            }
-          } catch (renderError) {
-            console.error(`渲染第${pageNum}页失败:`, renderError);
-            this.setData({
-              previewStatusText: '渲染失败: ' + renderError.message,
-              isRendering: false
-            });
-            throw renderError;
-          }
-        } else {
-          throw new Error('无法获取Canvas节点');
-        }
-      });
-      
-    } catch (error) {
-      console.error(`渲染第${pageNum}页失败:`, error);
-      this.setData({
-        previewStatusText: '渲染失败',
-        isRendering: false
-      });
-      throw error;
+      await this.tryAppendPage(targetPage);
+      return true;
+    } catch (e) {
+      return false;
     }
   },
 
-  /**
-   * 缩放控制
-   */
+  // 跳转到目标页（若不存在则尝试加载）
+  async goToPageOrLoad(target) {
+    if (target < 1) return;
+    const ok = await this.ensurePageExists(target);
+    if (ok) {
+      this.setData({ currentPage: target, scrollIntoViewId: `page-${target}` });
+    } else {
+      wx.showToast({ title: '已是最后一页', icon: 'none' });
+    }
+  },
+
+  // 触摸手势（左右滑动翻页）
+  onTouchStart(e) {
+    const t = e.touches && e.touches[0] ? e.touches[0] : { clientX: 0, clientY: 0 };
+    this.setData({ touchStartX: t.clientX, touchStartY: t.clientY, touchStartTime: Date.now() });
+  },
+  async onTouchEnd(e) {
+    if (!e.changedTouches || !e.changedTouches[0]) return;
+    const end = e.changedTouches[0];
+    const deltaX = end.clientX - this.data.touchStartX;
+    const deltaY = end.clientY - this.data.touchStartY;
+    const deltaTime = Date.now() - this.data.touchStartTime;
+
+    if (deltaTime < 400 && Math.abs(deltaX) > 40 && Math.abs(deltaY) < 60) {
+      if (deltaX < 0) {
+        await this.goToPageOrLoad(this.data.currentPage + 1);
+      } else {
+        const prev = this.data.currentPage - 1;
+        if (prev >= 1) this.setData({ currentPage: prev, scrollIntoViewId: `page-${prev}` });
+      }
+    }
+  },
+
+  // 图片加载完成/失败回调
+  onImageLoad(e) {
+    const page = Number(e.currentTarget.dataset.page);
+    const key = `pageImages[${this.data.pageImages.findIndex(p=>p.page===page)}].loaded`;
+    if (key.endsWith('].loaded')) this.setData({ [key]: true });
+  },
+  onImageError(e) {
+    const page = Number(e.currentTarget.dataset.page);
+    const key = `pageImages[${this.data.pageImages.findIndex(p=>p.page===page)}].error`;
+    if (key.endsWith('].error')) this.setData({ [key]: true });
+  },
+
+  // 缩放（整体图片容器缩放）
   zoomIn() {
-    try {
-      const newScale = pdfPreviewService.zoomIn();
-      this.setData({ zoomLevel: newScale });
-      console.log('放大成功，当前缩放级别:', newScale);
-    } catch (error) {
-      console.error('放大失败:', error);
-    }
+    const scale = Math.min(3.0, this.data.pageScale + 0.25);
+    this.setData({ pageScale: scale });
   },
-
   zoomOut() {
-    try {
-      const newScale = pdfPreviewService.zoomOut();
-      this.setData({ zoomLevel: newScale });
-      console.log('缩小成功，当前缩放级别:', newScale);
-    } catch (error) {
-      console.error('缩小失败:', error);
-    }
+    const scale = Math.max(0.5, this.data.pageScale - 0.25);
+    this.setData({ pageScale: scale });
   },
-
   resetZoom() {
-    try {
-      const newScale = pdfPreviewService.resetScale();
-      this.setData({ zoomLevel: newScale });
-      console.log('重置缩放成功，当前缩放级别:', newScale);
-    } catch (error) {
-      console.error('重置缩放失败:', error);
-    }
+    this.setData({ pageScale: 1.0 }); // 重置缩放为1.0
   },
 
-  /**
-   * 页面导航
-   */
-  previousPage() {
-    try {
-      if (pdfPreviewService.previousPage()) {
-        const newPage = pdfPreviewService.getStatus().currentPage;
-        this.setData({ currentPage: newPage });
-        this.renderPdfPage(newPage);
-        console.log('跳转到上一页:', newPage);
-      } else {
-        wx.showToast({
-          title: '已经是第一页',
-          icon: 'none'
-        });
-      }
-    } catch (error) {
-      console.error('上一页失败:', error);
-    }
-  },
-
-  nextPage() {
-    try {
-      if (pdfPreviewService.nextPage()) {
-        const newPage = pdfPreviewService.getStatus().currentPage;
-        this.setData({ currentPage: newPage });
-        this.renderPdfPage(newPage);
-        console.log('跳转到下一页:', newPage);
-      } else {
-        wx.showToast({
-          title: '已经是最后一页',
-          icon: 'none'
-        });
-      }
-    } catch (error) {
-      console.error('下一页失败:', error);
-    }
-  },
-
-  /**
-   * Canvas触摸事件处理
-   */
-  onCanvasTouchStart(e) {
-    this.setData({
-      touchStartX: e.touches[0].clientX,
-      touchStartY: e.touches[0].clientY,
-      touchStartTime: Date.now()
-    });
-  },
-
-  onCanvasTouchMove(e) {
-    // 防止页面滚动
-    e.preventDefault();
-  },
-
-  onCanvasTouchEnd(e) {
-    if (!this.data.touchStartX || !this.data.touchStartY) return;
-    
-    const touchEndX = e.changedTouches[0].clientX;
-    const touchEndY = e.changedTouches[0].clientY;
-    const touchEndTime = Date.now();
-    
-    const deltaX = touchEndX - this.data.touchStartX;
-    const deltaY = touchEndY - this.data.touchStartY;
-    const deltaTime = touchEndTime - this.data.touchStartTime;
-    
-    // 判断是否为有效的滑动手势
-    if (deltaTime < 300 && Math.abs(deltaX) > 50 && Math.abs(deltaY) < 100) {
-      if (deltaX > 0) {
-        // 向右滑动，显示上一页
-        console.log('检测到向右滑动，显示上一页');
-        this.previousPage();
-      } else {
-        // 向左滑动，显示下一页
-        console.log('检测到向左滑动，显示下一页');
-        this.nextPage();
-      }
-    }
-    
-    // 清理触摸状态
-    this.setData({
-      touchStartX: null,
-      touchStartY: null,
-      touchStartTime: null
-    });
-  },
-
-  /**
-   * 检查PDF内容质量
-   */
-  checkPdfContentQuality() {
-    try {
-      const status = pdfPreviewService.getStatus();
-      
-      if (status.hasRealContent) {
-        // 显示真实内容信息
-        wx.showModal({
-          title: 'PDF内容检测',
-          content: `✓ PDF文件解析成功\n• 总页数: ${status.totalPages}页\n• 文件大小: ${Math.round(status.fileSize / 1024)}KB\n• 内容类型: 真实PDF内容`,
-          showCancel: false,
-          confirmText: '确定'
-        });
-      } else {
-        // 显示模拟内容信息
-        wx.showModal({
-          title: 'PDF内容检测',
-          content: `⚠ PDF文件解析失败\n• 总页数: ${status.totalPages}页（估算）\n• 文件大小: ${Math.round(status.fileSize / 1024)}KB\n• 内容类型: 模拟内容\n\n可能原因：\n• PDF文件格式不支持\n• 文件损坏\n• 解析器限制`,
-          showCancel: false,
-          confirmText: '确定'
-        });
-      }
-    } catch (error) {
-      console.error('PDF内容质量检测失败:', error);
-      wx.showToast({
-        title: '检测失败',
-        icon: 'none'
-      });
-    }
-  },
-
-  /**
-   * 重新解析PDF文件
-   */
-  async reparsePdf() {
-    if (!this.data.pdfFilePath) {
-      wx.showToast({
-        title: 'PDF文件未准备就绪',
-        icon: 'none'
-      });
+  // 下载（保留）
+  async startPdfDownload() {
+    const { fileId, title } = this.data;
+    if (!fileId) return;
+    if (!pdfDownloadService || typeof pdfDownloadService.startDownload !== 'function') {
+      wx.showToast({ title: '下载服务不可用', icon: 'none' });
       return;
     }
-
-    wx.showLoading({
-      title: '重新解析中...'
-    });
-
+    this.setData({ showDownloadProgress: true, downloadStatus: 'downloading', downloadProgress: 0 });
     try {
-      // 清理之前的PDF数据
-      pdfPreviewService.cleanup();
-      
-      // 重新加载PDF文件
-      const pdfInfo = await pdfPreviewService.loadPdf(this.data.pdfFilePath);
-      
-      // 重新渲染当前页
-      const canvasObj = await this.initCanvas();
-      await pdfPreviewService.renderPage(this.data.currentPage, canvasObj.canvas);
-      
-      // 更新状态
-      const status = pdfPreviewService.getStatus();
-      const statusText = status.hasRealContent ? 
-        '重新解析完成（真实PDF内容）' : 
-        '重新解析完成（模拟内容）';
-      
-      this.setData({
-        totalPages: pdfInfo.totalPages,
-        previewStatusText: statusText
-      });
-      
-      wx.hideLoading();
-      wx.showToast({
-        title: '重新解析完成',
-        icon: 'success'
-      });
-      
-    } catch (error) {
-      wx.hideLoading();
-      console.error('重新解析PDF失败:', error);
-      
-      this.setData({
-        previewStatusText: '重新解析失败'
-      });
-      
-      wx.showToast({
-        title: '重新解析失败',
-        icon: 'none'
-      });
+      await pdfDownloadService.startDownload(
+        fileId,
+        `${title}.pdf`,
+        (progress) => this.setData({ downloadProgress: progress }),
+        () => this.setData({ downloadStatus: 'completed', downloadProgress: 100, showDownloadProgress: false }),
+        (err) => {
+          console.error(err);
+          this.setData({ downloadStatus: 'failed', showDownloadProgress: false });
+        }
+      );
+    } catch (e) {
+      this.setData({ downloadStatus: 'failed', showDownloadProgress: false });
     }
   },
 
-  /**
-   * 返回上一页
-   */
-  onBack() {
-    wx.navigateBack();
-  },
-
-  /**
-   * 页面卸载时清理资源
-   */
-  onUnload() {
-    // 清理PDF预览器资源
-    if (pdfPreviewService) {
-      pdfPreviewService.cleanup();
-    }
-  }
+  onUnload() {}
 });

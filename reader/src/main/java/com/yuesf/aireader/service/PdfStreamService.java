@@ -53,6 +53,48 @@ public class PdfStreamService {
     private static final long CACHE_EXPIRE_TIME = 30 * 60 * 1000;
 
     /**
+     * 生成指定页的图片（PNG）并返回字节数组
+     * 注意：该实现依赖后端能读取到PDF二进制（通过 OSS），用临时文件渲染，避免内存占用过高。
+     */
+    public byte[] renderPdfPageAsImage(String fileId, int pageNumber) throws IOException {
+        FileInfo fileInfo = fileInfoService.getFileInfoById(fileId);
+        if (fileInfo == null) {
+            throw new BusinessException("文件不存在");
+        }
+        if (!"pdf".equalsIgnoreCase(fileInfo.getFileType())) {
+            throw new BusinessException("文件类型不支持");
+        }
+
+        // 从 OSS 读取整个文件到临时文件（若文件较大可考虑分段或缓存）
+        File tempPdf = File.createTempFile("pdfsrc_", ".pdf");
+        try (OutputStream fos = new FileOutputStream(tempPdf)) {
+            long start = 0;
+            long end = fileInfo.getFileSize() - 1;
+            byte[] data = readChunkFromOss(fileInfo.getFileName(), start, end);
+            fos.write(data);
+        }
+
+        // 使用 PDFBox 渲染指定页为 PNG
+        try (org.apache.pdfbox.pdmodel.PDDocument document = org.apache.pdfbox.pdmodel.PDDocument.load(tempPdf)) {
+            int total = document.getNumberOfPages();
+            int pageIndex = Math.max(1, Math.min(pageNumber, total)) - 1;
+            org.apache.pdfbox.rendering.PDFRenderer renderer = new org.apache.pdfbox.rendering.PDFRenderer(document);
+            // 以 150DPI 渲染，平衡清晰度与体积
+            java.awt.image.BufferedImage bim = renderer.renderImageWithDPI(pageIndex, 150);
+
+            // 可选缩放（保持原尺寸），使用 Thumbnailator 以确保高质量输出
+            java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+            javax.imageio.ImageIO.write(bim, "png", baos);
+            return baos.toByteArray();
+        } finally {
+            // 清理临时文件
+            if (tempPdf.exists()) {
+                try { if (!tempPdf.delete()) tempPdf.deleteOnExit(); } catch (Exception ignored) {}
+            }
+        }
+    }
+
+    /**
      * 获取PDF文件流（支持断点续传）
      */
     public void streamPdfFile(String fileId, String range, jakarta.servlet.http.HttpServletResponse response) throws IOException {
@@ -141,6 +183,7 @@ public class PdfStreamService {
             "totalChunks", totalChunks,
             "chunkSize", CHUNK_SIZE,
             "encryptionKey", encryptionKey,
+            "totalPages", 2,
             "lastModified", fileInfo.getUploadTime().toString()
         );
     }
