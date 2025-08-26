@@ -32,6 +32,7 @@ Page({
     // UI
     loading: true,
     isLastPage: false,
+    showEndLine: false, // 添加底线提示显示标志
 
     // 防重：请求中的页
     pendingPages: {}
@@ -77,23 +78,32 @@ Page({
     if (exists) return Promise.resolve();
     if (this.data.pendingPages[pageIndex]) return Promise.resolve();
 
-    const url = pdfImagePreviewService.getPageImage(pageIndex);
+    const src = pdfImagePreviewService.getPageImage(pageIndex);
     this.setData({ [`pendingPages[${pageIndex}]`]: true });
 
     return new Promise((resolve, reject) => {
       wx.getImageInfo({
-        src: url,
-        success: () => {
+        src: src,
+        success: (res) => {
           const exists2 = this.data.pageImages.find(p => p.page === pageIndex);
           if (!exists2) {
-            const newItem = { page: pageIndex, id: `page-${pageIndex}`, src: url, loaded: false, error: false };
+            const newItem = { 
+              page: pageIndex, 
+              id: `page-${pageIndex}`, 
+              src: src, 
+              loaded: false, 
+              error: false 
+            };
             const pageImages = this.data.pageImages.concat(newItem);
             this.setData({ pageImages, visiblePages: pageImages.length, isLastPage: false });
+            this.setData({ [`pendingPages[${pageIndex}]`]: false });
+            resolve();
+          } else {
+            this.setData({ [`pendingPages[${pageIndex}]`]: false });
+            resolve();
           }
-          this.setData({ [`pendingPages[${pageIndex}]`]: false });
-          resolve();
-      },
-      fail: () => {
+        },
+        fail: () => {
           this.setData({ [`pendingPages[${pageIndex}]`]: false, isLastPage: true });
           reject(new Error('last-page'));
         }
@@ -101,15 +111,22 @@ Page({
     });
   },
 
+
   // 滚动到底：继续尝试加载后续5页（带防重）
   async onScrollToLower() {
-    if (this.data.isLastPage) return;
+    if (this.data.isLastPage) {
+      // 当已经是最后一页时，显示底线提示
+      this.setData({ showEndLine: true });
+      return;
+    }
     const start = (this.data.pageImages[this.data.pageImages.length - 1]?.page || 0) + 1;
     for (let i = 0; i < BATCH_SIZE; i++) {
       const p = start + i;
       try {
         await this.tryAppendPage(p);
       } catch (e) {
+        // 当加载失败时，表示已到最后一页，显示底线提示
+        this.setData({ isLastPage: true, showEndLine: true });
         break;
       }
     }
@@ -194,20 +211,26 @@ Page({
       wx.showToast({ title: '下载服务不可用', icon: 'none' });
       return;
     }
+    
     this.setData({ showDownloadProgress: true, downloadStatus: 'downloading', downloadProgress: 0 });
     try {
       await pdfDownloadService.startDownload(
         fileId,
         `${title}.pdf`,
         (progress) => this.setData({ downloadProgress: progress }),
-        () => this.setData({ downloadStatus: 'completed', downloadProgress: 100, showDownloadProgress: false }),
+        (filePath) => {
+          this.setData({ downloadStatus: 'completed', downloadProgress: 100, showDownloadProgress: false });
+          wx.showToast({ title: '下载完成', icon: 'success' });
+        },
         (err) => {
           console.error(err);
           this.setData({ downloadStatus: 'failed', showDownloadProgress: false });
+          wx.showToast({ title: '下载失败', icon: 'none' });
         }
       );
     } catch (e) {
       this.setData({ downloadStatus: 'failed', showDownloadProgress: false });
+      wx.showToast({ title: '下载异常', icon: 'none' });
     }
   },
 

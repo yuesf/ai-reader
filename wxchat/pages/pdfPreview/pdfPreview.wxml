@@ -34,5 +34,10 @@
       <view class="loading-spinner"></view>
       <text class="loading-text">加载中...</text>
     </view>
+    
+    <!-- 底线提示 -->
+    <view wx:if="{{showEndLine}}" class="end-line-container">
+      <view class="end-line-text">—— 文件也是有底线的 ——</view>
+    </view>
   </scroll-view>
 </view>
