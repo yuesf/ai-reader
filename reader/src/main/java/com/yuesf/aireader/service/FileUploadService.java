@@ -194,14 +194,6 @@ public class FileUploadService {
         return ossClient.generatePresignedUrl(ossProperties.getBucketName(), objectKey, expirationDate).toString();
     }
 
-    public String generateUrl(String objectKey, int expiration) {
-        java.util.Date expirationDate = new java.util.Date(new java.util.Date().getTime() + expiration * 1000);
-        String signedUrl = ossClient.generatePresignedUrl(ossProperties.getBucketName(), objectKey, expirationDate).toString();
-        // 替换为CDN域名（关键步骤！）
-        return signedUrl.toString()
-                .replace(ossProperties.getUpload().getBaseUrl(), ossProperties.getUpload().getCdnDomain());
-
-    }
 
     /**
      * 将PDF文件转换为预览图片

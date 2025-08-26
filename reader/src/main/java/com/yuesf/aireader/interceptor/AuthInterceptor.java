@@ -33,7 +33,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         String method = request.getMethod();
         // 公开接口直接放行
         if (uri.startsWith("/v1/auth/")
-                || uri.startsWith("/v1/health")
+                || uri.startsWith("/health")
                 || "/v1/mini/reports".equals(uri)
                 || ("GET".equals(method) && uri.startsWith("/v1/images/"))) {
             System.out.println("公开接口，直接放行");

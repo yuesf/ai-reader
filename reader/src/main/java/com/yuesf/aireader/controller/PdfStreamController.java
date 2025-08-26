@@ -125,35 +125,6 @@ public class PdfStreamController {
     }
 
     /**
-     * 健康检查接口
-     * GET /pdf/health
-     * 用于测试PDF流服务是否正常运行
-     */
-    @GetMapping("/health")
-    public ApiResponse<String> healthCheck() {
-        try {
-            log.info("PDF流服务健康检查");
-            
-            // 检查基本服务状态
-            // Assuming ossClient and fileInfoService are available in the context
-            // if (ossClient == null) {
-            //     return ApiResponse.error(500, "OSS客户端未初始化");
-            // }
-            
-            // if (fileInfoService == null) {
-            //     return ApiResponse.error(500, "文件信息服务未初始化");
-            // }
-            
-            log.info("PDF流服务运行正常");
-            return ApiResponse.success("PDF流服务运行正常");
-            
-        } catch (Exception e) {
-            log.error("PDF流服务健康检查失败", e);
-            return ApiResponse.error(500, "PDF流服务异常: " + e.getMessage());
-        }
-    }
-
-    /**
      * 按页返回PDF渲染图片（PNG）
      * GET /v1/pdf/page/{fileId}/{page}
      * 用于小程序端图片化预览

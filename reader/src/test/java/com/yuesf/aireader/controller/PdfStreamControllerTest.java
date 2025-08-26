@@ -25,7 +25,7 @@ class PdfStreamControllerTest {
 
     @Test
     void health_ok() throws Exception {
-        mockMvc.perform(get("/v1/pdf/health"))
+        mockMvc.perform(get("/health"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json"))
                 .andExpect(jsonPath("$.code").value(200));

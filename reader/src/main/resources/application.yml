@@ -1,13 +1,13 @@
 server:
-  port: 443
+  port: 8080
   servlet:
     context-path: /
-  ssl:
-    key-store: classpath:yuesf.cn.jks
-    key-store-password: changeit
-    key-store-type: JKS
-    key-alias: yuesf.cn
-    enabled: true
+#  ssl:
+#    key-store: classpath:yuesf.cn.jks
+#    key-store-password: changeit
+#    key-store-type: JKS
+#    key-alias: yuesf.cn
+#    enabled: true
 
 spring:
   application:
@@ -69,4 +69,3 @@ app:
       max-file-size: 500MB
       allowed-extensions: jpg,jpeg,png,gif,pdf,doc,docx,xls,xlsx,ppt,pptx
       base-url: https://ai-doc-low.oss-cn-hangzhou.aliyuncs.com
-      cdn-domain: https://yuesf.cn

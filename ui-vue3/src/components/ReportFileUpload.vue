@@ -157,7 +157,7 @@ async function testApi() {
     // 测试1: 使用fetch测试基础连接
     console.log('测试1: 使用fetch测试基础连接');
     try {
-      const response = await fetch('/v1/health');
+      const response = await fetch('/health');
       const data = await response.json();
       console.log('健康检查响应:', data);
       ElMessage.success('基础连接正常');
@@ -170,7 +170,7 @@ async function testApi() {
     console.log('测试2: 使用axios测试');
     try {
       const axios = (await import('axios')).default;
-      const response = await axios.get('/v1/health');
+      const response = await axios.get('/health');
       console.log('axios健康检查响应:', response.data);
       ElMessage.success('axios连接正常');
     } catch (error) {
@@ -181,7 +181,7 @@ async function testApi() {
     // 测试3: 直接测试后端地址
     console.log('测试3: 直接测试后端地址');
     try {
-      const response = await fetch('http://api.yuesf.cn/v1/health');
+      const response = await fetch('https://yuesf.cn/health');
       const data = await response.json();
       console.log('直接后端连接响应:', data);
       ElMessage.success('直接后端连接正常');

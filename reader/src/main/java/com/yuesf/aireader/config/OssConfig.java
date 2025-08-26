@@ -68,7 +68,6 @@ public class OssConfig {
             private List<String> allowedExtensions;
             // 上传文件的基准URL
             private String baseUrl;
-            private String cdnDomain;
         }
     }
 }

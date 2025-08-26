@@ -7,7 +7,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/v1': {
-        target: 'http://api.yuesf.cn',
+        target: 'http://127.0.0.1:8080',
         changeOrigin: true,
         configure: (proxy, options) => {
           proxy.on('error', (err, req, res) => {
