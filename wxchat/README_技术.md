@@ -323,17 +323,17 @@ POST /v1/pdf/cache/cleanup           # 清理过期缓存（管理员）
 ```javascript
 const ENV = {
   DEV: {
-    BASE_URL: 'http://api.yuesf.cn',    // 开发环境
+    BASE_URL: 'https://yuesf.cn',    // 开发环境
     API_VERSION: 'v1',
     DEBUG: true
   },
   TEST: {
-    BASE_URL: 'http://test.yuesf.cn',     // 测试环境
+    BASE_URL: 'https://yuesf.cn',     // 测试环境
     API_VERSION: 'v1',
     DEBUG: true
   },
   PROD: {
-    BASE_URL: 'https://wx.yuesf.cn',      // 生产环境
+    BASE_URL: 'https://yuesf.cn',      // 生产环境
     API_VERSION: 'v1',
     DEBUG: false
   }

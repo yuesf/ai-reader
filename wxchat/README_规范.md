@@ -68,14 +68,14 @@ utils/
 #### 1.1 变量声明
 ```javascript
 // ✅ 推荐：使用 const 和 let
-const BASE_URL = 'http://api.yuesf.cn'
+const BASE_URL = 'https://yuesf.cn'
 const reportAPI = require('../../utils/api.js')
 
 let currentPage = 1
 let isLoading = false
 
 // ❌ 避免：使用 var
-var baseUrl = 'http://api.yuesf.cn'
+var baseUrl = 'https://yuesf.cn'
 ```
 
 #### 1.2 函数声明
@@ -179,7 +179,7 @@ this.setData({
 #### 3.1 API 服务封装
 ```javascript
 // utils/api.js
-const BASE_URL = 'http://api.yuesf.cn'
+const BASE_URL = 'https://yuesf.cn'
 
 /**
  * 通用请求方法

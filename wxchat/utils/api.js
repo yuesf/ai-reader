@@ -1,6 +1,6 @@
 // api.js - API服务文件
 // 将基础URL指向后端服务（根据实际部署环境修改为域名/内网地址）
-const BASE_URL = 'http://api.yuesf.cn'  // 本地测试用，生产环境改为实际域名
+const BASE_URL = 'https://yuesf.cn'  // 本地测试用，生产环境改为实际域名
 
 /**
  * 通用请求方法
@@ -9,11 +9,13 @@ const BASE_URL = 'http://api.yuesf.cn'  // 本地测试用，生产环境改为�
  * @returns {Promise} 请求结果
  */
 const request = (url, options = {}) => {
+  console.log(`API: request to ${url}`, options);
   return new Promise((resolve, reject) => {
     wx.request({
       url: `${BASE_URL}${url}`,
       ...options,
       success: (res) => {
+        console.log(`API: request success for ${url}`, res);
         if (res.statusCode === 200) {
           if (res.data.code === 200) {
             resolve(res.data)
@@ -25,6 +27,7 @@ const request = (url, options = {}) => {
         }
       },
       fail: (err) => {
+        console.error(`API: request failed for ${url}`, err);
         reject(new Error(err.errMsg || '网络请求失败'))
       }
     })
@@ -73,6 +76,7 @@ const reportAPI = {
    */
   getReports: (params = {}) => {
     // 使用小程序专用接口 POST /v1/mini/reports
+    console.log('API: reportAPI.getReports called', params);
     return post('/v1/mini/reports', params)
   },
 
@@ -83,6 +87,7 @@ const reportAPI = {
    */
   searchReports: (searchParams) => {
     // 使用小程序专用接口 POST /v1/mini/reports
+    console.log('API: reportAPI.searchReports called', searchParams);
     return post('/v1/mini/reports', searchParams)
   },
 
@@ -93,6 +98,7 @@ const reportAPI = {
    */
   getReportDetail: (id) => {
     // 使用小程序专用接口 GET /v1/mini/reports/{id}
+    console.log('API: reportAPI.getReportDetail called', id);
     return get(`/v1/mini/reports/${id}`)
   },
   
@@ -103,6 +109,7 @@ const reportAPI = {
    */
   getReportFileUrl: (id) => {
     // 使用小程序专用接口 GET /v1/mini/reports/{id}/file
+    console.log('API: reportAPI.getReportFileUrl called', id);
     return get(`/v1/mini/reports/${id}/file`)
   },
 
@@ -113,6 +120,7 @@ const reportAPI = {
    */
   getPdfFileInfo: (fileId) => {
     // 使用PDF流服务接口 GET /v1/pdf/info/{fileId}
+    console.log('API: reportAPI.getPdfFileInfo called', fileId);
     return get(`/v1/pdf/info/${fileId}`)
   },
 
@@ -124,6 +132,7 @@ const reportAPI = {
    */
   getPdfChunk: (fileId, chunkIndex) => {
     // 使用PDF流服务接口 GET /v1/pdf/chunk/{fileId}/{chunkIndex}
+    console.log('API: reportAPI.getPdfChunk called', { fileId, chunkIndex });
     return new Promise((resolve, reject) => {
       wx.request({
         url: `${BASE_URL}/v1/pdf/chunk/${fileId}/${chunkIndex}`,
@@ -154,7 +163,18 @@ const reportAPI = {
    */
   getPdfHealth: () => {
     // 使用PDF流服务接口 GET /v1/pdf/health
+    console.log('API: reportAPI.getPdfHealth called');
     return get('/v1/pdf/health');
+  },
+  
+  /**
+   * 获取PDF信息（用于图片预览）
+   * @param {string} fileId - 文件ID
+   * @returns {Promise} PDF信息
+   */
+  getPdfInfo: (fileId) => {
+    console.log('API: reportAPI.getPdfInfo called', fileId);
+    return get(`/v1/pdf/info/${fileId}`);
   }
 }
 

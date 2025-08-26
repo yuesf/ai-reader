@@ -47,6 +47,54 @@
 
 ## 配置说明
 
+### SSL/HTTPS 配置
+
+本服务支持 HTTPS 协议，以确保数据传输的安全性。默认配置如下：
+
+- HTTPS 端口: 443
+- HTTP 端口: 80 (自动重定向到 HTTPS)
+- SSL 证书: `yuesf.cn.jks` (位于 `src/main/resources` 目录)
+
+#### SSL 配置文件
+
+1. `application.yml` 包含 SSL 证书配置:
+   ```yaml
+   server:
+     port: 443
+     ssl:
+       key-store: classpath:yuesf.cn.jks
+       key-store-password: changeit
+       key-store-type: JKS
+       key-alias: yuesf.cn
+       enabled: true
+   ```
+
+2. `application.properties` 包含 HTTP 端口配置:
+   ```properties
+   server.http.port=80
+   ```
+
+3. `SslConfig.java` 配置了 HTTP 到 HTTPS 的重定向:
+   - HTTP 请求会自动重定向到 HTTPS
+   - 同时监听 80 和 443 端口
+
+#### 生成本地开发SSL证书
+
+有关如何生成本地开发用SSL证书的详细说明，请参考 [SSL_CERTIFICATE_GENERATION.md](file:///d:/projects/ai-reader/reader/SSL_CERTIFICATE_GENERATION.md) 文件。
+
+#### 自定义 SSL 证书
+
+如需使用自定义 SSL 证书，请替换以下文件:
+1. 将新的 JKS 证书文件放置在 `src/main/resources` 目录下
+2. 更新 `application.yml` 中的证书配置:
+   ```yaml
+   server:
+     ssl:
+       key-store: classpath:your-certificate.jks
+       key-store-password: your-password
+       key-alias: your-alias
+   ```
+
 ### 阿里云文档智能服务配置
 
 本服务使用阿里云 DashScope 的兼容 OpenAI 接口来生成报告摘要。配置通过 `application.properties` 文件进行管理。
@@ -168,7 +216,7 @@ public class ReportController {
 
 ### 日志示例
 
-```java
+``java
 @Slf4j
 @Service
 public class ReportService {

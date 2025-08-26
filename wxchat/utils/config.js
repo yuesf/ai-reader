@@ -8,14 +8,14 @@ const ENV = {
   
   // 测试环境
   TEST: {
-    BASE_URL: 'http://wx.yuesf.cn',
+    BASE_URL: 'http://yuesf.cn',
     API_VERSION: 'v1',
     DEBUG: true
   },
   
   // 生产环境
   PROD: {
-    BASE_URL: 'https://wx.yuesf.cn',
+    BASE_URL: 'https://yuesf.cn',
     API_VERSION: 'v1',
     DEBUG: false
   }

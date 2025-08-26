@@ -10,11 +10,13 @@ page {
 
 /* 搜索区域样式 */
 .search-section {
-  background: linear-gradient(135deg, #f4a460, #daa520);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 20rpx;
   position: sticky;
   top: 0;
   z-index: 100;
+  width: 98%;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
 }
 
 .search-bar {
@@ -22,27 +24,31 @@ page {
   align-items: center;
   background: white;
   border-radius: 50rpx;
-  padding: 10rpx 20rpx;
   box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
 }
 
 .search-input {
   flex: 1;
-  padding: 20rpx;
+  padding: 20rpx 30rpx; /* 增加左右内边距 */
   font-size: 28rpx;
   border: none;
   outline: none;
 }
 
 .search-btn {
-  background: linear-gradient(135deg, #f4a460, #daa520);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
   border-radius: 50rpx;
-  padding: 20rpx 40rpx;
+  padding: 20rpx 30rpx; /* 增加左右内边距 */
   font-size: 28rpx;
   font-weight: bold;
-  margin-left: 20rpx;
+  margin-left: 0; /* 移除左边距 */
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+.search-btn:active {
+  transform: scale(0.98);
 }
 
 /* 报告列表样式 */
@@ -54,6 +60,11 @@ page {
   padding: 10rpx 20rpx;
   color: #999;
   font-size: 24rpx;
+  text-align: center;
+  background: white;
+  border-radius: 10rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
 }
 
 /* 加载状态样式 */
@@ -63,13 +74,17 @@ page {
   align-items: center;
   justify-content: center;
   padding: 100rpx 20rpx;
+  background: white;
+  border-radius: 16rpx;
+  margin: 20rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
 }
 
 .loading-spinner {
   width: 60rpx;
   height: 60rpx;
   border: 6rpx solid #f3f3f3;
-  border-top: 6rpx solid #f4a460;
+  border-top: 6rpx solid #667eea;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 20rpx;
@@ -98,35 +113,63 @@ page {
   margin-bottom: 20rpx;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.report-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.03) 0%, rgba(118, 75, 162, 0.03) 100%);
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.report-item:active::before {
+  opacity: 1;
 }
 
 .report-item:active {
-  background-color: #f8f8f8;
+  transform: translateY(2rpx);
+  box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.1);
 }
 
 .report-main {
   display: flex;
   align-items: flex-start;
+  position: relative;
+  z-index: 1;
 }
 
 /* 缩略图样式 */
 .report-thumbnail {
   margin-right: 30rpx;
   flex-shrink: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .thumbnail-img {
   width: 120rpx;
   height: 160rpx;
   border-radius: 12rpx;
-  background: linear-gradient(135deg, #4a90e2, #7b68ee);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
 }
 
 /* 报告信息样式 */
 .report-info {
   flex: 1;
   min-width: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .report-title {
@@ -185,12 +228,12 @@ page {
 }
 
 .tag {
-  background: #f0f0f0;
-  color: #666;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
   padding: 6rpx 12rpx;
   border-radius: 16rpx;
   font-size: 22rpx;
-  border: 1rpx solid #e0e0e0;
+  box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.1);
 }
 
 /* 发布时间样式 */
@@ -201,6 +244,8 @@ page {
   color: #999;
   font-size: 24rpx;
   margin-top: 12rpx;
+  position: relative;
+  z-index: 1;
 }
 
 .date-icon {
@@ -218,6 +263,9 @@ page {
   padding: 100rpx 20rpx;
   color: #999;
   font-size: 28rpx;
+  background: white;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
 }
 
 /* 空状态样式 */
@@ -226,6 +274,9 @@ page {
   padding: 100rpx 20rpx;
   color: #999;
   font-size: 28rpx;
+  background: white;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
 }
 
 /* 加载更多样式 */

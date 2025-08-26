@@ -30,10 +30,12 @@ Page({
     // 页面状态
     loading: false,
     error: false,
-    errorMessage: ''
+    errorMessage: '',
+    
   },
 
   onLoad(options) {
+    console.log('ReportDetail: onLoad called', options);
     // 从页面参数获取报告ID
     const reportId = options.id;
     this.setData({ reportId });
@@ -46,6 +48,7 @@ Page({
    * 获取报告详情
    */
   async getReportDetail(reportId) {
+    console.log('ReportDetail: getReportDetail called', reportId);
     try {
       this.setData({ loading: true, error: false });
       
@@ -74,6 +77,7 @@ Page({
           reportRating: report.rating || 0,
           reportComments: report.comments || []
         });
+        
       } else {
         this.setData({ 
           error: true, 
@@ -101,10 +105,12 @@ Page({
     }
   },
 
+
   /**
    * 下载文档
    */
   downloadDocument() {
+    console.log('ReportDetail: downloadDocument called');
     if (!this.data.reportFileId) {
       wx.showToast({
         title: '报告文件不存在',
@@ -134,6 +140,7 @@ Page({
    * 处理下载逻辑
    */
   async processDownload() {
+    console.log('ReportDetail: processDownload called');
     try {
       wx.showLoading({ title: '准备下载...' });
       
@@ -162,7 +169,7 @@ Page({
    * 跳转到预览页面
    */
   goToPreview() {
-    console.log('点击预览按钮，当前数据:', {
+    console.log('ReportDetail: goToPreview called', {
       reportId: this.data.reportId,
       fileId: this.data.reportFileId,
       title: this.data.reportTitle

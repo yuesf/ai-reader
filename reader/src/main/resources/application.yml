@@ -1,7 +1,13 @@
 server:
-  port: 80
+  port: 443
   servlet:
     context-path: /
+  ssl:
+    key-store: classpath:yuesf.cn.jks
+    key-store-password: changeit
+    key-store-type: JKS
+    key-alias: yuesf.cn
+    enabled: true
 
 spring:
   application:
@@ -48,9 +54,9 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
 app:
-  api:
-    version: v1
-    base-url: https://wx.example.com/v1
+#  api:
+#    version: v1
+#    base-url: https://yuesf.cn/v1
   
   # 阿里云OSS配置
   oss:
@@ -63,4 +69,4 @@ app:
       max-file-size: 500MB
       allowed-extensions: jpg,jpeg,png,gif,pdf,doc,docx,xls,xlsx,ppt,pptx
       base-url: https://ai-doc-low.oss-cn-hangzhou.aliyuncs.com
-      cdn-domain: https://oss.yuesf.cn
+      cdn-domain: https://yuesf.cn

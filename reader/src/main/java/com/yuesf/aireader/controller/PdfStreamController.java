@@ -155,7 +155,7 @@ public class PdfStreamController {
 
     /**
      * 按页返回PDF渲染图片（PNG）
-     * GET /pdf/page/{fileId}/{page}
+     * GET /v1/pdf/page/{fileId}/{page}
      * 用于小程序端图片化预览
      */
     @GetMapping("/page/{fileId}/{page}")

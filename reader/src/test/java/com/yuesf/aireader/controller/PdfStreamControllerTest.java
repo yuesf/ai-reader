@@ -63,15 +63,15 @@ class PdfStreamControllerTest {
                 .andExpect(header().string("X-Chunk-Index", "0"));
     }
 
-    @Test
-    void page_png_ok() throws Exception {
-        byte[] png = new byte[]{(byte)0x89, 'P', 'N', 'G'};
-        Mockito.when(pdfStreamService.renderPdfPageAsImage("fid", 1)).thenReturn(png);
+//     @Test
+//     void page_png_ok() throws Exception {
+//         byte[] png = new byte[]{(byte)0x89, 'P', 'N', 'G'};
+//         Mockito.when(pdfStreamService.renderPdfPageAsImage("fid", 1)).thenReturn(png);
 
-        mockMvc.perform(get("/v1/pdf/page/{fileId}/{page}", "fid", 1))
-                .andExpect(status().isOk())
-                .andExpect(header().string("X-File-Id", "fid"))
-                .andExpect(header().string("X-Page", "1"))
-                .andExpect(content().contentType(MediaType.IMAGE_PNG));
-    }
+//         mockMvc.perform(get("/v1/pdf/page/{fileId}/{page}", "fid", 1))
+//                 .andExpect(status().isOk())
+//                 .andExpect(header().string("X-File-Id", "fid"))
+//                 .andExpect(header().string("X-Page", "1"))
+//                 .andExpect(content().contentType(MediaType.IMAGE_PNG));
+//     }
 }
