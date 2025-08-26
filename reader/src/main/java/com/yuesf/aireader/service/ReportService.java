@@ -141,6 +141,7 @@ public class ReportService {
                 FileInfo newFileInfo = reportProcessingService.generateAndUploadThumbnailFromPdf(fileInfo);
                 String newThumbnailKey = "/v1/images/" + newFileInfo.getId();
                 report.setThumbnail(newThumbnailKey);
+                report.setPages(newFileInfo.getPageNums());
             }
         } catch (Exception e) {
             // 不中断创建流程，但记录错误
@@ -205,8 +206,8 @@ public class ReportService {
         existingReport.setPrice(request.getPrice() != null ? request.getPrice() : existingReport.getPrice());
 
         // 如果提供了新的文件ID，更新文件信息
-        if (request.getReportFileId() != null && !request.getReportFileId().isBlank()) {
-            FileInfo fileInfo = fileInfoService.getFileInfoById(request.getReportFileId());
+        if (existingReport.getReportFileId() != null && !existingReport.getReportFileId().isBlank()) {
+            FileInfo fileInfo = fileInfoService.getFileInfoById(existingReport.getReportFileId());
             if (fileInfo == null || !"ACTIVE".equals(fileInfo.getStatus())) {
                 throw new IllegalArgumentException("报告文件信息不存在或已失效，请重新上传文件");
             }
@@ -216,15 +217,14 @@ public class ReportService {
             existingReport.setReportFileName(fileInfo.getOriginalName());
             existingReport.setReportFileSize(String.valueOf(fileInfo.getFileSize()));
 
-            // 如果更换了文件，重新生成缩略图
-            if (!request.getReportFileId().equals(existingReport.getReportFileId())) {
-                try {
-                    FileInfo newFileInfo = reportProcessingService.generateAndUploadThumbnailFromPdf(fileInfo);
-                    String newThumbnailKey = "/v1/images/" + newFileInfo.getId();
-                    existingReport.setThumbnail(newThumbnailKey);
-                } catch (Exception e) {
-                    log.error("重新生成缩略图失败: " + e.getMessage());
-                }
+            // 重新生成缩略图
+            try {
+                FileInfo newFileInfo = reportProcessingService.generateAndUploadThumbnailFromPdf(fileInfo);
+                String newThumbnailKey = "/v1/images/" + newFileInfo.getId();
+                existingReport.setThumbnail(newThumbnailKey);
+                existingReport.setPages(newFileInfo.getPageNums());
+            } catch (Exception e) {
+                log.error("重新生成缩略图失败: " + e.getMessage());
             }
         }
 

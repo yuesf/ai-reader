@@ -4,10 +4,12 @@ import com.aliyun.oss.OSS;
 import com.aliyun.oss.model.ObjectMetadata;
 import com.aliyun.oss.model.PutObjectRequest;
 import com.aliyun.oss.model.PutObjectResult;
-import com.yuesf.aireader.config.OssConfig.OssProperties;
+import com.yuesf.aireader.config.OssConfig;
 import com.yuesf.aireader.entity.FileInfo;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,10 +26,12 @@ public class FileUploadService {
     private OSS ossClient;
 
     @Autowired
-    private OssProperties ossProperties;
+    private OssConfig.OssProperties ossProperties;
 
     @Autowired
     private FileInfoService fileInfoService;
+
+    private static final Logger logger = LoggerFactory.getLogger(FileUploadService.class);
 
     /**
      * 上传文件到阿里云OSS并保存文件信息

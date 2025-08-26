@@ -39,7 +39,8 @@ CREATE TABLE IF NOT EXISTS file_info (
     upload_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     upload_user_id VARCHAR(50),
     status VARCHAR(20) DEFAULT 'ACTIVE', -- ACTIVE, DELETED
-    request_id VARCHAR(100)
+    request_id VARCHAR(100),
+    page_nums INTEGER DEFAULT 0
 );
 
 -- 后台用户表（简单账号密码，实际生产请使用加盐哈希）

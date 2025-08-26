@@ -68,9 +68,9 @@ reader/
 - 用户信息存储在SQLite数据库中
 
 #### 3.1.2 核心类
-- [AuthController](file:///d:/projects/ai-reader/reader/src/main/java/com/yuesf/aireader/controller/AuthController.java#L23-L77)：处理认证相关接口
-- [AuthInterceptor](file:///d:/projects/ai-reader/reader/src/main/java/com/yuesf/aireader/interceptor/AuthInterceptor.java#L19-L57)：认证拦截器
-- [AuthService](file:///d:/projects/ai-reader/reader/src/main/java/com/yuesf/aireader/service/AuthService.java#L21-L66)：认证服务实现
+- [AuthController](/ai-reader/reader/src/main/java/com/yuesf/aireader/controller/AuthController.java#L23-L77)：处理认证相关接口
+- [AuthInterceptor](/ai-reader/reader/src/main/java/com/yuesf/aireader/interceptor/AuthInterceptor.java#L19-L57)：认证拦截器
+- [AuthService](/ai-reader/reader/src/main/java/com/yuesf/aireader/service/AuthService.java#L21-L66)：认证服务实现
 
 ### 3.2 报告管理模块
 
@@ -81,9 +81,9 @@ reader/
 - 通过外键关联保证数据一致性
 
 #### 3.2.2 核心类
-- [ReportController](file:///d:/projects/ai-reader/reader/src/main/java/com/yuesf/aireader/controller/ReportController.java#L24-L115)：处理报告相关接口
-- [ReportService](file:///d:/projects/ai-reader/reader/src/main/java/com/yuesf/aireader/service/ReportService.java#L25-L144)：报告业务逻辑实现
-- [ReportMapper](file:///d:/projects/ai-reader/reader/src/main/java/com/yuesf/aireader/mapper/ReportMapper.java#L15-L35)：报告数据访问接口
+- [ReportController](/ai-reader/reader/src/main/java/com/yuesf/aireader/controller/ReportController.java#L24-L115)：处理报告相关接口
+- [ReportService](/ai-reader/reader/src/main/java/com/yuesf/aireader/service/ReportService.java#L25-L144)：报告业务逻辑实现
+- [ReportMapper](/ai-reader/reader/src/main/java/com/yuesf/aireader/mapper/ReportMapper.java#L15-L35)：报告数据访问接口
 
 ### 3.3 文件上传模块
 
@@ -96,9 +96,9 @@ reader/
 - 支持私有文件访问控制
 
 #### 3.3.2 核心类
-- [FileUploadController](file:///d:/projects/ai-reader/reader/src/main/java/com/yuesf/aireader/controller/FileUploadController.java#L28-L126)：处理文件上传相关接口
-- [FileUploadService](file:///d:/projects/ai-reader/reader/src/main/java/com/yuesf/aireader/service/FileUploadService.java#L31-L151)：文件上传业务逻辑实现
-- [OssConfig](file:///d:/projects/ai-reader/reader/src/main/java/com/yuesf/aireader/config/OssConfig.java#L15-L43)：OSS配置类
+- [FileUploadController](/ai-reader/reader/src/main/java/com/yuesf/aireader/controller/FileUploadController.java#L28-L126)：处理文件上传相关接口
+- [FileUploadService](/ai-reader/reader/src/main/java/com/yuesf/aireader/service/FileUploadService.java#L31-L151)：文件上传业务逻辑实现
+- [OssConfig](/ai-reader/reader/src/main/java/com/yuesf/aireader/config/OssConfig.java#L15-L43)：OSS配置类
 
 ## 4. 数据库设计
 
@@ -163,7 +163,7 @@ reader/
 - 使用HTTP动词表示操作类型（GET、POST、PUT、DELETE）
 - 使用名词表示资源
 - 使用HTTP状态码表示操作结果
-- 所有接口返回统一的[ApiResponse](file:///d:/projects/ai-reader/reader/src/main/java/com/yuesf/aireader/dto/ApiResponse.java#L11-L65)包装格式
+- 所有接口返回统一的[ApiResponse](/ai-reader/reader/src/main/java/com/yuesf/aireader/dto/ApiResponse.java#L11-L65)包装格式
 
 ### 5.2 接口统一返回格式
 ```json
@@ -198,7 +198,7 @@ reader/
 ## 6. 阿里云OSS集成
 
 ### 6.1 OSS配置
-通过[application.yml](file:///d:/projects/ai-reader/reader/src/main/resources/application.yml#L1-L41)配置文件进行OSS相关参数配置：
+通过[application.yml](/ai-reader/reader/src/main/resources/application.yml#L1-L41)配置文件进行OSS相关参数配置：
 
 ```yaml
 app:

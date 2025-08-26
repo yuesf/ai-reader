@@ -634,8 +634,7 @@ onReportTap(e) {
   },
   "compileType": "miniprogram",
   "libVersion": "2.19.4",
-  "appid": "your-app-id",
-  "projectname": "ai-reader"
+  "appid": "your-app-id"
 }
 ```
 

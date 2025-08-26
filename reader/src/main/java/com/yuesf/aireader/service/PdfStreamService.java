@@ -61,6 +61,11 @@ public class PdfStreamService {
         if (fileInfo == null) {
             throw new BusinessException("文件不存在");
         }
+        // 校验请求页数大于文件页数时不返回数据
+        if (pageNumber > fileInfo.getPageNums()) {
+            return new byte[0];
+        }
+
         if (!"pdf".equalsIgnoreCase(fileInfo.getFileType())) {
             throw new BusinessException("文件类型不支持");
         }
@@ -183,7 +188,7 @@ public class PdfStreamService {
             "totalChunks", totalChunks,
             "chunkSize", CHUNK_SIZE,
             "encryptionKey", encryptionKey,
-            "totalPages", 2,
+            "totalPages", fileInfo.getPageNums(),
             "lastModified", fileInfo.getUploadTime().toString()
         );
     }

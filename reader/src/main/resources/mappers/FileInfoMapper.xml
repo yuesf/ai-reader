@@ -14,16 +14,17 @@
         <result column="upload_user_id" property="uploadUserId" jdbcType="VARCHAR"/>
         <result column="status" property="status" jdbcType="VARCHAR"/>
         <result column="request_id" property="requestId" jdbcType="VARCHAR"/>
+        <result column="page_nums" property="pageNums" jdbcType="INTEGER"/>
     </resultMap>
 
     <!-- 插入文件信息 -->
     <insert id="insert" parameterType="com.yuesf.aireader.entity.FileInfo">
         INSERT INTO file_info (
             id, file_name, original_name, file_size, 
-            file_type, folder, upload_time, upload_user_id, status, request_id
+            file_type, folder, upload_time, upload_user_id, status, request_id, page_nums
         ) VALUES (
             #{id}, #{fileName}, #{originalName}, #{fileSize}, 
-            #{fileType}, #{folder}, #{uploadTime}, #{uploadUserId}, #{status}, #{requestId}
+            #{fileType}, #{folder}, #{uploadTime}, #{uploadUserId}, #{status}, #{requestId}, #{pageNums}
         )
     </insert>
 

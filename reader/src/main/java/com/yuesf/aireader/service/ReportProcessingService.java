@@ -52,6 +52,7 @@ public class ReportProcessingService {
         var ossObject = ossClient.getObject(ossProperties.getBucketName(), objectKey);
         try (var input = ossObject.getObjectContent(); var document = PDDocument.load(input)) {
             PDFRenderer renderer = new PDFRenderer(document);
+
             BufferedImage pageImage = renderer.renderImageWithDPI(0, 180, ImageType.RGB);
             // 生成缩略图，最大边不超过 600px
             ByteArrayOutputStream thumbOut = new ByteArrayOutputStream();
@@ -85,6 +86,8 @@ public class ReportProcessingService {
                 fileInfo.setFolder(folder);
 //                fileInfo.setUploadUserId(uploadUserId);
                 fileInfo.setRequestId(result.getRequestId()); // 存储请求ID
+
+                fileInfo.setPageNums(document.getNumberOfPages());
 
                 // 保存文件信息到数据库
                 return fileInfoService.saveFileInfo(fileInfo);

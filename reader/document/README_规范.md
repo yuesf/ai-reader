@@ -204,7 +204,7 @@ logger.info("获取报告列表，查询条件: {}", request);
 - URI应简洁明了，能够准确表达资源
 
 ### 5.2 返回格式
-- 所有接口返回统一的[ApiResponse](file:///d:/projects/ai-reader/reader/src/main/java/com/yuesf/aireader/dto/ApiResponse.java#L11-L65)包装格式
+- 所有接口返回统一的[ApiResponse](/ai-reader/reader/src/main/java/com/yuesf/aireader/dto/ApiResponse.java#L11-L65)包装格式
 - 正确使用HTTP状态码
 - 错误信息应清晰明确
 
