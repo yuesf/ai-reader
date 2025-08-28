@@ -8,6 +8,7 @@ import com.yuesf.aireader.config.OssConfig;
 import com.yuesf.aireader.entity.FileInfo;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.pdfbox.pdmodel.PDDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
@@ -67,6 +69,7 @@ public class FileUploadService {
 
         PutObjectResult result = ossClient.putObject(putObjectRequest);
 
+
         if (null != result && StringUtils.isNotBlank(result.getRequestId())) {
             // 创建文件信息对象
             FileInfo fileInfo = new FileInfo();
@@ -77,7 +80,7 @@ public class FileUploadService {
             fileInfo.setFolder(folder);
             fileInfo.setUploadUserId(uploadUserId);
             fileInfo.setRequestId(result.getRequestId()); // 存储请求ID
-
+            fileInfo.setPageNums(getPdfPageCount(file));
             // 保存文件信息到数据库
             return fileInfoService.saveFileInfo(fileInfo);
         } else {
@@ -85,6 +88,12 @@ public class FileUploadService {
         }
     }
 
+    public int getPdfPageCount(MultipartFile file) throws IOException {
+        try (InputStream inputStream = file.getInputStream();
+             PDDocument document = PDDocument.load(inputStream)) {
+            return document.getNumberOfPages();
+        }
+    }
 
     /**
      * 上传报告相关文件
