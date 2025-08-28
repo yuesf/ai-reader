@@ -16,7 +16,7 @@
       </div>
       <template #tip>
         <div class="el-upload__tip">
-          支持 PDF、Word、Excel、PowerPoint 格式，文件大小不超过 100MB
+          支持 PDF、Word、Excel、PowerPoint 格式，文件大小不超过 500MB
         </div>
       </template>
     </el-upload>
@@ -78,10 +78,10 @@ function beforeUpload(file: File) {
     type: file.type
   });
   
-  // 检查文件大小 (100MB = 100 * 1024 * 1024)
-  const isLt100M = file.size / 1024 / 1024 < 100;
-  if (!isLt100M) {
-    ElMessage.error('文件大小不能超过 100MB!');
+  // 检查文件大小 (500MB = 500 * 1024 * 1024)
+  const isLt500M = file.size / 1024 / 1024 < 500;
+  if (!isLt500M) {
+    ElMessage.error('文件大小不能超过 500MB!');
     return false;
   }
   

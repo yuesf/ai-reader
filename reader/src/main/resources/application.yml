@@ -16,8 +16,10 @@ spring:
   servlet:
     multipart:
       enabled: true
-      max-file-size: 100MB
-      max-request-size: 100MB
+      max-file-size: 500MB
+      max-request-size: 500MB
+      file-size-threshold: 2KB
+      location: ${java.io.tmpdir}
   
   datasource:
     driver-class-name: org.sqlite.JDBC

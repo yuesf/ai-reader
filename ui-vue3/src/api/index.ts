@@ -2,7 +2,8 @@ import axios from 'axios';
 import router from '../router';
 
 // 定义BASE_URL
-const BASE_URL = 'http://127.0.0.1:8080';
+// const BASE_URL = 'http://127.0.0.1:8080';
+const BASE_URL = 'https://yuesf.cn/reader';
 
 export interface ApiResponse<T> {
   code: number;
@@ -47,6 +48,11 @@ export interface ReportListResponse {
   list: ReportItem[];
 }
 
+// 配置 axios 默认设置以支持大文件上传
+axios.defaults.timeout = 300000; // 5分钟超时
+axios.defaults.maxContentLength = 500 * 1024 * 1024; // 500MB
+axios.defaults.maxBodyLength = 500 * 1024 * 1024; // 500MB
+
 // 全局 axios 拦截器：携带 token，处理 401
 axios.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
@@ -59,6 +65,13 @@ axios.interceptors.request.use((config) => {
     console.log('设置Authorization头:', `Bearer ${token.substring(0, 20)}...`);
   } else {
     console.log('未设置Authorization头');
+  }
+  
+  // 对于文件上传请求，设置更长的超时时间
+  if (config.url?.includes('/upload/')) {
+    config.timeout = 300000; // 5分钟
+    config.maxContentLength = 500 * 1024 * 1024; // 500MB
+    config.maxBodyLength = 500 * 1024 * 1024; // 500MB
   }
   
   return config;
