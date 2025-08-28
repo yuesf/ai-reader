@@ -196,7 +196,9 @@ public class ReportService {
 
         // 更新基本信息
         existingReport.setTitle(request.getTitle());
-        existingReport.setSummary(request.getSummary());
+        if (StringUtils.isNotBlank(request.getSummary())) {
+            existingReport.setSummary(request.getSummary());
+        }
         existingReport.setSource(request.getSource());
         existingReport.setCategory(request.getCategory());
         existingReport.setPages(request.getPages());
@@ -214,10 +216,11 @@ public class ReportService {
                 throw new IllegalArgumentException("报告文件信息不存在或已失效，请重新上传文件");
             }
 
-            existingReport.setReportFileId(request.getReportFileId());
+            existingReport.setReportFileId(fileInfo.getId());
             existingReport.setReportFileUrl(fileInfo.getFileName());
             existingReport.setReportFileName(fileInfo.getOriginalName());
             existingReport.setReportFileSize(String.valueOf(fileInfo.getFileSize()));
+
 
             // 重新生成缩略图
             try {
