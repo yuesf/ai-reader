@@ -104,4 +104,8 @@ public class FileInfoService {
     private String generateFileId() {
         return "file_" + UUID.randomUUID().toString().replaceAll("-", "").substring(0, 16);
     }
+
+    public void updateFileInfo(FileInfo fileInfo) {
+        fileInfoMapper.updateFileInfo(fileInfo);
+    }
 }

@@ -142,6 +142,8 @@ public class ReportService {
                 String newThumbnailKey = "/v1/images/" + newFileInfo.getId();
                 report.setThumbnail(newThumbnailKey);
                 report.setPages(newFileInfo.getPageNums());
+                fileInfo.setPageNums(newFileInfo.getPageNums());
+                fileInfoService.updateFileInfo(fileInfo);
             }
         } catch (Exception e) {
             // 不中断创建流程，但记录错误

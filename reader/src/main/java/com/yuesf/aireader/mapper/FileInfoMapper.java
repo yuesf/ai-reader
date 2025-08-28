@@ -54,4 +54,6 @@ public interface FileInfoMapper {
      * @return 影响行数
      */
     int deleteById(@Param("id") String id);
+
+    int updateFileInfo(FileInfo fileInfo);
 }

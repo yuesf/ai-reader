@@ -28,6 +28,12 @@
         )
     </insert>
 
+    <update id="updateFileInfo" parameterType="com.yuesf.aireader.entity.FileInfo">
+        UPDATE file_info set
+                             page_nums = #{pageNums}
+                         WHERE id = #{id}
+    </update>
+
     <!-- 根据ID查询文件信息 -->
     <select id="selectById" resultMap="FileInfoResultMap">
         SELECT * FROM file_info WHERE id = #{id} AND status = 'ACTIVE'
