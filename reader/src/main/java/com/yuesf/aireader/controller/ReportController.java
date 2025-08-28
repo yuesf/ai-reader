@@ -119,9 +119,9 @@ public class ReportController {
 
     /**
      * 更新报告
-     * PUT /reports/{id}
+     * POST /report/update/{id}
      */
-    @PutMapping("/reports/{id}")
+    @PostMapping("/report/update/{id}")
     public ApiResponse<Report> updateReport(@PathVariable String id, @RequestBody ReportUpdateRequest request) {
         try {
             log.info("后台更新报告，ID: {}", id);

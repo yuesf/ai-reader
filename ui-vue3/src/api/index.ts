@@ -117,7 +117,7 @@ export function createReport(body: Partial<ReportItem>) {
 }
 
 export function updateReport(id: string, body: Partial<ReportItem>) {
-  return axios.put<ApiResponse<ReportItem>>(BASE_URL+`/v1/reports/${id}`, body);
+  return axios.post<ApiResponse<ReportItem>>(BASE_URL+`/v1/report/update/${id}`, body);
 }
 
 export function deleteReport(id: string) {
