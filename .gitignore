@@ -5,8 +5,9 @@ reader.db
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-
-
+ui-vue3/dist
+ui-vue3/node_modules
+yuesf.cn
 ### IntelliJ IDEA ###
 .idea
 *.iws

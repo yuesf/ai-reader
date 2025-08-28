@@ -12,6 +12,8 @@ class PdfImagePreviewService {
     this.generatedImageCache = new Set();
     // 本地临时文件路径映射
     this.localImagePaths = new Map();
+    // 请求中的页面缓存，防止重复请求
+    this.pendingRequests = new Map();
   }
 
   /**
@@ -146,8 +148,28 @@ class PdfImagePreviewService {
    */
   getPageImage(pageIndex) {
     const page = Math.max(1, pageIndex);
+    
+    // 生成请求键，用于防止重复请求
+    const requestKey = `${this.fileId}_${page}`;
+    
+    // 检查是否已有相同请求正在进行中
+    if (this.pendingRequests.has(requestKey)) {
+      console.log(`PdfImagePreviewService: getPageImage reusing pending request for page ${page}`);
+      return this.pendingRequests.get(requestKey);
+    }
+    
     const url = this.buildPageImageUrl(page);
     console.log(`PdfImagePreviewService: getPageImage for page ${page}, url: ${url}`);
+    
+    // 存储请求URL，防止重复请求
+    this.pendingRequests.set(requestKey, url);
+    
+    // 设置一个超时，从pendingRequests中移除，允许将来重新请求
+    // 通常图片加载完成后应该移除，但为防止异常情况，设置一个超时保底
+    setTimeout(() => {
+      this.pendingRequests.delete(requestKey);
+    }, 10000); // 10秒后自动清除
+    
     return url;
   }
 }

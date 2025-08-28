@@ -1,6 +1,6 @@
 // api.js - API服务文件
 // 将基础URL指向后端服务（根据实际部署环境修改为域名/内网地址）
-const BASE_URL = 'https://yuesf.cn'  // 本地测试用，生产环境改为实际域名
+const BASE_URL = 'https://yuesf.cn/reader'  // 本地测试用，生产环境改为实际域名
 
 /**
  * 通用请求方法

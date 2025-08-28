@@ -296,12 +296,20 @@ Page({
     console.log(`PdfPreview: onImageLoad called for page ${page}`);
     const key = `pageImages[${this.data.pageImages.findIndex(p=>p.page===page)}].loaded`;
     if (key.endsWith('].loaded')) this.setData({ [key]: true });
+    
+    // 清除pendingRequests中的记录，允许将来重新请求
+    const requestKey = `${this.data.fileId}_${page}`;
+    pdfImagePreviewService.pendingRequests.delete(requestKey);
   },
   onImageError(e) {
     const page = Number(e.currentTarget.dataset.page);
     console.log(`PdfPreview: onImageError called for page ${page}`);
     const key = `pageImages[${this.data.pageImages.findIndex(p=>p.page===page)}].error`;
     if (key.endsWith('].error')) this.setData({ [key]: true });
+    
+    // 清除pendingRequests中的记录，允许将来重新请求
+    const requestKey = `${this.data.fileId}_${page}`;
+    pdfImagePreviewService.pendingRequests.delete(requestKey);
   },
 
   // 缩放（整体图片容器缩放）
@@ -353,5 +361,17 @@ Page({
 
   onUnload() {
     console.log('PdfPreview: onUnload called');
+    
+    // 清除所有与当前文件相关的pendingRequests
+    if (this.data.fileId) {
+      const prefix = `${this.data.fileId}_`;
+      // 遍历并删除所有与当前文件相关的pendingRequests
+      for (const key of pdfImagePreviewService.pendingRequests.keys()) {
+        if (key.startsWith(prefix)) {
+          pdfImagePreviewService.pendingRequests.delete(key);
+        }
+      }
+      console.log('PdfPreview: onUnload cleared all pending requests for current file');
+    }
   }
 });

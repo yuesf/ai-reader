@@ -8,21 +8,21 @@ const ENV = {
   
   // 测试环境
   TEST: {
-    BASE_URL: 'http://yuesf.cn',
+    BASE_URL: 'http://127.0.0.1:8080',
     API_VERSION: 'v1',
     DEBUG: true
   },
   
   // 生产环境
   PROD: {
-    BASE_URL: 'https://yuesf.cn',
+    BASE_URL: 'https://yuesf.cn/reader',
     API_VERSION: 'v1',
     DEBUG: false
   }
 };
 
 // 当前环境（根据实际部署情况修改）
-const CURRENT_ENV = 'TEST';
+const CURRENT_ENV = 'PROD';
 
 // 获取当前环境配置
 const getCurrentConfig = () => {

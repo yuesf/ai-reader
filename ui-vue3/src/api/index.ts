@@ -2,7 +2,7 @@ import axios from 'axios';
 import router from '../router';
 
 // 定义BASE_URL
-const BASE_URL = 'http://api.yuesf.cn';
+const BASE_URL = 'http://127.0.0.1:8080';
 
 export interface ApiResponse<T> {
   code: number;
@@ -85,7 +85,7 @@ axios.interceptors.response.use((resp) => resp, (error) => {
 });
 
 export function fetchReports(body: ReportListRequest) {
-  return axios.post<ApiResponse<ReportListResponse>>('/v1/reports', body).then(response => {
+  return axios.post<ApiResponse<ReportListResponse>>(BASE_URL+'/v1/reports', body).then(response => {
     // 处理缩略图URL，添加BASE_URL前缀
     if (response.data.data?.list) {
       response.data.data.list = response.data.data.list.map(item => {
@@ -100,23 +100,23 @@ export function fetchReports(body: ReportListRequest) {
 }
 
 export function createReport(body: Partial<ReportItem>) {
-  return axios.post<ApiResponse<ReportItem>>('/v1/reports/create', body);
+  return axios.post<ApiResponse<ReportItem>>(BASE_URL+'/v1/reports/create', body);
 }
 
 export function updateReport(id: string, body: Partial<ReportItem>) {
-  return axios.put<ApiResponse<ReportItem>>(`/v1/reports/${id}`, body);
+  return axios.put<ApiResponse<ReportItem>>(BASE_URL+`/v1/reports/${id}`, body);
 }
 
 export function deleteReport(id: string) {
-  return axios.delete<ApiResponse<number>>(`/v1/reports/${id}`);
+  return axios.delete<ApiResponse<number>>(BASE_URL+`/v1/reports/${id}`);
 }
 
 export function batchDelete(ids: string[]) {
-  return axios.post<ApiResponse<number>>('/v1/reports/delete', { ids });
+  return axios.post<ApiResponse<number>>(BASE_URL+'/v1/reports/delete', { ids });
 }
 
 export function generateSummary(id: string) {
-  return axios.post<ApiResponse<string>>(`/v1/reports/${id}/generate-summary`);
+  return axios.post<ApiResponse<string>>(BASE_URL+`/v1/reports/${id}/generate-summary`);
 }
 
 // 文件上传相关接口
@@ -136,13 +136,13 @@ export function uploadReportFile(file: File) {
   }
   
   console.log('发送请求到: /v1/upload/report');
-  return axios.post<ApiResponse<{url: string, filename: string, size: string}>>('/v1/upload/report', formData);
+  return axios.post<ApiResponse<{url: string, filename: string, size: string}>>(BASE_URL+'/v1/upload/report', formData);
 }
 
 export function uploadImage(file: File) {
   const formData = new FormData();
   formData.append('file', file);
-  return axios.post<ApiResponse<{fileId: string, thumbnail: string}>>('/v1/upload/image', formData);
+  return axios.post<ApiResponse<{fileId: string, thumbnail: string}>>(BASE_URL+'/v1/upload/image', formData);
 }
 
 export function uploadFile(file: File, folder?: string) {
@@ -151,20 +151,20 @@ export function uploadFile(file: File, folder?: string) {
   if (folder) {
     formData.append('folder', folder);
   }
-  return axios.post<ApiResponse<{url: string, filename: string, size: string, folder: string}>>('/v1/upload/file', formData);
+  return axios.post<ApiResponse<{url: string, filename: string, size: string, folder: string}>>(BASE_URL+'/v1/upload/file', formData);
 }
 
 export function deleteFile(fileId: string) {
-  return axios.delete<ApiResponse<string>>('/v1/upload/file', { params: { fileId } });
+  return axios.delete<ApiResponse<string>>(BASE_URL+'/v1/upload/file', { params: { fileId } });
 }
 
 // 鉴权相关
 export function login(username: string, password: string) {
-  return axios.post<ApiResponse<{ token: string }>>('/v1/auth/login', { username, password });
+  return axios.post<ApiResponse<{ token: string }>>(BASE_URL+'/v1/auth/login', { username, password });
 }
 
 export function logout() {
-  return axios.post<ApiResponse<string>>('/v1/auth/logout');
+  return axios.post<ApiResponse<string>>(BASE_URL+'/v1/auth/logout');
 }
 
 // 账号管理
@@ -172,16 +172,16 @@ export interface UserItem { id?: number; username: string; password?: string; di
 export interface UserListReq { page?: number; pageSize?: number; keyword?: string; status?: number }
 export interface UserListResp { total: number; page: number; pageSize: number; list: UserItem[] }
 export function fetchUsers(body: UserListReq) {
-  return axios.post<ApiResponse<UserListResp>>('/v1/users/list', body);
+  return axios.post<ApiResponse<UserListResp>>(BASE_URL+'/v1/users/list', body);
 }
 export function createUser(body: UserItem) {
-  return axios.post<ApiResponse<number>>('/v1/users/create', body);
+  return axios.post<ApiResponse<number>>(BASE_URL+'/v1/users/create', body);
 }
 export function updateUser(body: UserItem) {
-  return axios.post<ApiResponse<number>>('/v1/users/update', body);
+  return axios.post<ApiResponse<number>>(BASE_URL+'/v1/users/update', body);
 }
 export function deleteUserApi(id: number) {
-  return axios.delete<ApiResponse<number>>(`/v1/users/${id}`);
+  return axios.delete<ApiResponse<number>>(BASE_URL+`/v1/users/${id}`);
 }
 
 

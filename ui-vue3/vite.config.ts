@@ -3,6 +3,7 @@ import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
   plugins: [vue()],
+  base: '/admin/', // 指定基础路径为 /admin/
   server: {
     port: 5173,
     proxy: {
