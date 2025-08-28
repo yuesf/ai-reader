@@ -18,7 +18,7 @@ public class Homecontroller {
      * GET /health
      * 用于测试PDF流服务是否正常运行
      */
-    @GetMapping("/health")
+    @GetMapping({"/health", "/"})
     public ApiResponse<String> healthCheck() {
         log.info("服务健康检查-运行正常");
         return ApiResponse.success("服务运行正常");
