@@ -174,4 +174,32 @@ public class ReportController {
             return ApiResponse.error(500, "服务器内部错误: " + e.getMessage());
         }
     }
+
+    /**
+     * 生成报告摘要
+     * POST /reports/{id}/generate-summary
+     */
+    @PostMapping("/reports/{id}/generate-summary")
+    public ApiResponse<String> generateReportSummary(@PathVariable String id) {
+        try {
+            log.info("后台生成报告摘要，ID: {}", id);
+            
+            if (id == null || id.trim().isEmpty()) {
+                return ApiResponse.error(400, "报告ID不能为空");
+            }
+            
+            String summary = reportService.generateReportSummary(id);
+            if (summary != null && !summary.trim().isEmpty()) {
+                log.info("后台报告摘要生成成功，ID: {}", id);
+                return ApiResponse.success(summary);
+            } else {
+                log.warn("后台报告摘要生成失败，ID: {}", id);
+                return ApiResponse.error(500, "摘要生成失败，请检查报告文件是否存在");
+            }
+            
+        } catch (Exception e) {
+            log.error("后台报告摘要生成失败，ID: {}", id, e);
+            return ApiResponse.error(500, "服务器内部错误: " + e.getMessage());
+        }
+    }
 }
