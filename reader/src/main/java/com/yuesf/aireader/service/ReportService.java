@@ -225,6 +225,8 @@ public class ReportService {
                 String newThumbnailKey = "/v1/images/" + newFileInfo.getId();
                 existingReport.setThumbnail(newThumbnailKey);
                 existingReport.setPages(newFileInfo.getPageNums());
+                fileInfo.setPageNums(newFileInfo.getPageNums());
+                fileInfoService.updateFileInfo(fileInfo);
             } catch (Exception e) {
                 log.error("重新生成缩略图失败: " + e.getMessage());
             }
