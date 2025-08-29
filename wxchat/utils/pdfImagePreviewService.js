@@ -2,16 +2,12 @@
 // 提供图片预览URL构建和缓存管理功能，确保每个报告只生成一次临时图片文件
 
 const { BASE_URL } = require('./api.js');
+const imageCache = require('./imageCache');
 
 class PdfImagePreviewService {
   constructor() {
     this.fileId = '';
     this.totalPages = 0;
-    // 全局缓存，记录已生成临时图片的报告文件ID
-    // 用于确保每个报告文件只生成一次本地临时图片文件
-    this.generatedImageCache = new Set();
-    // 本地临时文件路径映射
-    this.localImagePaths = new Map();
     // 请求中的页面缓存，防止重复请求
     this.pendingRequests = new Map();
   }
@@ -26,31 +22,13 @@ class PdfImagePreviewService {
   }
 
   /**
-   * 检查是否已为指定报告生成过临时图片文件
-   * @param {string} fileId - 报告文件ID
-   * @returns {boolean} 是否已生成过临时图片
-   */
-  hasGeneratedImages(fileId) {
-    return this.generatedImageCache.has(fileId);
-  }
-
-  /**
-   * 标记指定报告已生成临时图片文件
-   * @param {string} fileId - 报告文件ID
-   */
-  markImagesAsGenerated(fileId) {
-    this.generatedImageCache.add(fileId);
-  }
-
-  /**
    * 获取已缓存的本地图片路径
    * @param {string} fileId - 报告文件ID
    * @param {number} pageIndex - 页码
-   * @returns {string|undefined} 本地图片路径或undefined
+   * @returns {string|null} 本地图片路径或null
    */
   getCachedLocalImagePath(fileId, pageIndex) {
-    const key = `${fileId}_${pageIndex}`;
-    return this.localImagePaths.get(key);
+    return imageCache.getCache(fileId, pageIndex);
   }
 
   /**
@@ -60,9 +38,7 @@ class PdfImagePreviewService {
    * @param {string} localPath - 本地图片路径
    */
   cacheLocalImagePath(fileId, pageIndex, localPath) {
-    const key = `${fileId}_${pageIndex}`;
-    this.localImagePaths.set(key, localPath);
-    console.log(`Cached local image path for ${key}: ${localPath}`);
+    imageCache.setCache(fileId, pageIndex, localPath);
   }
 
   /**
@@ -70,15 +46,7 @@ class PdfImagePreviewService {
    * @param {string} fileId - 报告文件ID
    */
   clearReportCache(fileId) {
-    // 清除生成标记
-    this.generatedImageCache.delete(fileId);
-    
-    // 清除本地路径缓存
-    for (const key of this.localImagePaths.keys()) {
-      if (key.startsWith(`${fileId}_`)) {
-        this.localImagePaths.delete(key);
-      }
-    }
+    imageCache.clearReportCache(fileId);
   }
 
   /**
@@ -144,10 +112,17 @@ class PdfImagePreviewService {
   /**
    * 获取某页图片（返回可直接用于 <image> 的 src）
    * @param {number} pageIndex - 页码
-   * @returns {string} 图片URL
+   * @returns {string} 图片URL或本地缓存路径
    */
   getPageImage(pageIndex) {
     const page = Math.max(1, pageIndex);
+    
+    // 首先检查缓存中是否有本地图片
+    const cachedPath = this.getCachedLocalImagePath(this.fileId, page);
+    if (cachedPath) {
+      console.log(`PdfImagePreviewService: getPageImage using cached image for page ${page}: ${cachedPath}`);
+      return cachedPath;
+    }
     
     // 生成请求键，用于防止重复请求
     const requestKey = `${this.fileId}_${page}`;
@@ -164,13 +139,56 @@ class PdfImagePreviewService {
     // 存储请求URL，防止重复请求
     this.pendingRequests.set(requestKey, url);
     
+    // 异步下载并缓存图片
+    this.downloadAndCacheImage(url, this.fileId, page);
+    
     // 设置一个超时，从pendingRequests中移除，允许将来重新请求
-    // 通常图片加载完成后应该移除，但为防止异常情况，设置一个超时保底
     setTimeout(() => {
       this.pendingRequests.delete(requestKey);
     }, 10000); // 10秒后自动清除
     
     return url;
+  }
+
+  /**
+   * 下载并缓存图片到本地
+   * @param {string} url - 图片URL
+   * @param {string} fileId - 文件ID
+   * @param {number} pageIndex - 页面索引
+   */
+  async downloadAndCacheImage(url, fileId, pageIndex) {
+    try {
+      const downloadTask = wx.downloadFile({
+        url: url,
+        success: (res) => {
+          if (res.statusCode === 200) {
+            // 生成本地文件名
+            const fileName = `report_${fileId}_page_${pageIndex}.jpg`;
+            const localPath = `${wx.env.USER_DATA_PATH}/${fileName}`;
+            
+            // 保存到本地文件系统
+            const fileManager = wx.getFileSystemManager();
+            fileManager.saveFile({
+              tempFilePath: res.tempFilePath,
+              filePath: localPath,
+              success: () => {
+                // 缓存本地路径
+                this.cacheLocalImagePath(fileId, pageIndex, localPath);
+                console.log(`PdfImagePreviewService: cached image for page ${pageIndex}: ${localPath}`);
+              },
+              fail: (error) => {
+                console.error(`PdfImagePreviewService: failed to save image for page ${pageIndex}:`, error);
+              }
+            });
+          }
+        },
+        fail: (error) => {
+          console.error(`PdfImagePreviewService: failed to download image for page ${pageIndex}:`, error);
+        }
+      });
+    } catch (error) {
+      console.error(`PdfImagePreviewService: error downloading image for page ${pageIndex}:`, error);
+    }
   }
 }
 

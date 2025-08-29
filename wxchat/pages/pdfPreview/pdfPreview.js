@@ -120,11 +120,37 @@ Page({
     // Mark page as pending BEFORE generating image URL
     this.setData({ [`pendingPages[${pageIndex}]`]: true });
     
-    const src = pdfImagePreviewService.getPageImage(pageIndex);
-    if (!src) {
-      console.error(`PdfPreview: getPageImage returned null or empty for page ${pageIndex}`);
-      this.setData({ [`pendingPages[${pageIndex}]`]: false });
-      return Promise.reject(new Error('empty image src'));
+    // 首先检查缓存
+    const cachedPath = pdfImagePreviewService.getCachedLocalImagePath(this.data.fileId, pageIndex);
+    let src;
+    
+    if (cachedPath) {
+      console.log(`PdfPreview: using cached image for page ${pageIndex}: ${cachedPath}`);
+      src = cachedPath;
+      // 直接添加到页面列表，无需验证
+      const newItem = { 
+        page: pageIndex, 
+        id: `page-${pageIndex}`, 
+        src: src, 
+        loaded: true, 
+        error: false 
+      };
+      const pageImages = this.data.pageImages.concat(newItem);
+      this.setData({ 
+        pageImages, 
+        visiblePages: pageImages.length, 
+        isLastPage: false,
+        [`pendingPages[${pageIndex}]`]: false 
+      });
+      console.log(`PdfPreview: tryAppendPage added cached page ${pageIndex}`);
+      return Promise.resolve();
+    } else {
+      src = pdfImagePreviewService.getPageImage(pageIndex);
+      if (!src) {
+        console.error(`PdfPreview: getPageImage returned null or empty for page ${pageIndex}`);
+        this.setData({ [`pendingPages[${pageIndex}]`]: false });
+        return Promise.reject(new Error('empty image src'));
+      }
     }
 
     console.log(`PdfPreview: tryAppendPage setting pending for page ${pageIndex}`);
@@ -326,6 +352,18 @@ Page({
   resetZoom() {
     this.setData({ pageScale: 1.0 }); // 重置缩放为1.0
     console.log('PdfPreview: resetZoom to scale 1.0');
+  },
+
+  // 清除当前报告的缓存（用于调试或强制刷新）
+  clearCurrentReportCache() {
+    if (this.data.fileId) {
+      pdfImagePreviewService.clearReportCache(this.data.fileId);
+      wx.showToast({
+        title: '缓存已清除',
+        icon: 'success'
+      });
+      console.log('PdfPreview: cleared cache for current report');
+    }
   },
 
   // 下载（保留）
