@@ -100,12 +100,13 @@ const reportFileInfo = ref<{
   fileId: string;
   filename: string;
   size: string;
+  source: string;
 } | null>(null);
 
 // 监听表单中的文件信息变化，同步到组件
-watch(() => [form.reportFileId, form.title, form.fileSize], ([fileId, filename, size]) => {
+watch(() => [form.reportFileId, form.title, form.fileSize, form.source], ([fileId, filename, size, source]) => {
   if (fileId && filename && size) {
-    reportFileInfo.value = { fileId, filename, size };
+    reportFileInfo.value = { fileId, filename, size, source };
   } else {
     reportFileInfo.value = null;
   }
@@ -117,6 +118,7 @@ watch(reportFileInfo, (newVal) => {
     form.reportFileId = newVal.fileId;
     form.title = newVal.filename; // 文件名赋值到标题
     form.fileSize = newVal.size;  // 文件大小赋值到文件大小字段
+    form.source = newVal.source;  // 来源
   }
 }, { deep: true });
 

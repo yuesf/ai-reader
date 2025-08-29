@@ -46,6 +46,7 @@ interface FileInfo {
   fileId: string;
   filename: string;
   size: string;
+  source: string;
 }
 
 interface Props {

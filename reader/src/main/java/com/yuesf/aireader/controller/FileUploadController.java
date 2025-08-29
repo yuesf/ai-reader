@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 文件上传控制器
@@ -39,7 +40,8 @@ public class FileUploadController {
             result.put("fileId", fileInfo.getId());
             result.put("filename", file.getOriginalFilename());
             result.put("size", String.valueOf(file.getSize()));
-            
+            result.put("source", Objects.requireNonNull(file.getOriginalFilename()).split("-")[0]);
+
             log.info("报告文件上传成功，文件ID: {}", fileInfo.getId());
             return ApiResponse.success(result);
         } catch (IllegalArgumentException e) {
