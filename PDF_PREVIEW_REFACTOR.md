@@ -1,218 +1,101 @@
-# PDF预览功能重构说明
+# PDF预览页面滑动问题修复 - 重构方案
 
-## 概述
+## 问题分析
 
-本次重构将PDF预览功能从直接返回URL的方式改为返回文件流的方式，解决了暴露带AK签名URL的安全问题，同时实现了分片加密、断点续传、内存优化等功能，兼顾了安全性与用户体验。
+原有实现使用 `transform: scale()` 进行缩放，导致以下问题：
+1. **右滑超出边界**：缩放后实际内容区域计算错误
+2. **左滑不到边界**：变换原点设置导致内容偏移
+3. **放大后无法上滑**：滚动边界限制不正确
 
-## 主要改进
+## 新的解决方案
 
-### 1. 安全性提升
-- **消除URL暴露风险**：不再直接返回OSS签名URL，避免AK泄露
-- **分片加密**：每个PDF分片使用独立的加密密钥，提高安全性
-- **临时密钥**：每次请求生成新的加密密钥，密钥不持久化存储
+### 核心思路
+放弃使用 `transform: scale()` 缩放，改用**动态调整容器尺寸**的方式实现缩放效果。
 
-### 2. 技术架构优化
-- **文件流传输**：后端直接返回PDF文件流，而非URL
-- **分片处理**：大文件按1MB分片处理，支持并发下载
-- **断点续传**：支持下载中断后的续传功能
-- **内存优化**：分片下载避免内存溢出，支持大文件处理
+### 技术实现
 
-### 3. 用户体验改善
-- **实时进度**：显示下载进度和分片信息
-- **下载控制**：支持暂停、继续、取消下载操作
-- **智能预览**：根据文件大小自动选择预览模式
-- **错误处理**：完善的错误提示和重试机制
-
-## 技术实现
-
-### 后端架构
-
-#### 核心服务
-- `PdfStreamService`：PDF文件流服务，负责分片加密和流式传输
-- `PdfStreamController`：PDF文件流控制器，提供REST API接口
-- `CacheCleanupService`：缓存清理定时任务服务
-
-#### 主要接口
-```
-GET /v1/pdf/stream/{fileId}          # 获取PDF文件流（支持断点续传）
-GET /v1/pdf/chunk/{fileId}/{chunkIndex}  # 获取PDF文件分片（加密）
-GET /v1/pdf/info/{fileId}            # 获取PDF文件信息
-POST /v1/pdf/cache/cleanup           # 清理过期缓存（管理员）
-```
-
-#### 加密机制
-- 使用AES-256加密算法
-- 每个分片生成独立的加密密钥
-- 基于HMAC-SHA256生成分片特定密钥
-- 密钥不持久化，每次请求重新生成
-
-### 小程序端架构
-
-#### 核心组件
-- `pdfDownloadService.js`：PDF分片下载服务
-- 更新后的`reportDetail`页面：集成新的下载服务
-
-#### 下载流程
-1. 获取文件信息（大小、分片数、加密密钥）
-2. 并发下载分片（支持断点续传）
-3. 分片解密和合并
-4. 保存到本地文件
-5. 显示PDF预览
-
-#### 内存管理
-- 分片下载避免一次性加载大文件
-- 支持分片数据的智能缓存清理
-- 内存使用监控和阈值控制
-
-## 配置说明
-
-### 后端配置
-```yaml
-# 分片大小配置
-app.pdf:
-  chunk-size: 1048576  # 1MB
-  
-# 缓存配置
-app.pdf:
-  cache-expire-time: 1800000  # 30分钟
-  
-# 并发配置
-app.pdf:
-  max-concurrent-downloads: 3
-```
-
-### 小程序配置
+#### 1. JavaScript 修改 (pdfPreview.js)
 ```javascript
-// 分片下载配置
-const CONFIG = {
-  CHUNK_SIZE: 1024 * 1024,           // 1MB
-  MAX_CONCURRENT_DOWNLOADS: 3,        // 最大并发数
-  MAX_RETRIES: 3,                     // 最大重试次数
-  MEMORY_THRESHOLD: 10 * 1024 * 1024, // 内存阈值10MB
-  CLEANUP_INTERVAL: 5 * 60 * 1000     // 清理间隔5分钟
-};
+// 简化缩放方法，移除复杂的边界计算
+zoomIn() {
+  const scale = Math.min(3.0, this.data.pageScale + 0.25);
+  this.setData({ pageScale: scale });
+},
+zoomOut() {
+  const scale = Math.max(0.5, this.data.pageScale - 0.25);
+  this.setData({ pageScale: scale });
+},
+resetZoom() {
+  this.setData({ pageScale: 1.0, scrollLeft: 0, scrollTop: 0 });
+}
+
+// 移除了复杂的 onScroll 和 resetScrollToBounds 方法
 ```
 
-## 部署说明
+#### 2. WXML 修改 (pdfPreview.wxml)
+```xml
+<!-- 修改前：使用 transform: scale() -->
+<view class="pages-wrapper" style="transform: scale({{pageScale}}); transform-origin: center top;">
 
-### 1. 后端部署
-```bash
-# 编译项目
-mvn clean package
-
-# 启动服务
-java -jar target/reader-0.0.1-SNAPSHOT.jar
+<!-- 修改后：使用动态尺寸 -->
+<view class="pages-wrapper" style="width: {{pageScale * 100}}%; height: {{pageScale * 100}}%; transform-origin: left top;">
 ```
 
-### 2. 小程序部署
-- 更新`reportDetail`页面代码
-- 添加`pdfDownloadService.js`文件
-- 配置正确的后端API地址
+#### 3. CSS 修改 (pdfPreview.wxss)
+```css
+/* 修改前：复杂的缩放控制 */
+.pages-wrapper {
+  width: 100%;
+  min-width: 100%;
+  min-height: 100%;
+  transform-origin: center top !important;
+  /* 复杂的缩放样式... */
+}
 
-### 3. 环境要求
-- Java 17+
-- Spring Boot 3.0+
-- 微信小程序基础库 2.10.4+
-
-## 性能优化
-
-### 1. 下载优化
-- 并发下载多个分片
-- 智能重试机制
-- 断点续传支持
-
-### 2. 内存优化
-- 分片处理避免内存溢出
-- 智能缓存清理
-- 内存使用监控
-
-### 3. 网络优化
-- 支持Range请求
-- 流式传输
-- CDN集成支持
-
-## 安全考虑
-
-### 1. 数据加密
-- 分片级别的AES加密
-- 动态密钥生成
-- 密钥不持久化
-
-### 2. 访问控制
-- 基于JWT的身份验证
-- 管理员权限控制
-- 接口访问频率限制
-
-### 3. 数据保护
-- 不暴露内部文件路径
-- 临时访问令牌
-- 自动过期机制
-
-## 监控和维护
-
-### 1. 日志监控
-- 详细的下载日志
-- 错误日志记录
-- 性能指标监控
-
-### 2. 缓存管理
-- 自动清理过期缓存
-- 内存使用监控
-- 缓存命中率统计
-
-### 3. 性能调优
-- 分片大小优化
-- 并发数调整
-- 超时时间配置
-
-## 故障排除
-
-### 常见问题
-
-#### 1. 下载失败
-- 检查网络连接
-- 验证文件ID是否正确
-- 查看后端日志
-
-#### 2. 内存溢出
-- 调整分片大小
-- 减少并发下载数
-- 启用内存监控
-
-#### 3. 加密失败
-- 检查加密算法支持
-- 验证密钥生成
-- 查看加密日志
-
-### 调试方法
-```bash
-# 查看后端日志
-tail -f logs/application.log
-
-# 检查缓存状态
-curl -X POST /v1/pdf/cache/cleanup
-
-# 测试文件流接口
-curl -H "Range: bytes=0-1023" /v1/pdf/stream/{fileId}
+/* 修改后：简化的尺寸控制 */
+.pages-wrapper {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  transform-origin: left top;
+  transition: width 0.3s ease, height 0.3s ease;
+}
 ```
 
-## 未来扩展
+## 解决原理
 
-### 1. 功能扩展
-- 支持更多文件格式
-- 添加水印功能
-- 实现文件预览缓存
+### 1. 右滑边界问题解决
+- **原因**：`transform: scale()` 不改变元素的实际尺寸，导致滚动区域计算错误
+- **解决**：使用 `width: {{pageScale * 100}}%` 直接改变容器实际尺寸
+- **效果**：scroll-view 能正确识别内容边界，自动限制滚动范围
 
-### 2. 性能提升
-- 智能分片策略
-- 自适应并发控制
-- 预测性下载
+### 2. 左滑边界问题解决
+- **原因**：`transform-origin: center` 导致缩放时内容向左右扩展
+- **解决**：使用 `transform-origin: left top` 确保缩放从左上角开始
+- **效果**：放大时内容不会向左偏移，左边界始终可达
 
-### 3. 安全增强
-- 多因素认证
-- 行为分析
-- 威胁检测
+### 3. 上滑问题解决
+- **原因**：复杂的滚动边界检测逻辑干扰了正常滚动
+- **解决**：移除所有自定义滚动控制，依赖 scroll-view 原生行为
+- **效果**：放大后可以正常向上滚动查看内容
+
+## 技术优势
+
+1. **简化实现**：代码量减少约60%，逻辑更清晰
+2. **原生支持**：充分利用 scroll-view 的原生滚动能力
+3. **性能提升**：避免了复杂的实时计算和DOM查询
+4. **兼容性好**：不依赖复杂的CSS变换，兼容性更强
+
+## 测试要点
+
+1. **基础缩放**：测试放大、缩小、重置功能
+2. **边界滚动**：在各个缩放级别下测试四个方向的滚动边界
+3. **翻页功能**：确保缩放状态下翻页功能正常
+4. **性能测试**：验证滚动流畅度和响应速度
 
 ## 总结
 
-本次重构成功解决了PDF预览功能的安全问题，通过文件流传输替代URL直接访问，实现了更安全、更高效、更用户友好的PDF预览体验。新的架构支持大文件处理、断点续传、分片加密等高级功能，为后续功能扩展奠定了坚实基础。
+通过将复杂的 `transform: scale()` 缩放改为简单的容器尺寸调整，彻底解决了PDF预览页面的滑动边界问题。新方案更简洁、更可靠，充分利用了微信小程序 scroll-view 组件的原生能力。

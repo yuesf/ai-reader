@@ -8,13 +8,25 @@
   </view>
 
   <!-- 图片预览滚动容器：支持手势与定位到当前页 -->
-  <scroll-view scroll-y style="height: calc(100vh - 140rpx);"
+  <scroll-view scroll-y="{{true}}" 
+               scroll-x="{{pageScale > 1.0}}" 
+               enhanced="{{true}}"
+               show-scrollbar="{{false}}"
+               enable-back-to-top="{{false}}"
+               upper-threshold="50"
+               lower-threshold="50"
+               enable-flex="{{true}}"
+               scroll-anchoring="{{true}}"
+               style="height: calc(100vh - 140rpx); overflow: hidden;"
                bindscrolltolower="onScrollToLower"
+               bindscroll="onScroll"
                bindtouchstart="onTouchStart"
                bindtouchend="onTouchEnd"
                scroll-into-view="{{scrollIntoViewId}}"
-               scroll-with-animation>
-    <view class="pages-wrapper" style="transform: scale({{pageScale}}); transform-origin: top center; display:flex; flex-direction:column; align-items:center;">
+               scroll-with-animation="{{pageScale <= 1.0}}"
+               scroll-left="{{scrollLeft}}"
+               scroll-top="{{scrollTop}}">
+    <view class="pages-wrapper" style="width: {{pageScale * 100}}%; height: {{pageScale * 100}}%; transform-origin: left top;">
       <block wx:for="{{pageImages}}" wx:key="page">
         <view id="page-{{item.page}}" class="page-item" style="width: 100%; margin: 16rpx auto; display:flex; flex-direction:column; align-items:center;">
           <image mode="widthFix"

@@ -38,7 +38,11 @@ Page({
     pendingPages: {},
     
     // 防止重复触发滑动事件
-    isSwiping: false
+    isSwiping: false,
+
+    // 滚动位置控制
+    scrollLeft: 0,
+    scrollTop: 0
   },
 
   async onLoad(options) {
@@ -199,7 +203,6 @@ Page({
     });
   },
 
-
   // 滚动到底：继续尝试加载后续5页（带防重）
   async onScrollToLower() {
     console.log('PdfPreview: onScrollToLower called');
@@ -275,14 +278,21 @@ Page({
     }
   },
 
-  // 触摸手势（左右滑动翻页）
+  // 触摸手势（左右滑动翻页）- 仅在未缩放时启用
   onTouchStart(e) {
-    console.log('PdfPreview: onTouchStart called');
+    // 如果已缩放，不处理翻页手势，让scroll-view处理滚动
+    if (this.data.pageScale > 1.0) {
+      return;
+    }
     const t = e.touches && e.touches[0] ? e.touches[0] : { clientX: 0, clientY: 0 };
     this.setData({ touchStartX: t.clientX, touchStartY: t.clientY, touchStartTime: Date.now() });
   },
   async onTouchEnd(e) {
-    console.log('PdfPreview: onTouchEnd called');
+    // 如果已缩放，不处理翻页手势，让scroll-view处理滚动
+    if (this.data.pageScale > 1.0) {
+      return;
+    }
+    
     // 防止重复触发滑动事件
     if (this.data.isSwiping) {
       console.log('PdfPreview: onTouchEnd skipped due to isSwiping');
@@ -312,7 +322,6 @@ Page({
     // 延迟重置滑动状态，防止误触
     setTimeout(() => {
       this.setData({ isSwiping: false });
-      console.log('PdfPreview: onTouchEnd reset isSwiping');
     }, 50);
   },
 
@@ -342,16 +351,13 @@ Page({
   zoomIn() {
     const scale = Math.min(3.0, this.data.pageScale + 0.25);
     this.setData({ pageScale: scale });
-    console.log(`PdfPreview: zoomIn to scale ${scale}`);
   },
   zoomOut() {
     const scale = Math.max(0.5, this.data.pageScale - 0.25);
     this.setData({ pageScale: scale });
-    console.log(`PdfPreview: zoomOut to scale ${scale}`);
   },
   resetZoom() {
-    this.setData({ pageScale: 1.0 }); // 重置缩放为1.0
-    console.log('PdfPreview: resetZoom to scale 1.0');
+    this.setData({ pageScale: 1.0, scrollLeft: 0, scrollTop: 0 });
   },
 
   // 清除当前报告的缓存（用于调试或强制刷新）
