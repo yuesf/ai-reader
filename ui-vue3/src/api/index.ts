@@ -121,11 +121,11 @@ export function updateReport(id: string, body: Partial<ReportItem>) {
 }
 
 export function deleteReport(id: string) {
-  return axios.delete<ApiResponse<number>>(BASE_URL+`/v1/reports/${id}`);
+  return axios.post<ApiResponse<number>>(BASE_URL+`/v1/reports/delete/${id}`);
 }
 
 export function batchDelete(ids: string[]) {
-  return axios.post<ApiResponse<number>>(BASE_URL+'/v1/reports/delete', { ids });
+  return axios.post<ApiResponse<number>>(BASE_URL+'/v1/reports/batch-delete', { ids });
 }
 
 export function generateSummary(id: string) {

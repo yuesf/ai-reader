@@ -373,9 +373,50 @@ public class ReportService {
         if (id == null || id.trim().isEmpty()) {
             throw new IllegalArgumentException("ID不能为空");
         }
-        // 先删子表，再删主表（尽管DB已设ON DELETE CASCADE，但为兼容性手动执行）
+        
+        // 获取报告信息，用于删除关联的OSS文件
+        Report report = reportMapper.selectById(id);
+        if (report == null) {
+            log.warn("报告不存在，ID: {}", id);
+            return 0;
+        }
+        
+        try {
+            // 1. 删除OSS上的报告文件
+            if (report.getReportFileId() != null && !report.getReportFileId().trim().isEmpty()) {
+                log.info("删除报告文件，fileId: {}", report.getReportFileId());
+                fileUploadService.deleteFile(report.getReportFileId());
+            }
+            
+            // 2. 删除OSS上的缩略图文件
+            if (report.getThumbnail() != null && !report.getThumbnail().trim().isEmpty()) {
+                // 从缩略图URL中提取文件ID (格式: /v1/images/{fileId})
+                String thumbnailPath = report.getThumbnail();
+                if (thumbnailPath.startsWith("/v1/images/")) {
+                    String thumbnailFileId = thumbnailPath.substring("/v1/images/".length());
+                    log.info("删除缩略图文件，fileId: {}", thumbnailFileId);
+                    fileUploadService.deleteFile(thumbnailFileId);
+                }
+            }
+            
+        } catch (Exception e) {
+            log.error("删除OSS文件失败，报告ID: {}, 错误: {}", id, e.getMessage());
+            // 继续执行数据库删除，不因为OSS删除失败而中断
+        }
+        
+        // 3. 删除数据库记录
+        // 先删除标签（子表）
         reportMapper.deleteTagsByReportId(id);
-        return reportMapper.deleteById(id);
+        // 再删除报告（主表）
+        int deleted = reportMapper.deleteById(id);
+        
+        if (deleted > 0) {
+            log.info("报告删除成功，ID: {}", id);
+        } else {
+            log.warn("报告删除失败，ID: {}", id);
+        }
+        
+        return deleted;
     }
 
     @Transactional
@@ -383,7 +424,21 @@ public class ReportService {
         if (request == null || request.getIds() == null || request.getIds().isEmpty()) {
             throw new IllegalArgumentException("ids不能为空");
         }
-        reportMapper.batchDeleteTagsByIds(request.getIds());
-        return reportMapper.batchDeleteByIds(request.getIds());
+        
+        int totalDeleted = 0;
+        
+        // 逐个删除以确保OSS文件也被清理
+        for (String id : request.getIds()) {
+            try {
+                int deleted = deleteById(id);
+                totalDeleted += deleted;
+            } catch (Exception e) {
+                log.error("批量删除中单个报告删除失败，ID: {}, 错误: {}", id, e.getMessage());
+                // 继续删除其他报告，不因为单个失败而中断整个批量操作
+            }
+        }
+        
+        log.info("批量删除完成，成功删除 {} 个报告，共 {} 个", totalDeleted, request.getIds().size());
+        return totalDeleted;
     }
 }

@@ -152,6 +152,34 @@ public class ReportController {
 
 
     /**
+     * 删除单个报告
+     * POST /reports/delete/{id}
+     */
+    @PostMapping("/reports/delete/{id}")
+    public ApiResponse<Void> deleteReport(@PathVariable String id) {
+        try {
+            log.info("后台删除报告，ID: {}", id);
+            
+            if (id == null || id.trim().isEmpty()) {
+                return ApiResponse.error(400, "报告ID不能为空");
+            }
+            
+            int deleted = reportService.deleteById(id);
+            if (deleted > 0) {
+                log.info("后台报告删除成功，ID: {}", id);
+                return ApiResponse.success(null);
+            } else {
+                log.warn("后台报告删除失败，报告不存在，ID: {}", id);
+                return ApiResponse.error(404, "报告不存在");
+            }
+            
+        } catch (Exception e) {
+            log.error("后台报告删除失败，ID: {}", id, e);
+            return ApiResponse.error(500, "服务器内部错误: " + e.getMessage());
+        }
+    }
+
+    /**
      * 批量删除报告
      * POST /reports/batch-delete
      */

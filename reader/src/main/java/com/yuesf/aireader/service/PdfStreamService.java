@@ -174,6 +174,7 @@ public class PdfStreamService {
         if (fileInfo == null) {
             throw new BusinessException("文件不存在");
         }
+        log.info("获取PDF文件信息，fileInfo={} ", fileInfo);
 
         // 计算分片数量
         int totalChunks = (int) Math.ceil((double) fileInfo.getFileSize() / CHUNK_SIZE);
