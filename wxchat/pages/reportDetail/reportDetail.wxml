@@ -41,10 +41,10 @@
         <text class="info-label">页数：</text>
         <text class="info-value">{{reportPages}}页</text>
       </view>
-      <view class="info-item">
+      <!-- <view class="info-item">
         <text class="info-label">作者：</text>
         <text class="info-value">{{reportAuthor}}</text>
-      </view>
+      </view> -->
       <view class="info-item">
         <text class="info-label">发布日期：</text>
         <text class="info-value">{{reportPublishDate}}</text>
@@ -88,7 +88,7 @@
     </view> -->
 
     <!-- 报告评论 -->
-    <view wx:if="{{reportComments.length > 0}}" class="report-comments">
+    <!-- <view wx:if="{{reportComments.length > 0}}" class="report-comments">
       <view class="comments-title">用户评论</view>
       <view wx:for="{{reportComments}}" wx:key="index" class="comment-item">
         <view class="comment-header">
@@ -97,15 +97,14 @@
         </view>
         <text class="comment-content">{{item.content}}</text>
       </view>
-    </view>
+    </view> -->
   </view>
 
   <!-- 底部操作按钮 -->
   <view class="bottom-actions">
-    <button class="action-btn download-btn" bindtap="downloadDocument">
-      <!-- <text class="btn-icon">📥</text> -->
+    <!-- <button class="action-btn download-btn" bindtap="downloadDocument">
       <text class="btn-text">{{reportIsFree ? '免费下载' : '付费下载'}}</text>
-    </button>
+    </button> -->
     
     <button class="action-btn preview-btn" bindtap="goToPreview">
       <!-- <text class="btn-icon">👁️</text> -->
