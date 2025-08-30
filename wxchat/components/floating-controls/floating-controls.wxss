@@ -1,0 +1,144 @@
+/* floating-controls.wxss */
+
+.floating-controls {
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  padding: 0;
+}
+
+/* 默认右侧中间位置 */
+.floating-controls.right-center {
+  right: 30rpx;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* 右上角位置 */
+.floating-controls.right-top {
+  right: 30rpx;
+  top: 120rpx;
+}
+
+/* 右下角位置 */
+.floating-controls.right-bottom {
+  right: 30rpx;
+  bottom: 120rpx;
+}
+
+/* 控制按钮基础样式 - 匹配其他页面的按钮风格 */
+.control-btn {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.08);
+  border: 1rpx solid #f0f0f0;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.control-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.control-btn:active::before {
+  left: 100%;
+}
+
+.control-btn:active {
+  transform: translateY(3rpx);
+  box-shadow: 0 3rpx 12rpx rgba(0, 0, 0, 0.12);
+}
+
+/* 按钮图标 */
+.btn-icon {
+  font-size: 36rpx;
+  font-weight: bold;
+  position: relative;
+  z-index: 1;
+  transition: transform 0.3s ease;
+}
+
+.control-btn:active .btn-icon {
+  transform: scale(0.9);
+}
+
+/* 放大按钮 */
+.zoom-in-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 6rpx 20rpx rgba(102, 126, 234, 0.3);
+  border: none;
+}
+
+.zoom-in-btn .btn-icon {
+  font-size: 40rpx;
+}
+
+/* 缩小按钮 */
+.zoom-out-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 6rpx 20rpx rgba(102, 126, 234, 0.3);
+  border: none;
+}
+
+.zoom-out-btn .btn-icon {
+  font-size: 40rpx;
+}
+
+/* 重置按钮 */
+.reset-btn {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  box-shadow: 0 6rpx 20rpx rgba(40, 167, 69, 0.3);
+  border: none;
+}
+
+.reset-btn .btn-icon {
+  font-size: 32rpx;
+}
+
+/* 响应式设计 */
+@media (max-width: 750rpx) {
+  .control-btn {
+    width: 70rpx;
+    height: 70rpx;
+    border-radius: 35rpx;
+  }
+  
+  .btn-icon {
+    font-size: 30rpx;
+  }
+  
+  .zoom-in-btn .btn-icon,
+  .zoom-out-btn .btn-icon {
+    font-size: 34rpx;
+  }
+  
+  .reset-btn .btn-icon {
+    font-size: 28rpx;
+  }
+  
+  .floating-controls {
+    gap: 12rpx;
+  }
+  
+  .floating-controls.right-center {
+    right: 20rpx;
+  }
+}

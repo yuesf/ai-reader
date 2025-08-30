@@ -1,11 +1,13 @@
 <!--pages/pdfPreview/pdfPreview.wxml-->
 <view class="container">
-  <!-- 操作栏 -->
-  <view class="preview-actions">
-    <button class="action-btn" bindtap="zoomIn">放大</button>
-    <button class="action-btn" bindtap="zoomOut">缩小</button>
-    <!--<button class="action-btn" bindtap="resetZoom">重置</button> -->
-  </view>
+  <!-- 浮动控制按钮 -->
+  <floating-controls 
+    position="right-center"
+    scale="{{pageScale}}"
+    bind:zoomIn="onZoomIn"
+    bind:zoomOut="onZoomOut"
+    bind:reset="onReset">
+  </floating-controls>
 
   <!-- 图片预览滚动容器：支持手势与定位到当前页 -->
   <scroll-view scroll-y="{{true}}" 

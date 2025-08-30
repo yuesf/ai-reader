@@ -1,0 +1,17 @@
+<!-- floating-controls.wxml -->
+<view class="floating-controls {{position}}">
+  <!-- 放大按钮 -->
+  <view class="control-btn zoom-in-btn" bindtap="onZoomIn">
+    <text class="btn-icon">+</text>
+  </view>
+  
+  <!-- 缩小按钮 -->
+  <view class="control-btn zoom-out-btn" bindtap="onZoomOut">
+    <text class="btn-icon">-</text>
+  </view>
+  
+  <!-- 重置按钮 -->
+  <view class="control-btn reset-btn" bindtap="onReset">
+    <text class="btn-icon">↻</text>
+  </view>
+</view>

@@ -360,6 +360,31 @@ Page({
     this.setData({ pageScale: 1.0, scrollLeft: 0, scrollTop: 0 });
   },
 
+  // 浮动控制按钮事件处理
+  onZoomIn(e) {
+    console.log('PdfPreview: onZoomIn called', e.detail);
+    this.zoomIn();
+  },
+
+  onZoomOut(e) {
+    console.log('PdfPreview: onZoomOut called', e.detail);
+    this.zoomOut();
+  },
+
+  onReset(e) {
+    console.log('PdfPreview: onReset called', e.detail);
+    this.setData({ 
+      pageScale: 1.0, 
+      scrollLeft: 0, 
+      scrollTop: 0
+    });
+    wx.showToast({
+      title: '回到首页',
+      icon: 'success',
+      duration: 1000
+    });
+  },
+
   // 清除当前报告的缓存（用于调试或强制刷新）
   clearCurrentReportCache() {
     if (this.data.fileId) {
