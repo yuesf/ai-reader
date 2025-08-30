@@ -2,8 +2,8 @@ import axios from 'axios';
 import router from '../router';
 
 // 定义BASE_URL
-// const BASE_URL = 'http://127.0.0.1:8080';
-const BASE_URL = 'https://yuesf.cn/reader';
+const BASE_URL = 'http://127.0.0.1:8080';
+// const BASE_URL = 'https://yuesf.cn/reader';
 
 export interface ApiResponse<T> {
   code: number;
@@ -149,7 +149,7 @@ export function uploadReportFile(file: File) {
   }
   
   console.log('发送请求到: /v1/upload/report');
-  return axios.post<ApiResponse<{url: string, filename: string, size: string}>>(BASE_URL+'/v1/upload/report', formData);
+  return axios.post<ApiResponse<{fileId: string, filename: string, size: string, pageNums?: number}>>(BASE_URL+'/v1/upload/report', formData);
 }
 
 export function uploadImage(file: File) {
