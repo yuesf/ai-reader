@@ -68,7 +68,7 @@
     <!-- 报告摘要 -->
     <view class="report-summary">
       <view class="summary-title">报告摘要</view>
-      <text class="summary-content">{{reportSummary}}</text>
+      <markdown-renderer content="{{reportSummary}}" class="summary-content"></markdown-renderer>
     </view>
 
     <!-- 报告统计信息 -->

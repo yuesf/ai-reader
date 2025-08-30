@@ -1,0 +1,64 @@
+<!-- components/markdown-renderer/markdown-renderer.wxml -->
+<view class="markdown-container">
+  <block wx:for="{{parsedContent}}" wx:key="index">
+    
+    <!-- 标题 -->
+    <view wx:if="{{item.type === 'header'}}" class="markdown-header markdown-h{{item.level}}">
+      <block wx:for="{{item.content}}" wx:for-item="inline" wx:key="index">
+        <text wx:if="{{inline.type === 'text'}}" class="markdown-text">{{inline.content}}</text>
+        <text wx:elif="{{inline.type === 'bold'}}" class="markdown-bold">{{inline.content}}</text>
+        <text wx:elif="{{inline.type === 'italic'}}" class="markdown-italic">{{inline.content}}</text>
+        <text wx:elif="{{inline.type === 'code'}}" class="markdown-inline-code">{{inline.content}}</text>
+        <text wx:elif="{{inline.type === 'link'}}" class="markdown-link" bindtap="onLinkTap" data-url="{{inline.url}}">{{inline.content}}</text>
+      </block>
+    </view>
+
+    <!-- 段落 -->
+    <view wx:elif="{{item.type === 'paragraph'}}" class="markdown-paragraph">
+      <block wx:for="{{item.content}}" wx:for-item="inline" wx:key="index">
+        <text wx:if="{{inline.type === 'text'}}" class="markdown-text">{{inline.content}}</text>
+        <text wx:elif="{{inline.type === 'bold'}}" class="markdown-bold">{{inline.content}}</text>
+        <text wx:elif="{{inline.type === 'italic'}}" class="markdown-italic">{{inline.content}}</text>
+        <text wx:elif="{{inline.type === 'code'}}" class="markdown-inline-code">{{inline.content}}</text>
+        <text wx:elif="{{inline.type === 'link'}}" class="markdown-link" bindtap="onLinkTap" data-url="{{inline.url}}">{{inline.content}}</text>
+      </block>
+    </view>
+
+    <!-- 列表项 -->
+    <view wx:elif="{{item.type === 'list-item'}}" class="markdown-list-item {{item.ordered ? 'ordered' : 'unordered'}}">
+      <text class="markdown-list-marker">{{item.ordered ? '•' : '•'}}</text>
+      <view class="markdown-list-content">
+        <block wx:for="{{item.content}}" wx:for-item="inline" wx:key="index">
+          <text wx:if="{{inline.type === 'text'}}" class="markdown-text">{{inline.content}}</text>
+          <text wx:elif="{{inline.type === 'bold'}}" class="markdown-bold">{{inline.content}}</text>
+          <text wx:elif="{{inline.type === 'italic'}}" class="markdown-italic">{{inline.content}}</text>
+          <text wx:elif="{{inline.type === 'code'}}" class="markdown-inline-code">{{inline.content}}</text>
+          <text wx:elif="{{inline.type === 'link'}}" class="markdown-link" bindtap="onLinkTap" data-url="{{inline.url}}">{{inline.content}}</text>
+        </block>
+      </view>
+    </view>
+
+    <!-- 引用 -->
+    <view wx:elif="{{item.type === 'blockquote'}}" class="markdown-blockquote">
+      <block wx:for="{{item.content}}" wx:for-item="inline" wx:key="index">
+        <text wx:if="{{inline.type === 'text'}}" class="markdown-text">{{inline.content}}</text>
+        <text wx:elif="{{inline.type === 'bold'}}" class="markdown-bold">{{inline.content}}</text>
+        <text wx:elif="{{inline.type === 'italic'}}" class="markdown-italic">{{inline.content}}</text>
+        <text wx:elif="{{inline.type === 'code'}}" class="markdown-inline-code">{{inline.content}}</text>
+        <text wx:elif="{{inline.type === 'link'}}" class="markdown-link" bindtap="onLinkTap" data-url="{{inline.url}}">{{inline.content}}</text>
+      </block>
+    </view>
+
+    <!-- 代码块 -->
+    <view wx:elif="{{item.type === 'code-block'}}" class="markdown-code-block">
+      <text class="markdown-code-text">{{item.content}}</text>
+    </view>
+
+    <!-- 分割线 -->
+    <view wx:elif="{{item.type === 'hr'}}" class="markdown-hr"></view>
+
+    <!-- 换行 -->
+    <view wx:elif="{{item.type === 'br'}}" class="markdown-br"></view>
+
+  </block>
+</view>

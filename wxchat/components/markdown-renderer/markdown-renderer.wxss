@@ -1,0 +1,208 @@
+/* components/markdown-renderer/markdown-renderer.wxss */
+
+.markdown-container {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  line-height: 1.6;
+  color: #333;
+}
+
+/* 标题样式 */
+.markdown-header {
+  font-weight: bold;
+  margin: 20rpx 0 15rpx 0;
+  line-height: 1.4;
+}
+
+.markdown-h1 {
+  font-size: 36rpx;
+  color: #2c3e50;
+  border-bottom: 2rpx solid #eee;
+  padding-bottom: 10rpx;
+}
+
+.markdown-h2 {
+  font-size: 32rpx;
+  color: #34495e;
+  border-bottom: 1rpx solid #eee;
+  padding-bottom: 8rpx;
+}
+
+.markdown-h3 {
+  font-size: 30rpx;
+  color: #34495e;
+}
+
+.markdown-h4 {
+  font-size: 28rpx;
+  color: #34495e;
+}
+
+.markdown-h5 {
+  font-size: 26rpx;
+  color: #34495e;
+}
+
+.markdown-h6 {
+  font-size: 24rpx;
+  color: #34495e;
+}
+
+/* 段落样式 */
+.markdown-paragraph {
+  margin: 15rpx 0;
+  line-height: 1.6;
+  text-align: justify;
+}
+
+/* 文本样式 */
+.markdown-text {
+  font-size: 28rpx;
+  color: #333;
+}
+
+.markdown-bold {
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.markdown-italic {
+  font-style: italic;
+  color: #34495e;
+}
+
+/* 行内代码 */
+.markdown-inline-code {
+  background-color: #f8f9fa;
+  color: #e83e8c;
+  padding: 4rpx 8rpx;
+  border-radius: 6rpx;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 24rpx;
+  border: 1rpx solid #e9ecef;
+}
+
+/* 链接 */
+.markdown-link {
+  color: #667eea;
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.markdown-link:active {
+  color: #764ba2;
+}
+
+/* 列表样式 */
+.markdown-list-item {
+  display: flex;
+  align-items: flex-start;
+  margin: 8rpx 0;
+  padding-left: 20rpx;
+}
+
+.markdown-list-marker {
+  color: #667eea;
+  font-weight: bold;
+  margin-right: 15rpx;
+  font-size: 28rpx;
+  line-height: 1.6;
+  flex-shrink: 0;
+}
+
+.markdown-list-content {
+  flex: 1;
+  line-height: 1.6;
+}
+
+/* 引用样式 */
+.markdown-blockquote {
+  background-color: #f8f9fa;
+  border-left: 6rpx solid #667eea;
+  padding: 20rpx 25rpx;
+  margin: 20rpx 0;
+  border-radius: 0 8rpx 8rpx 0;
+  font-style: italic;
+  color: #555;
+  position: relative;
+}
+
+.markdown-blockquote::before {
+  content: '"';
+  font-size: 60rpx;
+  color: #667eea;
+  position: absolute;
+  top: -10rpx;
+  left: 15rpx;
+  opacity: 0.3;
+  font-family: serif;
+}
+
+/* 代码块样式 */
+.markdown-code-block {
+  background-color: #2d3748;
+  color: #e2e8f0;
+  padding: 25rpx;
+  border-radius: 12rpx;
+  margin: 20rpx 0;
+  overflow-x: auto;
+  border: 1rpx solid #4a5568;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+.markdown-code-text {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 24rpx;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* 分割线 */
+.markdown-hr {
+  height: 2rpx;
+  background: linear-gradient(90deg, transparent, #667eea, transparent);
+  margin: 30rpx 0;
+  border: none;
+  border-radius: 1rpx;
+}
+
+/* 换行 */
+.markdown-br {
+  height: 15rpx;
+}
+
+/* 响应式调整 */
+@media (max-width: 750rpx) {
+  .markdown-h1 { font-size: 32rpx; }
+  .markdown-h2 { font-size: 30rpx; }
+  .markdown-h3 { font-size: 28rpx; }
+  .markdown-h4 { font-size: 26rpx; }
+  .markdown-h5 { font-size: 24rpx; }
+  .markdown-h6 { font-size: 22rpx; }
+  .markdown-text { font-size: 26rpx; }
+  .markdown-inline-code { font-size: 22rpx; }
+  .markdown-code-text { font-size: 22rpx; }
+}
+
+/* 动画效果 */
+.markdown-container {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 选中效果 */
+.markdown-link:active,
+.markdown-blockquote:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
+}

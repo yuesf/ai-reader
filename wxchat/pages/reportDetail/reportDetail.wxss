@@ -248,6 +248,31 @@
   text-align: justify;
 }
 
+/* Markdown renderer integration */
+.summary-content .markdown-container {
+  margin: 0;
+  padding: 0;
+}
+
+.summary-content .markdown-text {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.summary-content .markdown-paragraph {
+  margin: 10rpx 0;
+}
+
+.summary-content .markdown-header {
+  margin: 15rpx 0 10rpx 0;
+}
+
+.summary-content .markdown-h1,
+.summary-content .markdown-h2,
+.summary-content .markdown-h3 {
+  color: #333;
+}
+
 /* 报告统计信息 */
 .report-stats {
   background: white;
