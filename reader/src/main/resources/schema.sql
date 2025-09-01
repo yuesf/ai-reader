@@ -52,3 +52,22 @@ CREATE TABLE IF NOT EXISTS admin_users (
     status INTEGER DEFAULT 1,
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 微信小程序用户表
+CREATE TABLE IF NOT EXISTS wechat_user (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    open_id VARCHAR(100) UNIQUE NOT NULL,
+    union_id VARCHAR(100),
+    session_key VARCHAR(100),
+    nick_name VARCHAR(100),
+    avatar_url VARCHAR(500),
+    gender INTEGER DEFAULT 0, -- 0:未知, 1:男, 2:女
+    country VARCHAR(50),
+    province VARCHAR(50),
+    city VARCHAR(50),
+    language VARCHAR(20),
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_login_time DATETIME,
+    status INTEGER DEFAULT 1 -- 1:正常, 0:禁用
+);

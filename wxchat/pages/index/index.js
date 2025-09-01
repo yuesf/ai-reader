@@ -10,12 +10,37 @@ Page({
     total: 0,
     page: 1,
     pageSize: 20,
-    hasMore: true
+    hasMore: true,
+    userInfo: null
   },
 
   onLoad() {
+    // 检查登录状态
+    this.checkLoginStatus()
+    // 获取用户信息
+    this.getUserInfo()
     // 页面加载时获取报告列表
     this.loadReports()
+  },
+
+  getUserInfo() {
+    const app = getApp()
+    if (app.globalData.userInfo) {
+      this.setData({
+        userInfo: app.globalData.userInfo
+      })
+    }
+  },
+
+  checkLoginStatus() {
+    const app = getApp()
+    if (!app.globalData.isLoggedIn) {
+      wx.reLaunch({
+        url: '/pages/login/login'
+      })
+      return false
+    }
+    return true
   },
 
   /**
@@ -217,5 +242,21 @@ Page({
     } finally {
       this.setData({ loading: false })
     }
+  },
+
+  /**
+   * 退出登录
+   */
+  logout() {
+    wx.showModal({
+      title: '确认退出',
+      content: '确定要退出登录吗？',
+      success: (res) => {
+        if (res.confirm) {
+          const app = getApp()
+          app.logout()
+        }
+      }
+    })
   }
 })

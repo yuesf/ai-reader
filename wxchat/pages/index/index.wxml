@@ -1,5 +1,14 @@
 <!--index.wxml-->
 <view class="container">
+  <!-- 用户信息区域 -->
+  <!-- <view class="user-section">
+    <view class="user-info">
+      <image class="user-avatar" src="{{userInfo.avatarUrl}}" mode="cover"></image>
+      <text class="user-name">{{userInfo.nickName}}</text>
+    </view>
+    <button class="logout-btn" bindtap="logout" size="mini">退出</button>
+  </view> -->
+  
   <!-- 搜索区域 -->
   <view class="search-section">
     <view class="search-bar">

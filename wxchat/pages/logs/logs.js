@@ -6,6 +6,11 @@ Page({
     logs: []
   },
   onLoad() {
+    // 检查登录状态
+    if (!this.checkLoginStatus()) {
+      return;
+    }
+    
     this.setData({
       logs: (wx.getStorageSync('logs') || []).map(log => {
         return {
@@ -14,5 +19,16 @@ Page({
         }
       })
     })
+  },
+
+  checkLoginStatus() {
+    const app = getApp()
+    if (!app.globalData.isLoggedIn) {
+      wx.reLaunch({
+        url: '/pages/login/login'
+      })
+      return false
+    }
+    return true
   }
 })

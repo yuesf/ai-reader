@@ -46,6 +46,11 @@ Page({
   },
 
   async onLoad(options) {
+    // 检查登录状态
+    if (!this.checkLoginStatus()) {
+      return;
+    }
+    
     const { reportId, fileId, title } = options || {};
     this.setData({
       reportId: reportId || '',
@@ -97,6 +102,17 @@ Page({
         icon: 'none' 
       });
     }
+  },
+
+  checkLoginStatus() {
+    const app = getApp()
+    if (!app.globalData.isLoggedIn) {
+      wx.reLaunch({
+        url: '/pages/login/login'
+      })
+      return false
+    }
+    return true
   },
 
   // 追加一页（探测成功才追加），带防重

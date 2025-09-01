@@ -36,12 +36,29 @@ Page({
 
   onLoad(options) {
     console.log('ReportDetail: onLoad called', options);
+    
+    // 检查登录状态
+    if (!this.checkLoginStatus()) {
+      return;
+    }
+    
     // 从页面参数获取报告ID
     const reportId = options.id;
     this.setData({ reportId });
     
     // 获取报告详情
     this.getReportDetail(reportId);
+  },
+
+  checkLoginStatus() {
+    const app = getApp()
+    if (!app.globalData.isLoggedIn) {
+      wx.reLaunch({
+        url: '/pages/login/login'
+      })
+      return false
+    }
+    return true
   },
 
   /**

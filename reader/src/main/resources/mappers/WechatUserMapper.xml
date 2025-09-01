@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yuesf.aireader.mapper.WechatUserMapper">
+
+    <resultMap id="WechatUserResultMap" type="com.yuesf.aireader.entity.WechatUser">
+        <result property="openId" column="open_id"/>
+        <result property="unionId" column="union_id"/>
+        <result property="sessionKey" column="session_key"/>
+        <result property="nickName" column="nick_name"/>
+        <result property="avatarUrl" column="avatar_url"/>
+        <result property="gender" column="gender"/>
+        <result property="country" column="country"/>
+        <result property="province" column="province"/>
+        <result property="city" column="city"/>
+        <result property="language" column="language"/>
+        <result property="createTime" column="create_time"/>
+        <result property="lastLoginTime" column="last_login_time"/>
+    </resultMap>
+
+    <select id="findByOpenId" parameterType="string" resultMap="WechatUserResultMap">
+        SELECT * FROM wechat_user WHERE open_id = #{openId}
+    </select>
+
+    <insert id="insert" parameterType="com.yuesf.aireader.entity.WechatUser">
+        INSERT INTO wechat_user (
+            open_id, union_id, session_key, nick_name, avatar_url, 
+            gender, country, province, city, language, last_login_time
+        ) VALUES (
+            #{openId}, #{unionId}, #{sessionKey}, #{nickName}, #{avatarUrl}, 
+            #{gender}, #{country}, #{province}, #{city}, #{language}, datetime('now')
+        )
+    </insert>
+
+    <update id="update" parameterType="com.yuesf.aireader.entity.WechatUser">
+        UPDATE wechat_user SET
+            union_id = #{unionId},
+            session_key = #{sessionKey},
+            nick_name = #{nickName},
+            avatar_url = #{avatarUrl},
+            gender = #{gender},
+            country = #{country},
+            province = #{province},
+            city = #{city},
+            language = #{language},
+            last_login_time = datetime('now')
+        WHERE open_id = #{openId}
+    </update>
+
+    <select id="findById" parameterType="string" resultMap="WechatUserResultMap">
+        SELECT * FROM wechat_user WHERE open_id = #{openId}
+    </select>
+
+    <delete id="deleteById" parameterType="string">
+        DELETE FROM wechat_user WHERE  open_id = #{openId}
+    </delete>
+
+</mapper>
