@@ -9,15 +9,7 @@
     bind:reset="onReset">
   </floating-controls>
 
-  <!-- 手势检测层 -->
-  <view class="gesture-layer"
-        bindtouchstart="onTouchStart"
-        bindtouchmove="onTouchMove"
-        bindtouchend="onTouchEnd"
-        style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1; pointer-events: {{pageScale > 1.0 ? 'none' : 'auto'}};">
-  </view>
-
-  <!-- 图片预览滚动容器：支持手势与定位到当前页 -->
+  <!-- 图片预览滚动容器：优化流畅性，只支持上下滑动浏览 -->
   <scroll-view scroll-y="{{true}}" 
                scroll-x="{{pageScale > 1.0}}" 
                enhanced="{{true}}"
@@ -26,14 +18,12 @@
                upper-threshold="50"
                lower-threshold="50"
                enable-flex="{{true}}"
-               scroll-anchoring="{{true}}"
-               style="height: calc(100vh - 140rpx); overflow: hidden; position: relative; z-index: 0;"
+               scroll-anchoring="{{false}}"
+               style="height: calc(100vh - 140rpx); position: relative; z-index: 0;"
                bindscrolltolower="onScrollToLower"
                bindscroll="onScroll"
                scroll-into-view="{{scrollIntoViewId}}"
-               scroll-with-animation="{{pageScale <= 1.0}}"
-               scroll-left="{{scrollLeft}}"
-               scroll-top="{{scrollTop}}">
+               scroll-with-animation="{{false}}">
     <view class="pages-wrapper" style="width: {{pageScale * 100}}%; height: {{pageScale * 100}}%; transform-origin: left top;">
       <block wx:for="{{pageImages}}" wx:key="page">
         <view id="page-{{item.page}}" class="page-item" style="width: 100%; margin: 16rpx auto; display:flex; flex-direction:column; align-items:center;">

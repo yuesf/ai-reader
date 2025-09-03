@@ -22,7 +22,7 @@ const ENV = {
 };
 
 // 当前环境（根据实际部署情况修改）
-const CURRENT_ENV = 'DEV';
+const CURRENT_ENV = 'PROD';
 
 // 获取当前环境配置
 const getCurrentConfig = () => {
