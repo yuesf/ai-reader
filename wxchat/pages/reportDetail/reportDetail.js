@@ -1,6 +1,7 @@
 // pages/reportDetail/reportDetail.js
 const { reportAPI } = require('../../utils/api.js')
 const config = require('../../utils/config.js')
+const { trackPage, trackClick, trackDownload } = require('../../utils/tracking/index.js')
 
 Page({
   data: {
@@ -36,6 +37,9 @@ Page({
 
   onLoad(options) {
     console.log('ReportDetail: onLoad called', options);
+    
+    // 页面浏览埋点
+    trackPage('reportDetail', '报告详情页', { reportId: options.id });
     
     // 检查登录状态
     if (!this.checkLoginStatus()) {
@@ -128,6 +132,15 @@ Page({
    */
   downloadDocument() {
     console.log('ReportDetail: downloadDocument called');
+    
+    // 下载按钮点击埋点
+    trackClick('download_button', 'reportDetail', {
+      reportId: this.data.reportId,
+      reportTitle: this.data.reportTitle,
+      isFree: this.data.reportIsFree,
+      price: this.data.reportPrice
+    });
+    
     if (!this.data.reportFileId) {
       wx.showToast({
         title: '报告文件不存在',
@@ -192,6 +205,13 @@ Page({
       title: this.data.reportTitle
     });
 
+    // 预览按钮点击埋点
+    trackClick('preview_button', 'reportDetail', {
+      reportId: this.data.reportId,
+      reportTitle: this.data.reportTitle,
+      fileId: this.data.reportFileId
+    });
+
     if (!this.data.reportFileId) {
       wx.showToast({
         title: '报告文件不存在',
@@ -223,6 +243,12 @@ Page({
    * 分享报告
    */
   onShareAppMessage() {
+    // 分享到微信好友埋点
+    trackClick('share_wechat', 'reportDetail', {
+      reportId: this.data.reportId,
+      reportTitle: this.data.reportTitle
+    });
+
     return {
       title: this.data.reportTitle,
       path: `/pages/reportDetail/reportDetail?id=${this.data.reportId}`,
@@ -234,6 +260,12 @@ Page({
    * 分享到朋友圈
    */
   onShareTimeline() {
+    // 分享到朋友圈埋点
+    trackClick('share_timeline', 'reportDetail', {
+      reportId: this.data.reportId,
+      reportTitle: this.data.reportTitle
+    });
+
     return {
       title: this.data.reportTitle,
       imageUrl: this.data.reportThumbnail
@@ -244,6 +276,11 @@ Page({
    * 返回上一页
    */
   onBack() {
+    // 返回按钮埋点
+    trackClick('back_button', 'reportDetail', {
+      reportId: this.data.reportId
+    });
+
     wx.navigateBack();
   }
 });

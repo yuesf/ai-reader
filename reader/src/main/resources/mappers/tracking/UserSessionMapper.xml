@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yuesf.aireader.mapper.tracking.UserSessionMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="UserSessionResultMap" type="com.yuesf.aireader.entity.tracking.UserSession">
+        <id column="id" property="id"/>
+        <result column="session_id" property="sessionId"/>
+        <result column="user_id" property="userId"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="page_count" property="pageCount"/>
+        <result column="event_count" property="eventCount"/>
+        <result column="duration" property="duration"/>
+        <result column="device_info" property="deviceInfo"/>
+        <result column="network_type" property="networkType"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <!-- 插入用户会话 -->
+    <insert id="insert" parameterType="com.yuesf.aireader.entity.tracking.UserSession">
+        INSERT INTO user_sessions (
+            session_id, user_id, start_time, end_time, page_count, 
+            event_count, duration, device_info, network_type, created_at, updated_at
+        ) VALUES (
+            #{sessionId}, #{userId}, #{startTime}, #{endTime}, #{pageCount},
+            #{eventCount}, #{duration}, #{deviceInfo}, #{networkType}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <!-- 更新用户会话 -->
+    <update id="update" parameterType="com.yuesf.aireader.entity.tracking.UserSession">
+        UPDATE user_sessions SET
+            end_time = #{endTime},
+            page_count = #{pageCount},
+            event_count = #{eventCount},
+            duration = #{duration},
+            device_info = #{deviceInfo},
+            network_type = #{networkType},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE session_id = #{sessionId}
+    </update>
+
+    <!-- 根据会话ID查询用户会话 -->
+    <select id="selectBySessionId" parameterType="java.lang.String" resultMap="UserSessionResultMap">
+        SELECT * FROM user_sessions WHERE session_id = #{sessionId}
+    </select>
+
+    <!-- 根据用户ID查询用户会话列表 -->
+    <select id="selectByUserId" resultMap="UserSessionResultMap">
+        SELECT * FROM user_sessions 
+        WHERE user_id = #{userId}
+        ORDER BY start_time DESC
+        <if test="limit != null and offset != null">
+            LIMIT #{limit} OFFSET #{offset}
+        </if>
+    </select>
+
+    <!-- 查询活跃会话数量 -->
+    <select id="countActiveSessions" parameterType="java.lang.Long" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM user_sessions 
+        WHERE end_time IS NULL 
+        AND start_time  <![CDATA[ > ]]> #{timeThreshold}
+    </select>
+
+    <!-- 结束超时的会话 -->
+    <update id="endTimeoutSessions" parameterType="java.lang.Long">
+        UPDATE user_sessions SET
+            end_time = #{timeoutThreshold},
+            duration = CAST((#{timeoutThreshold} - start_time) / 1000 AS INTEGER),
+            updated_at = CURRENT_TIMESTAMP
+        WHERE end_time IS NULL 
+        AND start_time <![CDATA[ < ]]>  #{timeoutThreshold}
+    </update>
+
+    <!-- 删除过期的用户会话 -->
+    <delete id="deleteExpiredSessions" parameterType="java.lang.Long">
+        DELETE FROM user_sessions WHERE start_time <![CDATA[ < ]]> #{expireTime}
+    </delete>
+
+</mapper>

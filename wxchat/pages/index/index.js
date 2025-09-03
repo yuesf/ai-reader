@@ -1,5 +1,10 @@
 // index.js
-const { reportAPI, BASE_URL } = require('../../utils/api.js')
+const { reportAPI } = require('../../utils/api.js')
+const { getBaseUrl } = require('../../utils/config.js')
+const tracking = require('../../utils/tracking/index.js')
+
+// 使用统一配置的 BASE_URL
+const BASE_URL = getBaseUrl()
 
 Page({
   data: {
@@ -15,6 +20,9 @@ Page({
   },
 
   onLoad() {
+    // 页面浏览埋点
+    tracking.trackPageView('/pages/index/index', '首页')
+    
     // 检查登录状态
     this.checkLoginStatus()
     // 获取用户信息
@@ -118,6 +126,12 @@ Page({
       return
     }
 
+    // 搜索埋点
+    tracking.trackCustomEvent('search', {
+      keyword: keyword,
+      pagePath: '/pages/index/index'
+    })
+
     this.setData({ loading: true })
     
     try {
@@ -168,26 +182,29 @@ Page({
     const report = this.data.reports.find(item => item.id === reportId)
     
     if (report) {
-      // wx.showModal({
-      //   title: '报告详情',
-      //   content: `${report.title}\n\n来源：${report.source}\n分类：${report.category}\n页数：${report.pages}页\n发布时间：${report.publishDate}\n\n${report.summary}`,
-      //   showCancel: false,
-      //   confirmText: '确定'
-      // })
+      // 报告卡片点击埋点
+      tracking.trackButtonClick('report_card', '报告卡片', {
+        reportId: reportId,
+        reportTitle: report.title,
+        reportCategory: report.category
+      })
 
-    
-    }
-      // 这里可以添加跳转到报告详情页的逻辑
+      // 跳转到报告详情页
       wx.navigateTo({
        url: `../reportDetail/reportDetail?id=${reportId}`
      })
-    
+    }
   },
 
   /**
    * 下拉刷新
    */
   async onPullDownRefresh() {
+    // 下拉刷新埋点
+    tracking.trackCustomEvent('pull_refresh', {
+      pagePath: '/pages/index/index'
+    })
+    
     await this.loadReports()
     wx.stopPullDownRefresh()
   },
@@ -248,6 +265,9 @@ Page({
    * 退出登录
    */
   logout() {
+    // 退出登录埋点
+    tracking.trackButtonClick('logout', '退出登录')
+    
     wx.showModal({
       title: '确认退出',
       content: '确定要退出登录吗？',

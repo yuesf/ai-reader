@@ -2,12 +2,6 @@ server:
   port: 8080
   servlet:
     context-path: /
-#  ssl:
-#    key-store: classpath:yuesf.cn.jks
-#    key-store-password: changeit
-#    key-store-type: JKS
-#    key-alias: yuesf.cn
-#    enabled: true
 
 spring:
   application:
@@ -22,6 +16,7 @@ spring:
       location: ${java.io.tmpdir}
   
   datasource:
+    # 统一数据源配置（主业务 + 埋点数据）
     driver-class-name: org.sqlite.JDBC
     url: jdbc:sqlite:reader.db
     username: 
@@ -40,8 +35,8 @@ spring:
       continue-on-error: true
 
 mybatis:
-  mapper-locations: classpath*:mappers/*.xml
-  type-aliases-package: com.yuesf.aireader.entity
+  mapper-locations: classpath*:mappers/**/*.xml
+  type-aliases-package: com.yuesf.aireader.entity,com.yuesf.aireader.entity.tracking
   configuration:
     map-underscore-to-camel-case: true
     cache-enabled: false

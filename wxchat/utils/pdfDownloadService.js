@@ -56,11 +56,10 @@ class PdfChunkDownloader {
    * @param {Function} onProgress 进度回调
    * @param {Function} onComplete 完成回调
    * @param {Function} onError 错误回调
-   * @param {boolean} testMode 测试模式，跳过加密解密
    */
-  async startDownload(fileId, filename, onProgress, onComplete, onError, testMode = false) {
+  async startDownload(fileId, filename, onProgress, onComplete, onError) {
     try {
-      console.log(`开始下载PDF文件: ${filename} (${fileId}), 测试模式: ${testMode}`);
+      console.log(`开始下载PDF文件: ${filename} (${fileId})`);
       
       // 创建下载任务
       const downloadTask = {
@@ -73,7 +72,6 @@ class PdfChunkDownloader {
         chunks: new Map(),
         encryptionKey: null,
         startTime: Date.now(),
-        testMode: testMode, // 添加测试模式标志
         onProgress,
         onComplete,
         onError
@@ -81,21 +79,16 @@ class PdfChunkDownloader {
       
       this.downloads.set(fileId, downloadTask);
       
-      console.log('开始下载PDF文件-获取文件信息');
       // 获取文件信息
       await this.getFileInfo(downloadTask);
       
-      console.log('开始下载PDF文件-检查是否有未完成的下载');
       // 检查是否有未完成的下载
       if (await this.checkResumeDownload(downloadTask)) {
         console.log(`恢复下载: ${filename}`);
       }
       
-      console.log('开始下载PDF文件-开始下载');
       // 开始下载
       await this.processDownload(downloadTask);
-      
-      console.log('开始下载PDF文件-结束');
     } catch (error) {
       console.error(`下载失败: ${filename}`, error);
       onError && onError(error);
@@ -231,7 +224,7 @@ class PdfChunkDownloader {
     try {
       console.log(`开始下载分片: ${chunkIndex + 1}/${downloadTask.totalChunks}`);
       
-      // 设置当前下载任务（用于测试模式判断）
+      // 设置当前下载任务
       this.currentDownloadTask = downloadTask;
       
       // 使用封装的API方法获取分片数据
@@ -471,28 +464,6 @@ class PdfChunkDownloader {
     console.log('=== 调试信息结束 ===');
   }
 
-  /**
-   * 测试连接
-   */
-  async testConnection() {
-    try {
-      console.log('测试PDF流服务连接...');
-      
-      const result = await reportAPI.getPdfHealth();
-      
-      if (result.code === 200) {
-        console.log('PDF流服务连接正常');
-        return true;
-      } else {
-        console.error('PDF流服务连接异常:', result.message);
-        return false;
-      }
-      
-    } catch (error) {
-      console.error('PDF流服务连接测试失败:', error);
-      return false;
-    }
-  }
 
   /**
    * 保存到本地文件

@@ -6,8 +6,8 @@
 // 环境配置
 const ENV = {
   
-  // 测试环境
-  TEST: {
+  // 开发环境
+  DEV: {
     BASE_URL: 'http://127.0.0.1:8080',
     API_VERSION: 'v1',
     DEBUG: true
@@ -22,7 +22,7 @@ const ENV = {
 };
 
 // 当前环境（根据实际部署情况修改）
-const CURRENT_ENV = 'PROD';
+const CURRENT_ENV = 'DEV';
 
 // 获取当前环境配置
 const getCurrentConfig = () => {

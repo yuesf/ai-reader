@@ -8,9 +8,11 @@
   ],
   "window": {
     "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#ffffff",
     "navigationBarTitleText": "AI Reader",
-    "style": "custom",
-    "custom": true
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f8f8f8",
+    "enablePullDownRefresh": false
   },
   "lazyCodeLoading": "requiredComponents",
   "sitemapLocation": "sitemap.json",

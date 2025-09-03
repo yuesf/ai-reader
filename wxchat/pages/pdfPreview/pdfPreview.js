@@ -2,6 +2,7 @@
 const pdfImagePreviewService = require('../../utils/pdfImagePreviewService.js');
 const { reportAPI } = require('../../utils/api.js');
 const pdfDownloadService = require('../../utils/pdfDownloadService.js');
+const { trackPage, trackClick } = require('../../utils/tracking/index.js');
 
 const BATCH_SIZE = 5;
 
@@ -46,6 +47,12 @@ Page({
   },
 
   async onLoad(options) {
+    // 页面浏览埋点
+    trackPage('pdfPreview', 'PDF预览页', { 
+      reportId: options?.reportId, 
+      fileId: options?.fileId 
+    });
+    
     // 检查登录状态
     if (!this.checkLoginStatus()) {
       return;
@@ -365,14 +372,34 @@ Page({
 
   // 缩放（整体图片容器缩放）
   zoomIn() {
+    // 放大埋点
+    trackClick('zoom_in', 'pdfPreview', {
+      reportId: this.data.reportId,
+      currentScale: this.data.pageScale,
+      currentPage: this.data.currentPage
+    });
+    
     const scale = Math.min(3.0, this.data.pageScale + 0.25);
     this.setData({ pageScale: scale });
   },
   zoomOut() {
+    // 缩小埋点
+    trackClick('zoom_out', 'pdfPreview', {
+      reportId: this.data.reportId,
+      currentScale: this.data.pageScale,
+      currentPage: this.data.currentPage
+    });
+    
     const scale = Math.max(0.5, this.data.pageScale - 0.25);
     this.setData({ pageScale: scale });
   },
   resetZoom() {
+    // 重置缩放埋点
+    trackClick('reset_zoom', 'pdfPreview', {
+      reportId: this.data.reportId,
+      currentPage: this.data.currentPage
+    });
+    
     this.setData({ pageScale: 1.0, scrollLeft: 0, scrollTop: 0 });
   },
 
@@ -403,6 +430,12 @@ Page({
 
   // 清除当前报告的缓存（用于调试或强制刷新）
   clearCurrentReportCache() {
+    // 清除缓存埋点
+    trackClick('clear_cache', 'pdfPreview', {
+      reportId: this.data.reportId,
+      fileId: this.data.fileId
+    });
+    
     if (this.data.fileId) {
       pdfImagePreviewService.clearReportCache(this.data.fileId);
       wx.showToast({
@@ -415,6 +448,13 @@ Page({
 
   // 下载（保留）
   async startPdfDownload() {
+    // PDF下载埋点
+    trackClick('pdf_download', 'pdfPreview', {
+      reportId: this.data.reportId,
+      fileId: this.data.fileId,
+      title: this.data.title
+    });
+    
     const { fileId, title } = this.data;
     if (!fileId) return;
     if (!pdfDownloadService || typeof pdfDownloadService.startDownload !== 'function') {

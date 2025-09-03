@@ -71,3 +71,55 @@ CREATE TABLE IF NOT EXISTS wechat_user (
     last_login_time DATETIME,
     status INTEGER DEFAULT 1 -- 1:正常, 0:禁用
 );
+
+-- ========== 埋点数据表 ==========
+
+-- 用户会话表
+CREATE TABLE IF NOT EXISTS user_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id VARCHAR(64) UNIQUE NOT NULL,
+    user_id VARCHAR(64) NOT NULL,
+    start_time BIGINT NOT NULL,
+    end_time BIGINT,
+    page_count INTEGER DEFAULT 0,
+    event_count INTEGER DEFAULT 0,
+    duration INTEGER DEFAULT 0, -- 会话时长(秒)
+    device_info TEXT, -- JSON格式存储设备信息
+    network_type VARCHAR(16),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 埋点事件表
+CREATE TABLE IF NOT EXISTS tracking_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id VARCHAR(64) NOT NULL,
+    session_id VARCHAR(64) NOT NULL,
+    event_type VARCHAR(32) NOT NULL, -- button_click, page_view, etc.
+    page_path VARCHAR(128) NOT NULL, -- /pages/index/index
+    element_id VARCHAR(64), -- search_btn, download_btn
+    element_text VARCHAR(128), -- "搜索", "下载"
+    properties TEXT, -- JSON格式存储自定义属性
+    timestamp BIGINT NOT NULL,
+    device_info TEXT, -- JSON格式存储设备信息
+    network_type VARCHAR(16),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    
+    -- 外键关联
+    FOREIGN KEY (session_id) REFERENCES user_sessions(session_id)
+);
+
+-- 创建索引优化查询性能
+CREATE INDEX IF NOT EXISTS idx_tracking_events_user_id ON tracking_events(user_id);
+CREATE INDEX IF NOT EXISTS idx_tracking_events_timestamp ON tracking_events(timestamp);
+CREATE INDEX IF NOT EXISTS idx_tracking_events_page_path ON tracking_events(page_path);
+CREATE INDEX IF NOT EXISTS idx_tracking_events_event_type ON tracking_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_tracking_events_session_id ON tracking_events(session_id);
+
+CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_session_id ON user_sessions(session_id);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_start_time ON user_sessions(start_time);
+
+-- 创建复合索引支持常用查询
+CREATE INDEX IF NOT EXISTS idx_tracking_events_user_time ON tracking_events(user_id, timestamp);
+CREATE INDEX IF NOT EXISTS idx_tracking_events_page_time ON tracking_events(page_path, timestamp);

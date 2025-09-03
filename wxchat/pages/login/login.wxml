@@ -30,6 +30,18 @@
         >
           微信登录
         </button>
+        
+       
+        
+        <!-- 测试网络请求按钮 -->
+        <button 
+          class="network-test-btn" 
+          bindtap="testRequest"
+          type="default"
+          style="margin-top: 10px; background-color: #e0e0e0;"
+        >
+          测试网络请求
+        </button>
       </view>
     </view>
 

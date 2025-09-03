@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yuesf.aireader.mapper.tracking.TrackingEventMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="TrackingEventResultMap" type="com.yuesf.aireader.entity.tracking.TrackingEvent">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="session_id" property="sessionId"/>
+        <result column="event_type" property="eventType"/>
+        <result column="page_path" property="pagePath"/>
+        <result column="element_id" property="elementId"/>
+        <result column="element_text" property="elementText"/>
+        <result column="properties" property="properties"/>
+        <result column="timestamp" property="timestamp"/>
+        <result column="device_info" property="deviceInfo"/>
+        <result column="network_type" property="networkType"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <!-- 插入单个埋点事件 -->
+    <insert id="insert" parameterType="com.yuesf.aireader.entity.tracking.TrackingEvent">
+        INSERT INTO tracking_events (
+            user_id, session_id, event_type, page_path, element_id, 
+            element_text, properties, timestamp, device_info, network_type, created_at
+        ) VALUES (
+            #{userId}, #{sessionId}, #{eventType}, #{pagePath}, #{elementId},
+            #{elementText}, #{properties}, #{timestamp}, #{deviceInfo}, #{networkType}, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <!-- 批量插入埋点事件 -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO tracking_events (
+            user_id, session_id, event_type, page_path, element_id, 
+            element_text, properties, timestamp, device_info, network_type, created_at
+        ) VALUES
+        <foreach collection="events" item="event" separator=",">
+            (#{event.userId}, #{event.sessionId}, #{event.eventType}, #{event.pagePath}, #{event.elementId},
+             #{event.elementText}, #{event.properties}, #{event.timestamp}, #{event.deviceInfo}, #{event.networkType}, CURRENT_TIMESTAMP)
+        </foreach>
+    </insert>
+
+    <!-- 根据ID查询埋点事件 -->
+    <select id="selectById" parameterType="java.lang.Long" resultMap="TrackingEventResultMap">
+        SELECT * FROM tracking_events WHERE id = #{id}
+    </select>
+
+    <!-- 根据用户ID查询埋点事件列表 -->
+    <select id="selectByUserId" resultMap="TrackingEventResultMap">
+        SELECT * FROM tracking_events 
+        WHERE user_id = #{userId}
+        ORDER BY timestamp DESC
+        <if test="limit != null and offset != null">
+            LIMIT #{limit} OFFSET #{offset}
+        </if>
+    </select>
+
+    <!-- 根据会话ID查询埋点事件列表 -->
+    <select id="selectBySessionId" parameterType="java.lang.String" resultMap="TrackingEventResultMap">
+        SELECT * FROM tracking_events 
+        WHERE session_id = #{sessionId}
+        ORDER BY timestamp ASC
+    </select>
+
+    <!-- 根据页面路径查询埋点事件列表 -->
+    <select id="selectByPagePath" resultMap="TrackingEventResultMap">
+        SELECT * FROM tracking_events 
+        WHERE page_path = #{pagePath}
+        <if test="startTime != null">
+            AND timestamp <![CDATA[ >= ]]>  #{startTime}
+        </if>
+        <if test="endTime != null">
+            AND timestamp <![CDATA[ <= ]]>#{endTime}
+        </if>
+        ORDER BY timestamp DESC
+        <if test="limit != null and offset != null">
+            LIMIT #{limit} OFFSET #{offset}
+        </if>
+    </select>
+
+    <!-- 根据事件类型查询埋点事件列表 -->
+    <select id="selectByEventType" resultMap="TrackingEventResultMap">
+        SELECT * FROM tracking_events 
+        WHERE event_type = #{eventType}
+        <if test="startTime != null">
+            AND timestamp <![CDATA[ >= ]]> #{startTime}
+        </if>
+        <if test="endTime != null">
+            AND timestamp <![CDATA[ <= ]]> #{endTime}
+        </if>
+        ORDER BY timestamp DESC
+        <if test="limit != null and offset != null">
+            LIMIT #{limit} OFFSET #{offset}
+        </if>
+    </select>
+
+    <!-- 统计埋点事件数量 -->
+    <select id="countEvents" parameterType="java.util.Map" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM tracking_events
+        <where>
+            <if test="params.userId != null and params.userId != ''">
+                AND user_id = #{params.userId}
+            </if>
+            <if test="params.eventType != null and params.eventType != ''">
+                AND event_type = #{params.eventType}
+            </if>
+            <if test="params.pagePath != null and params.pagePath != ''">
+                AND page_path = #{params.pagePath}
+            </if>
+            <if test="params.startTime != null">
+                AND timestamp <![CDATA[ >= ]]> #{params.startTime}
+            </if>
+            <if test="params.endTime != null">
+                AND timestamp <![CDATA[ <= ]]> #{params.endTime}
+            </if>
+        </where>
+    </select>
+
+    <!-- 按维度统计埋点事件 -->
+    <select id="statisticsByDimension" resultType="java.util.Map">
+        SELECT 
+        <choose>
+            <when test="groupBy == 'page_path'">
+                page_path as dimension, COUNT(*) as count
+            </when>
+            <when test="groupBy == 'event_type'">
+                event_type as dimension, COUNT(*) as count
+            </when>
+            <when test="groupBy == 'date'">
+                DATE(created_at) as dimension, COUNT(*) as count
+            </when>
+            <when test="groupBy == 'hour'">
+                strftime('%Y-%m-%d %H:00:00', created_at) as dimension, COUNT(*) as count
+            </when>
+            <otherwise>
+                'unknown' as dimension, COUNT(*) as count
+            </otherwise>
+        </choose>
+        FROM tracking_events
+        <where>
+            <if test="startTime != null">
+                AND timestamp <![CDATA[ >= ]]> #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND timestamp <![CDATA[ <= ]]> #{endTime}
+            </if>
+        </where>
+        GROUP BY dimension
+        ORDER BY count DESC
+    </select>
+
+    <!-- 获取热力图数据 -->
+    <select id="getHeatmapData" resultType="java.util.Map">
+        SELECT 
+            element_id,
+            element_text,
+            COUNT(*) as click_count,
+            page_path
+        FROM tracking_events
+        WHERE event_type = 'button_click'
+        <if test="pagePath != null and pagePath != ''">
+            AND page_path = #{pagePath}
+        </if>
+        <if test="startTime != null">
+            AND timestamp <![CDATA[ >= ]]> #{startTime}
+        </if>
+        <if test="endTime != null">
+            AND timestamp <![CDATA[ <= ]]> #{endTime}
+        </if>
+        GROUP BY element_id, element_text, page_path
+        ORDER BY click_count DESC
+    </select>
+
+    <!-- 删除过期的埋点事件 -->
+    <delete id="deleteExpiredEvents" parameterType="java.lang.Long">
+        DELETE FROM tracking_events WHERE timestamp  <![CDATA[ < ]]> #{expireTime}
+    </delete>
+
+</mapper>

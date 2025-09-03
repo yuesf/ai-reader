@@ -1,9 +1,32 @@
 import axios from 'axios';
 import router from '../router';
 
-// 定义BASE_URL
-// const BASE_URL = 'http://127.0.0.1:8080';
-const BASE_URL = 'https://yuesf.cn/reader';
+// 获取环境配置 - 从 vite.config.ts 中定义的环境变量
+const ENV_CONFIG = JSON.parse(import.meta.env.VITE_ENV_CONFIG || '{}');
+const CURRENT_ENV = import.meta.env.VITE_CURRENT_ENV || 'PROD';
+const IS_DEV = import.meta.env.VITE_IS_DEV || false;
+const IS_DEBUG = import.meta.env.VITE_IS_DEBUG || false;
+const BASE_URL_CONFIG = import.meta.env.VITE_BASE_URL || '';
+
+// 获取后台地址配置 - 参考小程序的配置模式
+const getBackendUrl = () => {
+  // 开发环境：使用代理，返回空字符串（相对路径）
+  if (IS_DEV) {
+    return '';
+  }
+  
+  // 生产环境：使用配置中的后台地址
+  return ENV_CONFIG.BASE_URL || BASE_URL_CONFIG;
+};
+
+const BASE_URL = getBackendUrl();
+
+console.log('📡 API 配置信息:');
+console.log('  - 当前环境:', CURRENT_ENV);
+console.log('  - 开发模式:', IS_DEV);
+console.log('  - 后台地址:', BASE_URL || '[使用代理]');
+console.log('  - API 版本:', ENV_CONFIG.API_VERSION || 'v1');
+console.log('  - 调试模式:', IS_DEBUG);
 
 export interface ApiResponse<T> {
   code: number;

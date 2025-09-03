@@ -16,7 +16,7 @@ public class Homecontroller {
     /**
      * 健康检查接口
      * GET /health
-     * 用于测试PDF流服务是否正常运行
+     * 用于检查PDF流服务健康状态
      */
     @GetMapping({"/health", "/"})
     public ApiResponse<String> healthCheck() {

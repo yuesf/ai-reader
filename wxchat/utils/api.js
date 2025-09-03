@@ -1,6 +1,8 @@
 // api.js - API服务文件
-// 将基础URL指向后端服务（根据实际部署环境修改为域名/内网地址）
-const BASE_URL = 'https://yuesf.cn/reader'  // 本地测试用，生产环境改为实际域名
+const { getBaseUrl } = require('./config.js')
+
+// 使用统一配置的 BASE_URL
+const BASE_URL = getBaseUrl()
 
 /**
  * 通用请求方法
@@ -63,6 +65,42 @@ const post = (url, data = {}) => {
     method: 'POST',
     data
   })
+}
+
+/**
+/**
+ * 用户相关API（小程序专用接口）
+ */
+const userAPI = {
+  /**
+   * 用户登录并保存用户信息
+   * @param {object} loginData - 登录数据
+   * @returns {Promise} 登录结果
+   */
+  login: (loginData) => {
+    console.log('API: userAPI.login called', loginData);
+    return post('/v1/mini/user/login', loginData)
+  },
+
+  /**
+   * 获取用户信息
+   * @param {string} openid - 用户openid
+   * @returns {Promise} 用户信息
+   */
+  getUserInfo: (openid) => {
+    console.log('API: userAPI.getUserInfo called', openid);
+    return get(`/v1/mini/user/${openid}`)
+  },
+
+  /**
+   * 更新用户信息
+   * @param {object} userData - 用户数据
+   * @returns {Promise} 更新结果
+   */
+  updateUserInfo: (userData) => {
+    console.log('API: userAPI.updateUserInfo called', userData);
+    return post('/v1/mini/user/update', userData)
+  }
 }
 
 /**
@@ -158,7 +196,7 @@ const reportAPI = {
   },
 
   /**
-   * 获取PDF服务健康状态（用于测试连接）
+   * 获取PDF服务健康状态
    * @returns {Promise} 健康状态信息
    */
   getPdfHealth: () => {
@@ -235,7 +273,11 @@ const mockAPI = {
 }
 
 // 导出API服务
+// 导出API服务
 module.exports = {
+  // 用户相关API
+  userAPI,
+  
   // 生产环境API（小程序专用）
   reportAPI,
   

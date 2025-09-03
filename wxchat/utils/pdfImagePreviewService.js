@@ -1,8 +1,11 @@
 // 图片化PDF预览服务（基于后端已将PDF按页转换为图片）
 // 提供图片预览URL构建和缓存管理功能，确保每个报告只生成一次临时图片文件
 
-const { BASE_URL } = require('./api.js');
+const { getBaseUrl } = require('./config.js');
 const imageCache = require('./imageCache');
+
+// 使用统一配置的 BASE_URL
+const BASE_URL = getBaseUrl();
 
 class PdfImagePreviewService {
   constructor() {
