@@ -1,7 +1,7 @@
 // pages/reportDetail/reportDetail.js
 const { reportAPI } = require('../../utils/api.js')
 const config = require('../../utils/config.js')
-const { trackPage, trackClick, trackDownload } = require('../../utils/tracking/index.js')
+const { trackPage, trackButton, trackDownload, trackClick } = require('../../utils/tracking/index.js')
 
 Page({
   data: {
@@ -38,8 +38,15 @@ Page({
   onLoad(options) {
     console.log('ReportDetail: onLoad called', options);
     
-    // 页面浏览埋点
-    trackPage('reportDetail', '报告详情页', { reportId: options.id });
+    // 页面浏览埋点 - 异步执行
+    setTimeout(() => {
+      try {
+        trackPage('reportDetail', '报告详情页', { reportId: options.id });
+        console.log('[报告详情] 页面浏览埋点已发送:', options.id)
+      } catch (error) {
+        console.error('[报告详情] 页面浏览埋点失败:', error)
+      }
+    }, 0)
     
     // 检查登录状态
     if (!this.checkLoginStatus()) {
@@ -126,20 +133,28 @@ Page({
     }
   },
 
-
   /**
-   * 下载文档
+   * 下载文档 - 修复埋点异步执行
    */
   downloadDocument() {
     console.log('ReportDetail: downloadDocument called');
     
-    // 下载按钮点击埋点
-    trackClick('download_button', 'reportDetail', {
-      reportId: this.data.reportId,
-      reportTitle: this.data.reportTitle,
-      isFree: this.data.reportIsFree,
-      price: this.data.reportPrice
-    });
+    // 下载按钮点击埋点 - 异步执行，不影响主业务
+    setTimeout(() => {
+      try {
+        trackClick('download_button', '下载按钮点击', {
+          reportId: this.data.reportId,
+          reportTitle: this.data.reportTitle,
+          isFree: this.data.reportIsFree,
+          price: this.data.reportPrice,
+          fileId: this.data.reportFileId
+        });
+        console.log('[报告详情] 下载按钮埋点已发送:', this.data.reportId)
+      } catch (error) {
+        console.error('[报告详情] 下载按钮埋点失败:', error)
+        // 埋点失败不影响主业务
+      }
+    }, 0)
     
     if (!this.data.reportFileId) {
       wx.showToast({
@@ -196,7 +211,7 @@ Page({
   },
 
   /**
-   * 跳转到预览页面
+   * 跳转到预览页面 - 修复埋点异步执行
    */
   goToPreview() {
     console.log('ReportDetail: goToPreview called', {
@@ -205,12 +220,20 @@ Page({
       title: this.data.reportTitle
     });
 
-    // 预览按钮点击埋点
-    trackClick('preview_button', 'reportDetail', {
-      reportId: this.data.reportId,
-      reportTitle: this.data.reportTitle,
-      fileId: this.data.reportFileId
-    });
+    // 预览按钮点击埋点 - 异步执行，不影响主业务
+    setTimeout(() => {
+      try {
+        trackClick('preview_button', '预览按钮点击', {
+          reportId: this.data.reportId,
+          reportTitle: this.data.reportTitle,
+          fileId: this.data.reportFileId
+        });
+        console.log('[报告详情] 预览按钮埋点已发送:', this.data.reportId)
+      } catch (error) {
+        console.error('[报告详情] 预览按钮埋点失败:', error)
+        // 埋点失败不影响主业务
+      }
+    }, 0)
 
     if (!this.data.reportFileId) {
       wx.showToast({
@@ -240,14 +263,21 @@ Page({
   },
 
   /**
-   * 分享报告
+   * 分享报告 - 修复埋点异步执行
    */
   onShareAppMessage() {
-    // 分享到微信好友埋点
-    trackClick('share_wechat', 'reportDetail', {
-      reportId: this.data.reportId,
-      reportTitle: this.data.reportTitle
-    });
+    // 分享到微信好友埋点 - 异步执行
+    setTimeout(() => {
+      try {
+        trackClick('share_wechat', '分享到微信好友', {
+          reportId: this.data.reportId,
+          reportTitle: this.data.reportTitle
+        });
+        console.log('[报告详情] 分享微信好友埋点已发送:', this.data.reportId)
+      } catch (error) {
+        console.error('[报告详情] 分享微信好友埋点失败:', error)
+      }
+    }, 0)
 
     return {
       title: this.data.reportTitle,
@@ -257,14 +287,18 @@ Page({
   },
 
   /**
-   * 分享到朋友圈
+   * 分享到朋友圈 - 修复埋点异步执行
    */
   onShareTimeline() {
-    // 分享到朋友圈埋点
-    trackClick('share_timeline', 'reportDetail', {
-      reportId: this.data.reportId,
-      reportTitle: this.data.reportTitle
-    });
+    // 分享到朋友圈埋点 - 异步执行
+    setTimeout(() => {
+      try {
+        trackButton('share_timeline', '分享到朋友圈');
+        console.log('[报告详情] 分享朋友圈埋点已发送')
+      } catch (error) {
+        console.error('[报告详情] 分享朋友圈埋点失败:', error)
+      }
+    }, 0)
 
     return {
       title: this.data.reportTitle,
@@ -273,13 +307,18 @@ Page({
   },
 
   /**
-   * 返回上一页
+   * 返回上一页 - 修复埋点异步执行
    */
   onBack() {
-    // 返回按钮埋点
-    trackClick('back_button', 'reportDetail', {
-      reportId: this.data.reportId
-    });
+    // 返回按钮埋点 - 异步执行
+    setTimeout(() => {
+      try {
+        trackButton('back_button', '返回按钮');
+        console.log('[报告详情] 返回按钮埋点已发送')
+      } catch (error) {
+        console.error('[报告详情] 返回按钮埋点失败:', error)
+      }
+    }, 0)
 
     wx.navigateBack();
   }

@@ -288,16 +288,37 @@ class TrackingUpload {
    * @returns {Object} 上报数据
    */
   prepareUploadData(events) {
+    console.log('[TrackingUpload] 准备上报数据，事件数量:', events.length)
+    
     if (events.length === 1) {
       // 单个事件上报
-      return this.cleanEventData(events[0])
+      const cleanedEvent = this.cleanEventData(events[0])
+      console.log('[TrackingUpload] 单个事件上报数据:', {
+        eventType: cleanedEvent.eventType,
+        pagePath: cleanedEvent.pagePath
+      })
+      return cleanedEvent
     } else {
       // 批量事件上报
-      return {
+      const cleanedEvents = events.map(event => this.cleanEventData(event))
+      
+      // 统计批量上报中的pagePath情况
+      const pagePathStats = cleanedEvents.reduce((stats, event) => {
+        const path = event.pagePath || 'empty'
+        stats[path] = (stats[path] || 0) + 1
+        return stats
+      }, {})
+      
+      console.log('[TrackingUpload] 批量事件上报pagePath统计:', pagePathStats)
+      
+      const batchData = {
         batchId: this.generateBatchId(),
-        events: events.map(event => this.cleanEventData(event)),
+        events: cleanedEvents,
         uploadTime: Date.now()
       }
+      
+      console.log('[TrackingUpload] 批量上报数据准备完成，批次ID:', batchData.batchId)
+      return batchData
     }
   }
 
@@ -313,7 +334,48 @@ class TrackingUpload {
     delete cleanEvent._retryCount
     delete cleanEvent._failedAt
     
+    // 验证并修正 pagePath
+    if (!cleanEvent.pagePath || cleanEvent.pagePath.trim() === '') {
+      console.warn('[TrackingUpload] 批量上报发现空的pagePath，尝试修正:', cleanEvent.eventType)
+      
+      // 尝试从当前页面获取路径
+      cleanEvent.pagePath = this.getCurrentValidPagePath()
+      
+      console.log('[TrackingUpload] pagePath已修正为:', cleanEvent.pagePath)
+    }
+    
     return cleanEvent
+  }
+
+  /**
+   * 获取当前有效的页面路径（用于批量上报时修正空值）
+   * @returns {string} 页面路径
+   */
+  getCurrentValidPagePath() {
+    try {
+      // 尝试从小程序页面栈获取
+      const pages = getCurrentPages()
+      if (pages && pages.length > 0) {
+        const currentPage = pages[pages.length - 1]
+        if (currentPage) {
+          let pagePath = currentPage.route || currentPage.__route__ || ''
+          
+          // 确保路径以 / 开头
+          if (pagePath && !pagePath.startsWith('/')) {
+            pagePath = '/' + pagePath
+          }
+          
+          if (pagePath) {
+            return pagePath
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('[TrackingUpload] 获取当前页面路径失败:', error)
+    }
+    
+    // 最后的备用方案
+    return '/unknown'
   }
 
   /**

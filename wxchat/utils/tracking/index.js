@@ -100,5 +100,11 @@ module.exports = {
       errorMessage: errorMessage,
       ...extraProps
     })
+  },
+
+  // 向后兼容的函数 - trackClick 别名
+  trackClick(elementId, elementText, extraProps = {}) {
+    console.warn('[Tracking] trackClick 已废弃，请使用 trackButton 或 trackButtonClick')
+    return trackingCore.trackButtonClick(elementId, elementText, extraProps)
   }
 }

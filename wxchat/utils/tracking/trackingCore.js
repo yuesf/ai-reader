@@ -137,11 +137,12 @@ class TrackingCore {
     }
 
     try {
+      const pagePath = this.getValidPagePath()
       const eventData = {
         userId: this.userId,
         sessionId: this.sessionId,
         eventType: 'button_click',
-        pagePath: this.currentPage || getCurrentPagePath(),
+        pagePath: pagePath,
         elementId: elementId,
         elementText: elementText,
         properties: {
@@ -155,7 +156,7 @@ class TrackingCore {
 
       this.reportEvent(eventData)
       
-      console.log('[Tracking] 按钮点击埋点:', elementId, elementText)
+      console.log('[Tracking] 按钮点击埋点:', elementId, elementText, 'pagePath:', pagePath)
     } catch (error) {
       console.error('[Tracking] 按钮点击埋点失败:', error)
     }
@@ -175,11 +176,12 @@ class TrackingCore {
     }
 
     try {
+      const pagePath = this.getValidPagePath()
       const eventData = {
         userId: this.userId,
         sessionId: this.sessionId,
         eventType: eventType,
-        pagePath: this.currentPage || getCurrentPagePath(),
+        pagePath: pagePath,
         elementId: properties.elementId || null,
         elementText: properties.elementText || null,
         properties: properties,
@@ -190,37 +192,111 @@ class TrackingCore {
 
       this.reportEvent(eventData)
       
-      console.log('[Tracking] 自定义事件埋点:', eventType)
+      console.log('[Tracking] 自定义事件埋点:', eventType, 'pagePath:', pagePath)
     } catch (error) {
       console.error('[Tracking] 自定义事件埋点失败:', error)
     }
   }
 
   /**
-   * 上报事件
+   * 获取有效的页面路径
+   * 确保pagePath始终有值，避免为空的情况
+   * @returns {string} 页面路径
+   */
+  getValidPagePath() {
+    // 优先使用当前页面路径
+    if (this.currentPage && this.currentPage.trim()) {
+      return this.currentPage
+    }
+    
+    // 尝试从页面栈获取
+    const currentPagePath = getCurrentPagePath()
+    if (currentPagePath && currentPagePath.trim()) {
+      return currentPagePath
+    }
+    
+    // 尝试从小程序API获取
+    try {
+      const pages = getCurrentPages()
+      if (pages && pages.length > 0) {
+        const page = pages[pages.length - 1]
+        if (page && page.route) {
+          return '/' + page.route
+        }
+      }
+    } catch (error) {
+      console.warn('[Tracking] 获取页面栈失败:', error)
+    }
+    
+    // 最后的备用方案
+    console.warn('[Tracking] 无法获取有效页面路径，使用默认值')
+    return '/unknown'
+  }
+
+  /**
+   * 上报事件 - 异步执行，不影响主业务
    * @param {Object} eventData 事件数据
    */
   reportEvent(eventData) {
+    // 使用 setTimeout 异步执行，确保不阻塞主业务
+    setTimeout(() => {
+      try {
+        // 确保pagePath不为空
+        if (!eventData.pagePath || eventData.pagePath.trim() === '') {
+          eventData.pagePath = this.getValidPagePath()
+          console.warn('[Tracking] 事件数据pagePath为空，已修正为:', eventData.pagePath)
+        }
+
+        // 数据验证
+        if (!this.validateEventData(eventData)) {
+          console.warn('[Tracking] 事件数据验证失败:', eventData)
+          return
+        }
+
+        // 存储到本地
+        trackingStorage.addEvent(eventData)
+
+        // 根据配置决定上报策略
+        if (TRACKING_CONFIG.upload.strategy === 'real-time') {
+          // 实时上报 - 异步执行
+          this.asyncUpload(eventData)
+        } else {
+          // 批量上报 - 异步执行
+          this.asyncBatchUpload()
+        }
+      } catch (error) {
+        console.error('[Tracking] 上报事件失败:', error)
+        // 埋点失败不影响主业务，只记录错误
+      }
+    }, 0)
+  }
+
+  /**
+   * 异步上报单个事件
+   * @param {Object} eventData 事件数据
+   */
+  asyncUpload(eventData) {
     try {
-      // 数据验证
-      if (!this.validateEventData(eventData)) {
-        console.warn('[Tracking] 事件数据验证失败:', eventData)
-        return
-      }
-
-      // 存储到本地
-      trackingStorage.addEvent(eventData)
-
-      // 根据配置决定上报策略
-      if (TRACKING_CONFIG.upload.strategy === 'real-time') {
-        // 实时上报
-        trackingUpload.uploadSingle(eventData)
-      } else {
-        // 批量上报
-        trackingUpload.checkAndUploadBatch()
-      }
+      // uploadSingle 方法不返回 Promise，直接调用即可
+      trackingUpload.uploadSingle(eventData)
+      console.log('[Tracking] 异步上报已触发:', eventData.eventType)
     } catch (error) {
-      console.error('[Tracking] 上报事件失败:', error)
+      console.error('[Tracking] 异步上报异常:', error)
+      // 上报失败不抛出异常，避免影响主业务
+    }
+  }
+
+  /**
+   * 异步批量上报
+   */
+  asyncBatchUpload() {
+    try {
+      // checkAndUploadBatch 方法不返回 Promise，直接调用即可
+      trackingUpload.checkAndUploadBatch()
+      console.log('[Tracking] 异步批量上报已触发')
+    } catch (error) {
+      console.error('[Tracking] 异步批量上报异常:', error)
+      // 上报失败不抛出异常，避免影响主业务
     }
   }
 
@@ -396,17 +472,33 @@ class TrackingCore {
 
 /**
  * 获取当前页面路径
+ * 改进版本，增加更多的获取方式和错误处理
  */
 function getCurrentPagePath() {
   try {
     const pages = getCurrentPages()
-    if (pages.length > 0) {
+    if (pages && pages.length > 0) {
       const currentPage = pages[pages.length - 1]
-      return currentPage.route || ''
+      if (currentPage) {
+        // 尝试多种方式获取页面路径
+        let pagePath = currentPage.route || currentPage.__route__ || ''
+        
+        // 确保路径以 / 开头
+        if (pagePath && !pagePath.startsWith('/')) {
+          pagePath = '/' + pagePath
+        }
+        
+        if (pagePath) {
+          console.log('[Tracking] getCurrentPagePath 成功获取页面路径:', pagePath)
+          return pagePath
+        }
+      }
     }
   } catch (error) {
     console.error('[Tracking] 获取当前页面路径失败:', error)
   }
+  
+  console.warn('[Tracking] getCurrentPagePath 无法获取页面路径，返回空字符串')
   return ''
 }
 

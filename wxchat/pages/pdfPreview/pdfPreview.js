@@ -2,7 +2,7 @@
 const pdfImagePreviewService = require('../../utils/pdfImagePreviewService.js');
 const { reportAPI } = require('../../utils/api.js');
 const pdfDownloadService = require('../../utils/pdfDownloadService.js');
-const { trackPage, trackButton } = require('../../utils/tracking/index.js');
+const { trackPage, trackButton, trackClick } = require('../../utils/tracking/index.js');
 
 const BATCH_SIZE = 5;
 
@@ -315,15 +315,65 @@ Page({
     }
   },
 
-  // 触摸手势（左右滑动翻页）- 仅在未缩放时启用
+  // 触摸手势（左右滑动翻页）- 优化版本
   onTouchStart(e) {
     // 如果已缩放，不处理翻页手势，让scroll-view处理滚动
     if (this.data.pageScale > 1.0) {
       return;
     }
-    const t = e.touches && e.touches[0] ? e.touches[0] : { clientX: 0, clientY: 0 };
-    this.setData({ touchStartX: t.clientX, touchStartY: t.clientY, touchStartTime: Date.now() });
+    
+    // 防止重复触发
+    if (this.data.isSwiping) {
+      return;
+    }
+    
+    const touch = e.touches && e.touches[0];
+    if (!touch) return;
+    
+    this.setData({ 
+      touchStartX: touch.clientX, 
+      touchStartY: touch.clientY, 
+      touchStartTime: Date.now(),
+      isSwiping: false
+    });
+    
+    console.log('PdfPreview: onTouchStart', {
+      x: touch.clientX,
+      y: touch.clientY,
+      scale: this.data.pageScale
+    });
   },
+
+  onTouchMove(e) {
+    // 如果已缩放，不处理翻页手势
+    if (this.data.pageScale > 1.0) {
+      return;
+    }
+    
+    // 如果已经在处理滑动，不再处理
+    if (this.data.isSwiping) {
+      return;
+    }
+    
+    const touch = e.touches && e.touches[0];
+    if (!touch) return;
+    
+    const deltaX = touch.clientX - this.data.touchStartX;
+    const deltaY = touch.clientY - this.data.touchStartY;
+    
+    // 如果水平滑动距离足够大，且垂直滑动距离较小，则认为是翻页手势
+    if (Math.abs(deltaX) > 30 && Math.abs(deltaY) < 50) {
+      // 阻止默认的滚动行为
+      e.preventDefault && e.preventDefault();
+      e.stopPropagation && e.stopPropagation();
+      
+      console.log('PdfPreview: onTouchMove detected swipe gesture', {
+        deltaX: deltaX,
+        deltaY: deltaY
+      });
+    }
+  },
+
   async onTouchEnd(e) {
     // 如果已缩放，不处理翻页手势，让scroll-view处理滚动
     if (this.data.pageScale > 1.0) {
@@ -336,30 +386,85 @@ Page({
       return;
     }
     
-    if (!e.changedTouches || !e.changedTouches[0]) return;
-    const end = e.changedTouches[0];
-    const deltaX = end.clientX - this.data.touchStartX;
-    const deltaY = end.clientY - this.data.touchStartY;
+    const touch = e.changedTouches && e.changedTouches[0];
+    if (!touch) return;
+    
+    const deltaX = touch.clientX - this.data.touchStartX;
+    const deltaY = touch.clientY - this.data.touchStartY;
     const deltaTime = Date.now() - this.data.touchStartTime;
 
-    // 标记正在滑动，防止重复触发
-    this.setData({ isSwiping: true });
-    
-    if (deltaTime < 400 && Math.abs(deltaX) > 40 && Math.abs(deltaY) < 60) {
-      if (deltaX < 0) {
-        console.log('PdfPreview: onTouchEnd detected left swipe');
-        await this.goToPageOrLoad(this.data.currentPage + 1);
-      } else {
-        console.log('PdfPreview: onTouchEnd detected right swipe');
-        const prev = this.data.currentPage - 1;
-        if (prev >= 1) this.setData({ currentPage: prev, scrollIntoViewId: `page-${prev}` });
+    console.log('PdfPreview: onTouchEnd', {
+      deltaX: deltaX,
+      deltaY: deltaY,
+      deltaTime: deltaTime,
+      currentPage: this.data.currentPage
+    });
+
+    // 检查是否为有效的滑动手势 - 降低阈值，更容易触发
+    const isValidSwipe = deltaTime < 800 && 
+                        Math.abs(deltaX) > 30 && 
+                        Math.abs(deltaY) < 150 &&
+                        Math.abs(deltaX) > Math.abs(deltaY) * 0.5;
+
+    if (isValidSwipe) {
+      // 标记正在滑动，防止重复触发
+      this.setData({ isSwiping: true });
+      
+      try {
+        if (deltaX < 0) {
+          // 左滑：下一页
+          console.log('PdfPreview: onTouchEnd detected left swipe - next page');
+          
+          // 异步执行埋点
+          setTimeout(() => {
+            try {
+              trackClick('swipe_next_page', '滑动下一页', {
+                reportId: this.data.reportId,
+                currentPage: this.data.currentPage,
+                targetPage: this.data.currentPage + 1
+              });
+            } catch (error) {
+              console.error('[PDF预览] 滑动下一页埋点失败:', error);
+            }
+          }, 0);
+          
+          await this.goToPageOrLoad(this.data.currentPage + 1);
+        } else {
+          // 右滑：上一页
+          console.log('PdfPreview: onTouchEnd detected right swipe - previous page');
+          
+          // 异步执行埋点
+          setTimeout(() => {
+            try {
+              trackClick('swipe_prev_page', '滑动上一页', {
+                reportId: this.data.reportId,
+                currentPage: this.data.currentPage,
+                targetPage: this.data.currentPage - 1
+              });
+            } catch (error) {
+              console.error('[PDF预览] 滑动上一页埋点失败:', error);
+            }
+          }, 0);
+          
+          const prev = this.data.currentPage - 1;
+          if (prev >= 1) {
+            this.setData({ currentPage: prev, scrollIntoViewId: `page-${prev}` });
+            console.log('PdfPreview: navigated to previous page:', prev);
+          } else {
+            wx.showToast({ title: '已是第一页', icon: 'none', duration: 1000 });
+          }
+        }
+      } catch (error) {
+        console.error('PdfPreview: swipe navigation error:', error);
       }
+      
+      // 延迟重置滑动状态，防止误触
+      setTimeout(() => {
+        this.setData({ isSwiping: false });
+      }, 300);
+    } else {
+      console.log('PdfPreview: onTouchEnd - not a valid swipe gesture');
     }
-    
-    // 延迟重置滑动状态，防止误触
-    setTimeout(() => {
-      this.setData({ isSwiping: false });
-    }, 50);
   },
 
   // 图片加载完成/失败回调

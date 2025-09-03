@@ -7,6 +7,17 @@
   position: relative;
 }
 
+/* 手势检测层 */
+.gesture-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  background: transparent;
+}
+
 /* 滚动视图容器 */
 scroll-view {
   position: relative;

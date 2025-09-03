@@ -126,11 +126,18 @@ Page({
       return
     }
 
-    // 搜索埋点
-    tracking.trackCustomEvent('search', {
-      keyword: keyword,
-      pagePath: '/pages/index/index'
-    })
+    // 搜索埋点 - 异步执行
+    setTimeout(() => {
+      try {
+        tracking.trackCustomEvent('search', {
+          keyword: keyword,
+          pagePath: '/pages/index/index'
+        })
+        console.log('[首页] 搜索埋点已发送:', keyword)
+      } catch (error) {
+        console.error('[首页] 搜索埋点失败:', error)
+      }
+    }, 0)
 
     this.setData({ loading: true })
     
@@ -175,24 +182,53 @@ Page({
   },
 
   /**
-   * 点击报告项
+   * 点击报告项 - 修复埋点问题
    */
   onReportTap(e) {
     const reportId = e.currentTarget.dataset.id
-    const report = this.data.reports.find(item => item.id === reportId)
+    const report = this.data.filteredReports.find(item => item.id === reportId) || 
+                   this.data.reports.find(item => item.id === reportId)
     
     if (report) {
-      // 报告卡片点击埋点
-      tracking.trackButtonClick('report_card', '报告卡片', {
-        reportId: reportId,
-        reportTitle: report.title,
-        reportCategory: report.category
-      })
+      // 异步执行埋点，不影响页面跳转
+      setTimeout(() => {
+        try {
+          tracking.trackButtonClick('report_card', '报告卡片点击', {
+            reportId: reportId,
+            reportTitle: report.title,
+            reportCategory: report.category,
+            reportSource: report.source,
+            reportPrice: report.price,
+            reportIsFree: report.isFree,
+            clickPosition: 'index_page'
+          })
+          console.log('[首页] 报告点击埋点已发送:', reportId, report.title)
+        } catch (error) {
+          console.error('[首页] 报告点击埋点失败:', error)
+          // 埋点失败不影响主业务
+        }
+      }, 0)
 
-      // 跳转到报告详情页
+      // 立即跳转到报告详情页，不等待埋点完成
       wx.navigateTo({
-       url: `../reportDetail/reportDetail?id=${reportId}`
-     })
+        url: `../reportDetail/reportDetail?id=${reportId}`,
+        success: () => {
+          console.log('[首页] 成功跳转到报告详情页:', reportId)
+        },
+        fail: (error) => {
+          console.error('[首页] 跳转报告详情页失败:', error)
+          wx.showToast({
+            title: '跳转失败，请重试',
+            icon: 'none'
+          })
+        }
+      })
+    } else {
+      console.error('[首页] 未找到报告信息:', reportId)
+      wx.showToast({
+        title: '报告信息不存在',
+        icon: 'none'
+      })
     }
   },
 
@@ -200,10 +236,17 @@ Page({
    * 下拉刷新
    */
   async onPullDownRefresh() {
-    // 下拉刷新埋点
-    tracking.trackCustomEvent('pull_refresh', {
-      pagePath: '/pages/index/index'
-    })
+    // 下拉刷新埋点 - 异步执行
+    setTimeout(() => {
+      try {
+        tracking.trackCustomEvent('pull_refresh', {
+          pagePath: '/pages/index/index'
+        })
+        console.log('[首页] 下拉刷新埋点已发送')
+      } catch (error) {
+        console.error('[首页] 下拉刷新埋点失败:', error)
+      }
+    }, 0)
     
     await this.loadReports()
     wx.stopPullDownRefresh()
@@ -247,6 +290,20 @@ Page({
           page: nextPage,
           hasMore: newReports.length < result.data.total
         })
+
+        // 加载更多埋点 - 异步执行
+        setTimeout(() => {
+          try {
+            tracking.trackCustomEvent('load_more', {
+              pagePath: '/pages/index/index',
+              page: nextPage,
+              totalLoaded: newReports.length
+            })
+            console.log('[首页] 加载更多埋点已发送:', nextPage)
+          } catch (error) {
+            console.error('[首页] 加载更多埋点失败:', error)
+          }
+        }, 0)
       } else {
         this.setData({ hasMore: false })
       }
@@ -265,8 +322,15 @@ Page({
    * 退出登录
    */
   logout() {
-    // 退出登录埋点
-    tracking.trackButtonClick('logout', '退出登录')
+    // 退出登录埋点 - 异步执行
+    setTimeout(() => {
+      try {
+        tracking.trackButtonClick('logout', '退出登录')
+        console.log('[首页] 退出登录埋点已发送')
+      } catch (error) {
+        console.error('[首页] 退出登录埋点失败:', error)
+      }
+    }, 0)
     
     wx.showModal({
       title: '确认退出',

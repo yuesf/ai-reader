@@ -9,6 +9,14 @@
     bind:reset="onReset">
   </floating-controls>
 
+  <!-- 手势检测层 -->
+  <view class="gesture-layer"
+        bindtouchstart="onTouchStart"
+        bindtouchmove="onTouchMove"
+        bindtouchend="onTouchEnd"
+        style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1; pointer-events: {{pageScale > 1.0 ? 'none' : 'auto'}};">
+  </view>
+
   <!-- 图片预览滚动容器：支持手势与定位到当前页 -->
   <scroll-view scroll-y="{{true}}" 
                scroll-x="{{pageScale > 1.0}}" 
@@ -19,11 +27,9 @@
                lower-threshold="50"
                enable-flex="{{true}}"
                scroll-anchoring="{{true}}"
-               style="height: calc(100vh - 140rpx); overflow: hidden;"
+               style="height: calc(100vh - 140rpx); overflow: hidden; position: relative; z-index: 0;"
                bindscrolltolower="onScrollToLower"
                bindscroll="onScroll"
-               bindtouchstart="onTouchStart"
-               bindtouchend="onTouchEnd"
                scroll-into-view="{{scrollIntoViewId}}"
                scroll-with-animation="{{pageScale <= 1.0}}"
                scroll-left="{{scrollLeft}}"
