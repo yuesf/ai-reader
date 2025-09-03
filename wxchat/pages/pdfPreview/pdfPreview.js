@@ -2,7 +2,7 @@
 const pdfImagePreviewService = require('../../utils/pdfImagePreviewService.js');
 const { reportAPI } = require('../../utils/api.js');
 const pdfDownloadService = require('../../utils/pdfDownloadService.js');
-const { trackPage, trackClick } = require('../../utils/tracking/index.js');
+const { trackPage, trackButton } = require('../../utils/tracking/index.js');
 
 const BATCH_SIZE = 5;
 
@@ -226,6 +226,20 @@ Page({
     });
   },
 
+  // 滚动事件处理
+  onScroll(e) {
+    // 更新滚动位置
+    if (e.detail) {
+      this.setData({
+        scrollLeft: e.detail.scrollLeft || 0,
+        scrollTop: e.detail.scrollTop || 0
+      });
+    }
+    
+    // 可以在这里添加其他滚动相关的逻辑
+    // 比如更新当前页码、滚动位置记录等
+  },
+
   // 滚动到底：继续尝试加载后续5页（带防重）
   async onScrollToLower() {
     console.log('PdfPreview: onScrollToLower called');
@@ -384,21 +398,14 @@ Page({
   },
   zoomOut() {
     // 缩小埋点
-    trackClick('zoom_out', 'pdfPreview', {
-      reportId: this.data.reportId,
-      currentScale: this.data.pageScale,
-      currentPage: this.data.currentPage
-    });
+    trackButton('zoom_out', 'pdfPreview');
     
     const scale = Math.max(0.5, this.data.pageScale - 0.25);
     this.setData({ pageScale: scale });
   },
   resetZoom() {
     // 重置缩放埋点
-    trackClick('reset_zoom', 'pdfPreview', {
-      reportId: this.data.reportId,
-      currentPage: this.data.currentPage
-    });
+    trackButton('reset_zoom', 'pdfPreview');
     
     this.setData({ pageScale: 1.0, scrollLeft: 0, scrollTop: 0 });
   },
@@ -431,10 +438,7 @@ Page({
   // 清除当前报告的缓存（用于调试或强制刷新）
   clearCurrentReportCache() {
     // 清除缓存埋点
-    trackClick('clear_cache', 'pdfPreview', {
-      reportId: this.data.reportId,
-      fileId: this.data.fileId
-    });
+    trackButton('clear_cache', 'pdfPreview');
     
     if (this.data.fileId) {
       pdfImagePreviewService.clearReportCache(this.data.fileId);
@@ -449,11 +453,7 @@ Page({
   // 下载（保留）
   async startPdfDownload() {
     // PDF下载埋点
-    trackClick('pdf_download', 'pdfPreview', {
-      reportId: this.data.reportId,
-      fileId: this.data.fileId,
-      title: this.data.title
-    });
+    trackButton('pdf_download', 'pdfPreview');
     
     const { fileId, title } = this.data;
     if (!fileId) return;
