@@ -41,6 +41,9 @@ public class ReportService {
     @Autowired
     private FileUploadService fileUploadService;
 
+    @Autowired
+    private AliyunDocumentIntelligenceService documentIntelligenceService;
+
 
     public ReportListResponse getReportList(ReportListRequest request) {
         int page = (request.getPage() == null || request.getPage() < 1) ? 1 : request.getPage();
@@ -265,6 +268,7 @@ public class ReportService {
 
     /**
      * 生成报告摘要
+     * 使用阿里云文档智能服务进行PDF解析，然后使用通义API生成摘要
      */
     @Transactional
     public String generateReportSummary(String reportId) {
@@ -287,21 +291,86 @@ public class ReportService {
                 return null;
             }
 
-            // 生成摘要
-            String summary = aiTextSummaryService.summarize(fileInfo.getOriginalName());
+            log.info("开始为报告生成摘要，ID: {}, 文件名: {}", reportId, fileInfo.getOriginalName());
+
+            // 步骤1: 从OSS获取PDF文件URL
+            String ossFileUrl = getOssFileUrl(fileInfo);
+            if (ossFileUrl == null) {
+                log.error("无法获取OSS文件URL，报告ID: {}", reportId);
+                return null;
+            }
+
+            // 步骤2: 使用阿里云文档智能服务解析PDF内容
+            String documentContent = parseDocumentWithAliyun(ossFileUrl, reportId);
+            if (documentContent == null || documentContent.isBlank()) {
+                log.error("PDF文档解析失败或内容为空，报告ID: {}", reportId);
+                return null;
+            }
+
+            log.info("PDF文档解析成功，内容长度: {}, 报告ID: {}", documentContent.length(), reportId);
+
+            // 步骤3: 使用通义API生成摘要
+            String summary = aiTextSummaryService.summarize(documentContent);
             if (summary != null && !summary.isBlank()) {
                 // 更新报告摘要
                 report.setSummary(summary);
                 reportMapper.updateReport(report);
-                log.info("报告摘要生成并更新成功，ID: {}", reportId);
+                log.info("报告摘要生成并更新成功，摘要长度: {}, 报告ID: {}", summary.length(), reportId);
                 return summary;
             } else {
-                log.error("AI摘要生成失败，ID: {}", reportId);
+                log.error("AI摘要生成失败，报告ID: {}", reportId);
                 return null;
             }
 
         } catch (Exception e) {
-            log.error("生成报告摘要失败，ID: {}", reportId, e);
+            log.error("生成报告摘要失败，报告ID: {}", reportId, e);
+            return null;
+        }
+    }
+
+    /**
+     * 获取OSS文件URL
+     */
+    private String getOssFileUrl(FileInfo fileInfo) {
+        try {
+            // 使用fileInfo.getFileName()获取OSS文件路径
+            String ossFilePath = fileInfo.getFileName();
+            if (ossFilePath == null || ossFilePath.isBlank()) {
+                log.error("OSS文件路径为空，文件ID: {}", fileInfo.getId());
+                return null;
+            }
+
+            // 生成临时访问URL（有效期1小时）
+            String presignedUrl = fileUploadService.generatePresignedUrl(ossFilePath, 3600);
+            log.info("生成OSS临时访问URL成功，文件: {}", ossFilePath);
+            return presignedUrl;
+
+        } catch (Exception e) {
+            log.error("生成OSS文件URL失败，文件ID: {}", fileInfo.getId(), e);
+            return null;
+        }
+    }
+
+    /**
+     * 使用阿里云文档智能服务解析PDF文档
+     */
+    private String parseDocumentWithAliyun(String ossFileUrl, String reportId) {
+        try {
+            log.info("开始使用阿里云文档智能服务解析PDF，报告ID: {}", reportId);
+
+            // 同步解析文档，最大等待时间300秒（5分钟）
+            String documentContent = documentIntelligenceService.parseDocumentSync(ossFileUrl, 300);
+
+            if (documentContent != null && !documentContent.isBlank()) {
+                log.info("阿里云文档智能服务解析成功，内容长度: {}, 报告ID: {}", documentContent.length(), reportId);
+                return documentContent;
+            } else {
+                log.warn("阿里云文档智能服务解析结果为空，报告ID: {}", reportId);
+                return null;
+            }
+
+        } catch (Exception e) {
+            log.error("阿里云文档智能服务解析失败，报告ID: {}", reportId, e);
             return null;
         }
     }
