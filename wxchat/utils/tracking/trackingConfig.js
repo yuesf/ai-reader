@@ -24,10 +24,10 @@ const TRACKING_CONFIG = {
   
   // 上报策略配置
   upload: {
-    strategy: 'real-time',      // 上报策略: 'real-time' | 'batch' - 改回实时上报
-    batchSize: 1,               // 批量上报大小 - 减少到3个
-    uploadInterval: 1000,       // 上报间隔(毫秒) - 改为5秒
-    maxRetries: 3,              // 最大重试次数
+    strategy: 'batch',      // 上报策略: 'real-time' | 'batch' - 改回实时上报
+    batchSize: 10,               // 批量上报大小 - 改为10个
+    uploadInterval: 10000,       // 上报间隔(毫秒) - 改为10秒
+    maxRetries: 2,              // 最大重试次数
     retryDelay: 2000,           // 重试延迟(毫秒) - 改为2秒
     timeout: 10000,             // 请求超时时间(毫秒) - 10秒
     enableRetry: true           // 是否启用重试
@@ -55,7 +55,7 @@ const TRACKING_CONFIG = {
   // 调试配置
   debug: {
     enabled: true,              // 是否启用调试模式
-    logLevel: 'debug',          // 日志级别: 'error' | 'warn' | 'info' | 'debug' - 改为debug级别
+    logLevel: 'info',           // 日志级别: 'error' | 'warn' | 'info' | 'debug'
     showConsole: true,          // 是否显示控制台日志
     mockUpload: false,          // 是否模拟上报(不实际发送请求)
     logUploadDetails: true,     // 是否记录上报详细信息

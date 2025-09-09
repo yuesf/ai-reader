@@ -43,9 +43,9 @@ mybatis:
 
 logging:
   level:
-    com.yuesf.aireader: DEBUG
-    org.springframework.web: INFO
-    org.apache.ibatis: DEBUG
+    com.yuesf.aireader: INFO
+    org.springframework.web: warn
+    org.apache.ibatis: INFO
     jdbc.sqlonly: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
