@@ -1,0 +1,5 @@
+{
+  "navigationBarTitleText": "报告列表",
+  "enablePullDownRefresh": true,
+  "onReachBottomDistance": 50
+}

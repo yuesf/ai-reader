@@ -1,6 +1,8 @@
 {
-  "usingComponents": {
-  },
+  "navigationBarTitleText": "AI Reader",
   "enablePullDownRefresh": true,
-  "backgroundTextStyle": "dark"
+  "onReachBottomDistance": 50,
+  "backgroundTextStyle": "dark",
+  "usingComponents": {
+  }
 }

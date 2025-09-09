@@ -49,12 +49,12 @@
         <text class="info-label">发布日期：</text>
         <text class="info-value">{{reportPublishDate}}</text>
       </view>
-      <view class="info-item">
+      <!-- <view class="info-item">
         <text class="info-label">价格：</text>
         <text class="info-value {{reportIsFree ? 'free' : 'paid'}}">
           {{reportIsFree ? '免费' : reportPrice}}
         </text>
-      </view>
+      </view> -->
     </view>
 
     <!-- 报告标签 -->

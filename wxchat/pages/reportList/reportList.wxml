@@ -1,0 +1,89 @@
+<!--reportList.wxml-->
+<view class="container">
+  <!-- 页面标题 -->
+  <view class="page-header">
+    <text class="page-title">报告列表</text>
+    <text class="page-subtitle">发现更多精彩内容</text>
+  </view>
+  
+  <!-- 搜索区域 -->
+  <view class="search-section">
+    <view class="search-bar">
+      <input 
+        class="search-input" 
+        placeholder="请输入关键词查询" 
+        value="{{searchKeyword}}"
+        bindinput="onSearchInput"
+      />
+      <button class="search-btn" bindtap="onSearch">搜索</button>
+    </view>
+  </view>
+
+  <!-- 报告列表 -->
+  <view class="reports-section">
+    <!-- 加载状态 -->
+    <view class="loading-container" wx:if="{{loading && reports.length === 0}}">
+      <view class="loading-spinner"></view>
+      <text class="loading-text">加载中...</text>
+    </view>
+
+    <!-- 报告列表 -->
+    <view class="report-item" 
+          wx:for="{{filteredReports}}" 
+          wx:key="id"
+          bindtap="onReportTap"
+          data-id="{{item.id}}">
+
+      <view class="report-main">
+        <!-- 报告缩略图 -->
+        <view class="report-thumbnail">
+          <image class="thumbnail-img" src="{{item.thumbnailFull}}" mode="aspectFill"></image>
+        </view>
+
+        <!-- 报告信息 -->
+        <view class="report-info">
+          <view class="report-title">{{item.title}}</view>
+          <view class="report-meta">
+            <text class="report-source">{{item.source}}</text>
+            <text class="report-category">{{item.category}}</text>
+            <text class="report-pages">共{{item.pages}}页</text>
+          </view>
+          <!-- 标签信息 -->
+          <view class="report-tags" wx:if="{{item.tags && item.tags.length > 0}}">
+            <text class="tag" wx:for="{{item.tags}}" wx:key="*this" wx:for-item="tag">{{tag}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 发布时间（单独一行，右对齐） -->
+      <view class="report-date">
+        <text class="date-icon">🕐</text>
+        <text class="date-text">{{item.publishDate}}</text>
+      </view>
+    </view>
+
+    <!-- 无搜索结果提示 -->
+    <view class="no-results" wx:if="{{filteredReports.length === 0 && !loading && searchKeyword}}">
+      <text>未找到相关报告</text>
+    </view>
+
+    <!-- 空状态提示 -->
+    <view class="empty-state" wx:if="{{filteredReports.length === 0 && !loading && !searchKeyword}}">
+      <text>暂无报告数据</text>
+    </view>
+
+    <!-- 加载更多提示 -->
+    <view class="load-more" wx:if="{{filteredReports.length > 0}}">
+      <view wx:if="{{loading}}" class="loading-more">
+        <view class="loading-spinner small"></view>
+        <text>加载中...</text>
+      </view>
+      <view wx:elif="{{!hasMore}}" class="no-more">
+        <text>已加载全部数据</text>
+      </view>
+      <view wx:else class="pull-up">
+        <text>上拉加载更多</text>
+      </view>
+    </view>
+  </view>
+</view>

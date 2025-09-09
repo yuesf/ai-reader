@@ -1,91 +1,159 @@
-<!--index.wxml-->
-<view class="container">
-  <!-- 用户信息区域 -->
-  <!-- <view class="user-section">
-    <view class="user-info">
-      <image class="user-avatar" src="{{userInfo.avatarUrl}}" mode="cover"></image>
-      <text class="user-name">{{userInfo.nickName}}</text>
-    </view>
-    <button class="logout-btn" bindtap="logout" size="mini">退出</button>
-  </view> -->
-  
-  <!-- 搜索区域 -->
-  <view class="search-section">
-    <view class="search-bar">
-      <input 
-        class="search-input" 
-        placeholder="请输入关键词查询" 
-        value="{{searchKeyword}}"
-        bindinput="onSearchInput"
-      />
-      <button class="search-btn" bindtap="onSearch">搜索</button>
+<!--index.wxml - 博客首页-->
+<view class="blog-container">
+  <!-- 顶部品牌区域 -->
+  <view class="blog-header">
+    <view class="brand-section">
+      <text class="blog-title">AI Reader</text>
+      <text class="blog-subtitle">智能阅读，深度洞察</text>
     </view>
   </view>
 
-  <!-- 报告列表 -->
-  <view class="reports-section">
-    <!-- 加载状态 -->
-    <view class="loading-container" wx:if="{{loading && reports.length === 0}}">
-      <view class="loading-spinner"></view>
-      <text class="loading-text">加载中...</text>
+  <!-- 快速导航区域 -->
+  <view class="nav-section">
+    <scroll-view class="category-nav" scroll-x="true" show-scrollbar="false">
+      <view class="nav-item {{currentCategory === '' ? 'active' : ''}}" 
+            bindtap="onCategoryTap" 
+            data-category="">
+        全部
+      </view>
+      <view class="nav-item {{currentCategory === item ? 'active' : ''}}" 
+            wx:for="{{categories}}" 
+            wx:key="*this"
+            bindtap="onCategoryTap" 
+            data-category="{{item}}">
+        {{item}}
+      </view>
+    </scroll-view>
+    
+    <view class="nav-actions">
+      <button class="search-btn" bindtap="onSearchTap">🔍</button>
+      <button class="all-reports-btn" bindtap="onAllReportsTap">全部报告</button>
     </view>
+  </view>
 
-    <!-- 报告列表 -->
-    <view class="report-item" 
-          wx:for="{{filteredReports}}" 
-          wx:key="id"
-          bindtap="onReportTap"
-          data-id="{{item.id}}">
+  <!-- 搜索区域（可展开） -->
+  <view class="search-section {{showSearch ? 'show' : ''}}">
+    <view class="search-bar">
+      <input 
+        class="search-input" 
+        placeholder="搜索博客内容..." 
+        value="{{searchKeyword}}"
+        bindinput="onSearchInput"
+        confirm-type="search"
+        bindconfirm="onSearch"
+      />
+      <button class="search-confirm-btn" bindtap="onSearch">搜索</button>
+      <button class="search-close-btn" bindtap="onSearchClose">✕</button>
+    </view>
+  </view>
 
-      <view class="report-main">
-        <!-- 报告缩略图 -->
-        <view class="report-thumbnail">
-          <image class="thumbnail-img" src="{{item.thumbnailFull}}" mode="aspectFill"></image>
-        </view>
-
-        <!-- 报告信息 -->
-        <view class="report-info">
-          <view class="report-title">{{item.title}}</view>
-          <view class="report-meta">
-            <text class="report-source">{{item.source}}</text>
-            <text class="report-category">{{item.category}}</text>
-            <text class="report-pages">共{{item.pages}}页</text>
+  <!-- 博客内容区域 -->
+  <view class="blog-content">
+    <!-- 精选推荐 -->
+    <view class="featured-section" wx:if="{{featuredArticles.length > 0}}">
+      <view class="section-header">
+        <text class="section-title">📌 精选推荐</text>
+      </view>
+      <scroll-view class="featured-scroll" scroll-x="true" show-scrollbar="false">
+        <view class="featured-item" 
+              wx:for="{{featuredArticles}}" 
+              wx:key="id"
+              bindtap="onArticleTap"
+              data-id="{{item.id}}"
+              data-type="featured">
+          <image class="featured-cover" src="{{item.coverImage}}" mode="aspectFill"></image>
+          <view class="featured-info">
+            <text class="featured-title">{{item.title}}</text>
+            <text class="featured-summary">{{item.summary}}</text>
+            <view class="featured-meta">
+              <text class="featured-category">{{item.category}}</text>
+              <text class="featured-date">{{item.publishDate}}</text>
+            </view>
           </view>
-          <!-- 标签信息 -->
-          <view class="report-tags" wx:if="{{item.tags && item.tags.length > 0}}">
-            <text class="tag" wx:for="{{item.tags}}" wx:key="*this" wx:for-item="tag">{{tag}}</text>
+        </view>
+      </scroll-view>
+    </view>
+
+    <!-- 最新文章 -->
+    <view class="latest-section">
+      <view class="section-header">
+        <text class="section-title">🆕 最新发布</text>
+        <text class="section-more" bindtap="onAllReportsTap">查看更多 →</text>
+      </view>
+      
+      <!-- 加载状态 -->
+      <view class="loading-container" wx:if="{{loading && articles.length === 0}}">
+        <view class="loading-spinner"></view>
+        <text class="loading-text">加载中...</text>
+      </view>
+
+      <!-- 文章列表 -->
+      <view class="article-list">
+        <view class="article-item" 
+              wx:for="{{filteredArticles}}" 
+              wx:key="id"
+              bindtap="onArticleTap"
+              data-id="{{item.id}}"
+              data-type="article">
+          
+          <view class="article-cover">
+            <image class="cover-img" src="{{item.coverImage}}" mode="aspectFill"></image>
+          </view>
+          
+          <view class="article-content">
+            <view class="article-title">{{item.title}}</view>
+            <view class="article-summary">{{item.summary}}</view>
+            
+            <view class="article-tags" wx:if="{{item.tags && item.tags.length > 0}}">
+              <text class="article-tag" wx:for="{{item.tags}}" wx:key="*this" wx:for-item="tag">{{tag}}</text>
+            </view>
+            
+            <view class="article-meta">
+              <text class="article-category">{{item.category}}</text>
+              <text class="article-date">{{item.publishDate}}</text>
+              <text class="article-read">{{item.readCount || 0}}次阅读</text>
+            </view>
+            
+            <view class="article-actions">
+              <button class="action-btn summary-btn" 
+                      bindtap="onReadSummary" 
+                      data-id="{{item.id}}"
+                      catchtap="true">
+                阅读摘要
+              </button>
+              <button class="action-btn report-btn" 
+                      bindtap="onViewReport" 
+                      data-id="{{item.id}}"
+                      catchtap="true">
+                查看报告
+              </button>
+            </view>
           </view>
         </view>
       </view>
 
-      <!-- 发布时间（单独一行，右对齐） -->
-      <view class="report-date">
-        <text class="date-icon">🕐</text>
-        <text class="date-text">{{item.publishDate}}</text>
+      <!-- 无搜索结果提示 -->
+      <view class="no-results" wx:if="{{filteredArticles.length === 0 && !loading && searchKeyword}}">
+        <text>未找到相关内容</text>
       </view>
-    </view>
 
-    <!-- 无搜索结果提示 -->
-    <view class="no-results" wx:if="{{filteredReports.length === 0 && !loading && searchKeyword}}">
-      <text>未找到相关报告</text>
-    </view>
-
-    <!-- 空状态提示 -->
-    <view class="empty-state" wx:if="{{filteredReports.length === 0 && !loading && !searchKeyword}}">
-      <text>暂无报告数据</text>
-    </view>
-
-    <!-- 加载更多提示 -->
-    <view class="load-more" wx:if="{{filteredReports.length > 0}}">
-      <view wx:if="{{loading}}" class="loading-more">
-        <view class="loading-spinner small"></view>
-        <text>加载中...</text>
+      <!-- 空状态提示 -->
+      <view class="empty-state" wx:if="{{filteredArticles.length === 0 && !loading && !searchKeyword}}">
+        <text>暂无博客内容</text>
       </view>
-      <view wx:elif="{{!hasMore}}" class="no-more">
-        <text>已加载全部数据</text>
-      </view>
-      <view wx:else class="pull-up">
-        <text>上拉加载更多</text>
+
+      <!-- 加载更多 -->
+      <view class="load-more" wx:if="{{filteredArticles.length > 0}}">
+        <view wx:if="{{loading}}" class="loading-more">
+          <view class="loading-spinner small"></view>
+          <text>加载中...</text>
+        </view>
+        <view wx:elif="{{!hasMore}}" class="no-more">
+          <text>已加载全部内容</text>
+        </view>
+        <view wx:else class="pull-up" bindtap="onLoadMore">
+          <text>点击加载更多</text>
+        </view>
       </view>
     </view>
   </view>
