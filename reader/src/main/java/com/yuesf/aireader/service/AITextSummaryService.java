@@ -42,16 +42,16 @@ public class AITextSummaryService {
             System.setProperty("DASHSCOPE_API_KEY", aiConfig.getApiKey());
             
             // 生成文档整体概览摘要
-            String generalSummary = generateGeneralSummary(documentContent);
+//            String generalSummary = generateGeneralSummary(documentContent);
             
             // 生成章节详细摘要
             String chapterSummary = generateChapterSummary(documentContent);
             
             // 合并摘要结果
             StringBuilder finalSummary = new StringBuilder();
-            if (generalSummary != null && !generalSummary.isBlank()) {
-                finalSummary.append("【文档总览摘要】\n").append(generalSummary);
-            }
+//            if (generalSummary != null && !generalSummary.isBlank()) {
+//                finalSummary.append("【文档总览摘要】\n").append(generalSummary);
+//            }
             
             if (chapterSummary != null && !chapterSummary.isBlank()) {
                 if (finalSummary.length() > 0) {
@@ -76,7 +76,7 @@ public class AITextSummaryService {
     private String generateGeneralSummary(String documentContent) {
         try {
             String prompt = "作为专业的研究报告分析师，请深入理解以下文档内容，提炼出核心观点和主要信息，形成一份结构清晰的概述。" +
-                           "请确保涵盖文档的主要议题、关键发现、重要结论和投资建议。请用中文回答，内容要简洁明了：\n\n" + 
+                           "请确保涵盖文档的主要议题、关键发现和重要结论。请用中文回答，内容要简洁明了：\n\n" +
                            truncateContent(documentContent, 8000);
             
             return callDashScopeAPI(prompt);
@@ -99,8 +99,9 @@ public class AITextSummaryService {
                            "请识别文档中的章节划分，并针对每个重要部分提供深度分析和要点提炼。" +
                            "请用中文回答，按章节结构组织内容：\n\n" +
                            "文档结构参考：\n" + tableOfContents + "\n\n" +
-                           "完整文档：\n" + truncateContent(documentContent, 8000);
-            
+//                           "完整文档：\n" + truncateContent(documentContent, 8000);
+                           "完整文档：\n" + documentContent;
+
             return callDashScopeAPI(prompt);
             
         } catch (Exception e) {
@@ -114,13 +115,14 @@ public class AITextSummaryService {
      */
     private String callDashScopeAPI(String prompt) throws ApiException, NoApiKeyException, InputRequiredException {
         Generation gen = new Generation();
-        
+
         Message userMsg = Message.builder()
                 .role(Role.USER.getValue())
                 .content(prompt)
                 .build();
         
         GenerationParam param = GenerationParam.builder()
+                .apiKey(aiConfig.getApiKey())
                 .model(aiConfig.getSummarize().getModel())
                 .messages(Arrays.asList(userMsg))
                 .resultFormat(GenerationParam.ResultFormat.MESSAGE)
