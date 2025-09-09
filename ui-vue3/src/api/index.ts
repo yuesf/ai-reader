@@ -50,7 +50,7 @@ const BASE_URL_CONFIG = (() => {
 // 获取后台地址配置 - 参考小程序的配置模式
 const getBackendUrl = () => {
   // 开发环境：使用代理，返回空字符串（相对路径）
-  if (IS_DEV) {
+  if (import.meta.env.MODE === 'development') {
     return '';
   }
   
