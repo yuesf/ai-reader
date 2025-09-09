@@ -65,11 +65,10 @@ export default defineConfig(({ mode }) => {
       // 环境配置对象
       'import.meta.env.VITE_ENV_CONFIG': JSON.stringify(currentConfig),
       'import.meta.env.VITE_CURRENT_ENV': JSON.stringify(envName),
-      'import.meta.env.VITE_IS_DEV': isDev,
-      // 工具函数
-      'import.meta.env.VITE_API_URL': JSON.stringify((path: string) => getApiUrl(currentConfig, path)),
+      'import.meta.env.VITE_IS_DEV': JSON.stringify(isDev),
+      // 基础配置
       'import.meta.env.VITE_BASE_URL': JSON.stringify(getBaseUrl(currentConfig)),
-      'import.meta.env.VITE_IS_DEBUG': isDebug(currentConfig)
+      'import.meta.env.VITE_IS_DEBUG': JSON.stringify(isDebug(currentConfig))
     },
     
     server: {

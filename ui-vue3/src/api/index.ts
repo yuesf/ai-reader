@@ -2,11 +2,50 @@ import axios from 'axios';
 import router from '../router';
 
 // 获取环境配置 - 从 vite.config.ts 中定义的环境变量
-const ENV_CONFIG = JSON.parse(import.meta.env.VITE_ENV_CONFIG || '{}');
-const CURRENT_ENV = import.meta.env.VITE_CURRENT_ENV || 'PROD';
-const IS_DEV = import.meta.env.VITE_IS_DEV || false;
-const IS_DEBUG = import.meta.env.VITE_IS_DEBUG || false;
-const BASE_URL_CONFIG = import.meta.env.VITE_BASE_URL || '';
+const ENV_CONFIG = (() => {
+  try {
+    return JSON.parse(import.meta.env.VITE_ENV_CONFIG || '{}');
+  } catch (e) {
+    console.warn('解析环境配置失败，使用默认配置:', e);
+    return {
+      BASE_URL: 'http://127.0.0.1:8080',
+      API_VERSION: 'v1',
+      DEBUG: true
+    };
+  }
+})();
+
+const CURRENT_ENV = (() => {
+  try {
+    return JSON.parse(import.meta.env.VITE_CURRENT_ENV || '"PROD"');
+  } catch (e) {
+    return 'DEV';
+  }
+})();
+
+const IS_DEV = (() => {
+  try {
+    return JSON.parse(import.meta.env.VITE_IS_DEV || 'false');
+  } catch (e) {
+    return import.meta.env.MODE === 'development';
+  }
+})();
+
+const IS_DEBUG = (() => {
+  try {
+    return JSON.parse(import.meta.env.VITE_IS_DEBUG || 'false');
+  } catch (e) {
+    return import.meta.env.MODE === 'development';
+  }
+})();
+
+const BASE_URL_CONFIG = (() => {
+  try {
+    return JSON.parse(import.meta.env.VITE_BASE_URL || '""');
+  } catch (e) {
+    return '';
+  }
+})();
 
 // 获取后台地址配置 - 参考小程序的配置模式
 const getBackendUrl = () => {
