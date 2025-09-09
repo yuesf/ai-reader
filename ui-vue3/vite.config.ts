@@ -58,7 +58,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [vue()],
-    base: '/admin/', // 指定基础路径为 /admin/
+    base: isDev ? '/' : '/admin/', // 开发环境使用根路径，生产环境使用 /admin/
     
     // 定义全局常量，供前端代码使用 - 不再依赖 global.d.ts
     define: {

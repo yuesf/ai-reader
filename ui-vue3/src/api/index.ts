@@ -4,13 +4,18 @@ import router from '../router';
 // 获取环境配置 - 从 vite.config.ts 中定义的环境变量
 const ENV_CONFIG = (() => {
   try {
-    return JSON.parse(import.meta.env.VITE_ENV_CONFIG || '{}');
+    const envConfig = import.meta.env.VITE_ENV_CONFIG;
+    // 如果已经是对象，直接返回；如果是字符串，则解析
+    if (typeof envConfig === 'object' && envConfig !== null) {
+      return envConfig;
+    }
+    return JSON.parse(envConfig || '{}');
   } catch (e) {
-    console.warn('解析环境配置失败，使用默认配置:', e);
+    console.warn('解析环境配置失败，使用默认生产配置:', e);
     return {
-      BASE_URL: 'http://127.0.0.1:8080',
+      BASE_URL: 'https://yuesf.cn/reader',
       API_VERSION: 'v1',
-      DEBUG: true
+      DEBUG: false
     };
   }
 })();
@@ -66,6 +71,8 @@ console.log('  - 开发模式:', IS_DEV);
 console.log('  - 后台地址:', BASE_URL || '[使用代理]');
 console.log('  - API 版本:', ENV_CONFIG.API_VERSION || 'v1');
 console.log('  - 调试模式:', IS_DEBUG);
+console.log('  - import.meta.env.MODE:', import.meta.env.MODE);
+console.log('  - 实际BASE_URL值:', JSON.stringify(BASE_URL));
 
 export interface ApiResponse<T> {
   code: number;
