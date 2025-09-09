@@ -31,17 +31,17 @@ public class AITextSummaryService {
         try {
             if (plainText == null || plainText.isBlank()) return null;
             
-            // 生成约350字的文档整理摘要
-            String generalPrompt = "请用中文为以下报告生成约350字的整理摘要，要求客观、中性，完整涵盖关键信息点：\n" + 
+            // 生成文档整体概览
+            String generalPrompt = "作为专业的文档分析师，请深入理解以下文档内容，提炼出核心观点和主要信息，形成一份结构清晰的概述。请确保涵盖文档的主要议题、关键发现和重要结论：\n" + 
                                plainText.substring(0, Math.min(5000, plainText.length()));
             
             // 提取目录结构用于章节摘要（假设目录在文档前部）
             String tableOfContents = extractTableOfContents(plainText);
             
-            // 生成分章节摘要
-            String chapterPrompt = "请根据以下文档目录结构，对每个章节分别生成约350字的摘要，保持客观、中性，突出各章节的核心内容：\n" + 
-                              "目录结构：\n" + tableOfContents + "\n\n" + 
-                              "文档内容：\n" + 
+            // 生成章节层次分析
+            String chapterPrompt = "请作为资深内容分析专家，基于文档的结构层次，深入解读各个部分的核心内容。请识别文档中的章节划分，并针对每个重要部分提供深度分析和要点提炼：\n" + 
+                              "文档结构参考：\n" + tableOfContents + "\n\n" + 
+                              "完整文档：\n" + 
                               plainText.substring(0, Math.min(5000, plainText.length()));
             
             // 执行两次AI调用并合并结果
@@ -105,5 +105,3 @@ public class AITextSummaryService {
         return null;
     }
 }
-
-
