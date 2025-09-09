@@ -1,0 +1,76 @@
+<view class="agreement-container">
+  <view class="agreement-header">
+    <text class="agreement-title">用户服务协议</text>
+    <text class="update-time">更新时间：2024年12月</text>
+  </view>
+
+  <scroll-view class="agreement-content" scroll-y="true">
+    <view class="content-section">
+      <text class="section-title">1. 服务条款的确认和接纳</text>
+      <text class="section-content">
+        欢迎使用AI Reader小程序！本协议是您与AI Reader之间关于使用AI Reader服务所订立的协议。请您仔细阅读本协议，您点击"同意"按钮后，本协议即构成对双方有约束力的法律文件。
+      </text>
+    </view>
+
+    <view class="content-section">
+      <text class="section-title">2. 服务内容</text>
+      <text class="section-content">
+        AI Reader为用户提供智能阅读辅助服务，包括但不限于：
+        \n• 文档智能解析和摘要生成
+        \n• 阅读进度管理和统计
+        \n• 个性化阅读推荐
+        \n• 阅读笔记和标注功能
+      </text>
+    </view>
+
+    <view class="content-section">
+      <text class="section-title">3. 用户权利和义务</text>
+      <text class="section-content">
+        3.1 用户有权享受AI Reader提供的各项服务功能。
+        \n3.2 用户应当遵守相关法律法规，不得利用本服务从事违法违规活动。
+        \n3.3 用户应当保护好自己的账号信息，不得将账号借给他人使用。
+        \n3.4 用户上传的内容应当合法合规，不得包含违法、有害信息。
+      </text>
+    </view>
+
+    <view class="content-section">
+      <text class="section-title">4. 知识产权</text>
+      <text class="section-content">
+        4.1 AI Reader的软件著作权、商标权等知识产权均归AI Reader所有。
+        \n4.2 用户上传的原创内容，其知识产权归用户所有。
+        \n4.3 未经授权，任何人不得复制、传播、展示、镜像、上载、下载使用AI Reader的内容。
+      </text>
+    </view>
+
+    <view class="content-section">
+      <text class="section-title">5. 免责声明</text>
+      <text class="section-content">
+        5.1 AI Reader不对服务的及时性、安全性、准确性作出保证。
+        \n5.2 用户因使用AI Reader服务而产生的风险由用户自行承担。
+        \n5.3 因不可抗力导致的服务中断，AI Reader不承担责任。
+      </text>
+    </view>
+
+    <view class="content-section">
+      <text class="section-title">6. 协议修改</text>
+      <text class="section-content">
+        AI Reader有权根据需要修改本协议条款。协议修改后，将在小程序内公布修改内容。如果不同意修改内容，用户可以主动取消获得的服务；如果用户继续享用服务，则视为接受协议修改。
+      </text>
+    </view>
+
+    <!-- <view class="content-section">
+      <text class="section-title">7. 联系方式</text>
+      <text class="section-content">
+        如您对本协议有任何疑问，可通过以下方式联系我们：
+        \n邮箱：support@aireader.com
+        \n客服热线：400-123-4567
+      </text>
+    </view> -->
+  </scroll-view>
+
+  <view class="agreement-footer">
+    <button class="agree-btn" bindtap="agreeAndReturn" type="primary">
+      我已阅读并同意
+    </button>
+  </view>
+</view>

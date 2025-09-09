@@ -7,6 +7,8 @@ Page({
     hasUserInfo: false,
     canIUseGetUserProfile: wx.canIUse('getUserProfile'),
     canIUseNicknameComp: wx.canIUse('input.type.nickname'),
+    isAgreed: false, // 协议勾选状态
+    showAgreementTip: false, // 是否显示协议提示
   },
 
   onLoad() {
@@ -204,6 +206,25 @@ Page({
   wxLogin() {
     console.log('[Login] 微信登录按钮被点击')
     
+    // 检查协议勾选状态
+    if (!this.data.isAgreed) {
+      this.setData({
+        showAgreementTip: true
+      })
+      
+      // 协议未勾选埋点
+      tracking.trackCustomEvent('agreement_not_checked', {
+        timestamp: Date.now(),
+        action: 'login_attempt'
+      })
+      
+      wx.showToast({
+        title: '请先阅读并同意用户协议',
+        icon: 'none'
+      })
+      return
+    }
+    
     // 记录登录开始时间
     this.loginStartTime = Date.now()
     
@@ -213,11 +234,66 @@ Page({
     // 登录流程开始埋点
     tracking.trackCustomEvent('login_process_start', {
       timestamp: this.loginStartTime,
-      loginMethod: 'wechat'
+      loginMethod: 'wechat',
+      agreementAccepted: true
     })
     
     // 调用获取用户信息
     this.getUserProfile()
+  },
+
+  // 切换协议勾选状态
+  toggleAgreement() {
+    const newAgreedState = !this.data.isAgreed
+    this.setData({
+      isAgreed: newAgreedState,
+      showAgreementTip: false
+    })
+    
+    // 协议勾选状态变更埋点
+    tracking.trackCustomEvent('agreement_toggle', {
+      timestamp: Date.now(),
+      isAgreed: newAgreedState,
+      action: newAgreedState ? 'check' : 'uncheck'
+    })
+    
+    console.log('[Login] 协议勾选状态:', newAgreedState)
+  },
+
+  // 查看用户服务协议
+  viewUserAgreement(e) {
+    // 安全地阻止事件冒泡
+    if (e && typeof e.stopPropagation === 'function') {
+      e.stopPropagation()
+    }
+    
+    // 用户协议查看埋点
+    tracking.trackCustomEvent('view_user_agreement', {
+      timestamp: Date.now(),
+      from: 'login_page'
+    })
+    
+    wx.navigateTo({
+      url: '/pages/agreement/user-agreement'
+    })
+  },
+
+  // 查看隐私政策
+  viewPrivacyPolicy(e) {
+    // 安全地阻止事件冒泡
+    if (e && typeof e.stopPropagation === 'function') {
+      e.stopPropagation()
+    }
+    
+    // 隐私政策查看埋点
+    tracking.trackCustomEvent('view_privacy_policy', {
+      timestamp: Date.now(),
+      from: 'login_page'
+    })
+    
+    wx.navigateTo({
+      url: '/pages/agreement/privacy-policy'
+    })
   },
 
   onGetUserInfo(e) {

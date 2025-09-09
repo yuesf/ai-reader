@@ -89,7 +89,7 @@ class TrackingUpload {
     }
 
     try {
-      const batchSize = getConfig('upload.batchSize', 1)  // 修改默认值为1
+      const batchSize = getConfig('upload.batchSize', 10)  // 批量大小默认10
       const events = trackingStorage.getEventsBatch(batchSize)
       
       console.log('[TrackingUpload] 检查批量上报 - 配置批量大小:', batchSize, '当前事件数:', events.length)
@@ -414,7 +414,7 @@ class TrackingUpload {
 
     // 检查最旧事件的时间
     const oldestEvent = events[0]
-    const maxWaitTime = getConfig('upload.uploadInterval', 1000)  // 修改默认值为1秒
+    const maxWaitTime = getConfig('upload.uploadInterval', 10000)  // 上报间隔默认10秒
     const currentTime = Date.now()
     
     const shouldForce = (currentTime - oldestEvent.timestamp) > maxWaitTime
@@ -428,7 +428,7 @@ class TrackingUpload {
    */
   startBatchUpload() {
     try {
-      const uploadInterval = getConfig('upload.uploadInterval', 1000)  // 修改默认值为1秒
+      const uploadInterval = getConfig('upload.uploadInterval', 10000)  // 上报间隔默认10秒
       
       this.uploadTimer = setInterval(() => {
         console.log('[TrackingUpload] 定时器触发批量上报检查')

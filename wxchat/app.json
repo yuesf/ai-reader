@@ -5,7 +5,9 @@
     "pages/reportList/reportList",
     "pages/logs/logs",
     "pages/reportDetail/reportDetail",
-    "pages/pdfPreview/pdfPreview"
+    "pages/pdfPreview/pdfPreview",
+    "pages/agreement/user-agreement",
+    "pages/agreement/privacy-policy"
   ],
   "window": {
     "backgroundTextStyle": "light",

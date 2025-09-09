@@ -1,6 +1,6 @@
 <view class="login-container">
   <view class="login-header">
-    <view class="logo-text">📚</view>
+    <!-- <view class="logo-text">📚</view> -->
     <text class="app-name">AI Reader</text>
     <text class="welcome-text">欢迎使用AI阅读助手</text>
   </view>
@@ -9,13 +9,14 @@
     <view wx:if="{{!hasUserInfo}}">
       <view class="login-tips">
         <text>请先登录微信账号</text>
-      </view>
-      
+      </view>     
+
       <view class="login-buttons">
         <button 
           wx:if="{{canIUseGetUserProfile}}" 
-          class="login-btn" 
+          class="login-btn {{!isAgreed ? 'disabled' : ''}}" 
           bindtap="wxLogin"
+          disabled="{{!isAgreed}}"
           type="primary"
         >
           微信登录
@@ -23,14 +24,20 @@
         
         <button 
           wx:else 
-          class="login-btn" 
+          class="login-btn {{!isAgreed ? 'disabled' : ''}}" 
           open-type="getUserInfo" 
           bindgetuserinfo="onGetUserInfo"
+          disabled="{{!isAgreed}}"
           type="primary"
         >
           微信登录
         </button>
 
+
+
+        <view wx:if="{{!isAgreed && showAgreementTip}}" class="agreement-tip">
+          <text>请先阅读并同意用户协议</text>
+        </view>
       </view>
     </view>
 
@@ -44,6 +51,14 @@
   </view>
 
   <view class="login-footer">
-    <text class="privacy-text">登录即表示同意用户协议和隐私政策</text>
+    <!-- 协议勾选区域 -->
+    <view class="agreement-section">
+      <view class="agreement-checkbox" bindtap="toggleAgreement">
+        <view class="checkbox {{isAgreed ? 'checked' : ''}}">
+          <text wx:if="{{isAgreed}}" class="checkmark">✓</text>
+        </view>
+        <text class="agreement-text">同意<text class="agreement-link" bindtap="viewUserAgreement">《用户协议》</text>和<text class="agreement-link" bindtap="viewPrivacyPolicy">《隐私政策》</text></text>
+      </view>
+    </view>
   </view>
 </view>
