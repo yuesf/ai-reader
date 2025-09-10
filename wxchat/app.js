@@ -58,12 +58,11 @@ App({
       this.globalData.isLoggedIn = true
     } else {
       this.globalData.isLoggedIn = false
-      // 如果未登录，跳转到登录页
-      wx.reLaunch({
-        url: '/pages/login/login'
-      })
+      // 移除强制登录跳转，允许游客浏览
+      console.log('[App] 用户未登录，允许游客模式浏览')
     }
   },
+
 
   // 登录方法
   login(userInfo) {

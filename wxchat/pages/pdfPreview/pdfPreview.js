@@ -41,10 +41,11 @@ Page({
       fileId: options?.fileId 
     });
     
-    // 检查登录状态
+    // PDF预览页需要登录验证
     if (!this.checkLoginStatus()) {
       return;
     }
+
     
     const { reportId, fileId, title } = options || {};
     this.setData({
@@ -64,17 +65,18 @@ Page({
     pdfImagePreviewService.setFile(this.data.fileId);
 
     console.log('PdfPreview: onLoad, initializing pages');
-    // 初始化尝试加载第1、2页，保证可滑动
+    // 初始化尝试加载前三页，保证可滑动
     try {
       // 获取报告总页数
       await pdfImagePreviewService.fetchTotalPages(reportAPI.getPdfInfo);
       const totalPages = pdfImagePreviewService.getTotalPages();
       console.log('PdfPreview: got total pages', totalPages);
       
-      // 使用 Promise.all 并行加载第一页和第二页
+      // 使用 Promise.all 并行加载前三页
       await Promise.all([
         this.tryAppendPage(1),
-        this.tryAppendPage(2)
+        this.tryAppendPage(2),
+        this.tryAppendPage(3)
       ]);
 
       // 检查是否成功加载了至少一页
@@ -102,13 +104,26 @@ Page({
   checkLoginStatus() {
     const app = getApp()
     if (!app.globalData.isLoggedIn) {
-      wx.reLaunch({
-        url: '/pages/login/login'
-      })
+      wx.showModal({
+        title: '需要登录',
+        content: 'PDF预览功能需要登录后使用',
+        confirmText: '去登录',
+        cancelText: '返回',
+        success: (res) => {
+          if (res.confirm) {
+            wx.navigateTo({
+              url: '/pages/login/login'
+            });
+          } else {
+            wx.navigateBack();
+          }
+        }
+      });
       return false
     }
     return true
   },
+
 
   // 追加一页（探测成功才追加），带防重
   async tryAppendPage(pageIndex) {

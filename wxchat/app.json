@@ -1,14 +1,15 @@
 {
   "pages": [
-    "pages/login/login",
     "pages/index/index",
     "pages/reportList/reportList",
-    "pages/logs/logs",
     "pages/reportDetail/reportDetail",
     "pages/pdfPreview/pdfPreview",
+    "pages/login/login",
+    "pages/logs/logs",
     "pages/agreement/user-agreement",
     "pages/agreement/privacy-policy"
   ],
+
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#ffffff",

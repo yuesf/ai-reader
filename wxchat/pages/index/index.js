@@ -33,22 +33,18 @@ Page({
     // 页面浏览埋点
     tracking.trackPageView('/pages/index/index', '博客首页')
     
-    // 检查登录状态
-    this.checkLoginStatus()
+    // 移除登录检查，允许游客浏览
+    console.log('[首页] 允许游客模式浏览')
     // 加载博客内容
     this.loadBlogContent()
   },
 
+  // 检查登录状态（保留方法但不强制跳转）
   checkLoginStatus() {
     const app = getApp()
-    if (!app.globalData.isLoggedIn) {
-      wx.reLaunch({
-        url: '/pages/login/login'
-      })
-      return false
-    }
-    return true
+    return app.globalData.isLoggedIn
   },
+
 
   /**
    * 加载博客内容

@@ -53,7 +53,18 @@ public class ReportProcessingService {
         try (var input = ossObject.getObjectContent(); var document = PDDocument.load(input)) {
             PDFRenderer renderer = new PDFRenderer(document);
 
-            BufferedImage pageImage = renderer.renderImageWithDPI(0, 180, ImageType.RGB);
+            BufferedImage pageImage;
+            try {
+                pageImage = renderer.renderImageWithDPI(0, 180, ImageType.RGB);
+            } catch (Exception e) {
+                log.error("PDF首页渲染失败，文件: {}, 错误: {}", pdfFileInfo.getFileName(), e.getMessage());
+                if (e.getMessage() != null && e.getMessage().contains("JPEG2000")) {
+                    log.error("JPEG2000图像处理错误，请确保已安装JAI Image I/O Tools依赖");
+                    throw new RuntimeException("PDF包含JPEG2000图像，需要额外的图像处理组件支持", e);
+                }
+                throw new RuntimeException("PDF首页渲染失败: " + e.getMessage(), e);
+            }
+            
             // 生成缩略图，最大边不超过 600px
             ByteArrayOutputStream thumbOut = new ByteArrayOutputStream();
             Thumbnails.of(pageImage)

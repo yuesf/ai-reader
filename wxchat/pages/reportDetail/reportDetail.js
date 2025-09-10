@@ -48,10 +48,8 @@ Page({
       }
     }, 0)
     
-    // 检查登录状态
-    if (!this.checkLoginStatus()) {
-      return;
-    }
+    // 移除登录检查，允许游客浏览
+    console.log('[报告详情页] 允许游客模式浏览')
     
     // 从页面参数获取报告ID
     const reportId = options.id;
@@ -61,15 +59,47 @@ Page({
     this.getReportDetail(reportId);
   },
 
+  // 检查登录状态（保留方法但不强制跳转）- 增强日志记录
   checkLoginStatus() {
-    const app = getApp()
-    if (!app.globalData.isLoggedIn) {
-      wx.reLaunch({
-        url: '/pages/login/login'
-      })
-      return false
+    const app = getApp();
+    const globalIsLoggedIn = app.globalData.isLoggedIn;
+    const globalUserInfo = app.globalData.userInfo;
+    const storageUserInfo = wx.getStorageSync('userInfo');
+    
+    // 详细的登录状态检查日志
+    console.log('[登录状态检查] 详细信息:', {
+      globalIsLoggedIn: globalIsLoggedIn,
+      hasGlobalUserInfo: !!globalUserInfo,
+      hasStorageUserInfo: !!storageUserInfo,
+      globalUserOpenId: globalUserInfo ? globalUserInfo.openid : null,
+      storageUserOpenId: storageUserInfo ? storageUserInfo.openid : null,
+      timestamp: new Date().toISOString(),
+      page: 'reportDetail'
+    });
+    
+    // 检查数据一致性
+    if (globalIsLoggedIn && !globalUserInfo) {
+      console.warn('[登录状态检查] 数据不一致: globalData.isLoggedIn为true但userInfo为空');
     }
-    return true
+    
+    if (!globalIsLoggedIn && globalUserInfo) {
+      console.warn('[登录状态检查] 数据不一致: globalData.isLoggedIn为false但userInfo存在');
+    }
+    
+    if (globalUserInfo && !storageUserInfo) {
+      console.warn('[登录状态检查] 数据不一致: 全局userInfo存在但本地存储为空');
+    }
+    
+    if (!globalUserInfo && storageUserInfo) {
+      console.warn('[登录状态检查] 数据不一致: 全局userInfo为空但本地存储存在');
+      // 尝试从本地存储恢复用户信息
+      app.globalData.userInfo = storageUserInfo;
+      app.globalData.isLoggedIn = true;
+      console.log('[登录状态检查] 已从本地存储恢复用户信息');
+      return true;
+    }
+    
+    return globalIsLoggedIn;
   },
 
   /**
@@ -211,7 +241,7 @@ Page({
   },
 
   /**
-   * 跳转到预览页面 - 修复埋点异步执行
+   * 跳转到预览页面 - 添加登录验证和详细日志
    */
   goToPreview() {
     console.log('ReportDetail: goToPreview called', {
@@ -220,13 +250,34 @@ Page({
       title: this.data.reportTitle
     });
 
+    // 获取当前登录状态
+    const isLoggedIn = this.checkLoginStatus();
+    const app = getApp();
+    const userInfo = app.globalData.userInfo;
+    
+    // 详细的登录状态日志
+    console.log('[预览报告] 登录状态检查:', {
+      isLoggedIn: isLoggedIn,
+      hasUserInfo: !!userInfo,
+      userOpenId: userInfo ? userInfo.openid : null,
+      userNickName: userInfo ? userInfo.nickName : null,
+      globalDataIsLoggedIn: app.globalData.isLoggedIn,
+      storageUserInfo: wx.getStorageSync('userInfo'),
+      timestamp: new Date().toISOString(),
+      reportId: this.data.reportId,
+      reportTitle: this.data.reportTitle
+    });
+
     // 预览按钮点击埋点 - 异步执行，不影响主业务
     setTimeout(() => {
       try {
         trackClick('preview_button', '预览按钮点击', {
           reportId: this.data.reportId,
           reportTitle: this.data.reportTitle,
-          fileId: this.data.reportFileId
+          fileId: this.data.reportFileId,
+          isLoggedIn: isLoggedIn,
+          hasUserInfo: !!userInfo,
+          userOpenId: userInfo ? userInfo.openid : null
         });
         console.log('[报告详情] 预览按钮埋点已发送:', this.data.reportId)
       } catch (error) {
@@ -235,7 +286,51 @@ Page({
       }
     }, 0)
 
+    // 检查登录状态，预览功能需要登录
+    if (!isLoggedIn) {
+      console.log('[预览报告] 用户未登录，需要跳转到登录页面');
+      
+      // 显示登录提示
+      wx.showToast({
+        title: '请先登录后预览',
+        icon: 'none',
+        duration: 2000
+      });
+
+      // 登录跳转埋点
+      setTimeout(() => {
+        try {
+          trackClick('login_redirect', '预览登录跳转', {
+            from: 'reportDetail',
+            reportId: this.data.reportId,
+            reason: 'preview_required_login',
+            timestamp: new Date().toISOString()
+          });
+          console.log('[预览报告] 登录跳转埋点已发送');
+        } catch (error) {
+          console.error('[报告详情] 登录跳转埋点失败:', error)
+        }
+      }, 0)
+      
+      // 延迟跳转到登录页，让用户看到提示
+      setTimeout(() => {
+        wx.navigateTo({
+          url: '/pages/login/login',
+          success: () => {
+            console.log('[预览报告] 成功跳转到登录页面');
+          },
+          fail: (err) => {
+            console.error('[预览报告] 跳转到登录页面失败:', err);
+          }
+        });
+      }, 1000);
+      return;
+    }
+
+    console.log('[预览报告] 用户已登录，继续预览流程');
+
     if (!this.data.reportFileId) {
+      console.log('[预览报告] 报告文件ID不存在:', this.data.reportFileId);
       wx.showToast({
         title: '报告文件不存在',
         icon: 'none'
@@ -245,15 +340,15 @@ Page({
 
     // 跳转到预览页面，传递必要的参数
     const url = `/pages/pdfPreview/pdfPreview?reportId=${this.data.reportId}&fileId=${this.data.reportFileId}&title=${encodeURIComponent(this.data.reportTitle)}`;
-    console.log('准备跳转到:', url);
+    console.log('[预览报告] 准备跳转到预览页面:', url);
     
     wx.navigateTo({
       url: url,
       success: (res) => {
-        console.log('跳转成功:', res);
+        console.log('[预览报告] 跳转预览页面成功:', res);
       },
       fail: (err) => {
-        console.error('跳转失败:', err);
+        console.error('[预览报告] 跳转预览页面失败:', err);
         wx.showToast({
           title: '跳转失败: ' + err.errMsg,
           icon: 'none'
@@ -261,6 +356,7 @@ Page({
       }
     });
   },
+
 
   /**
    * 分享报告 - 修复埋点异步执行

@@ -84,13 +84,23 @@ public class PdfStreamService {
             int total = document.getNumberOfPages();
             int pageIndex = Math.max(1, Math.min(pageNumber, total)) - 1;
             org.apache.pdfbox.rendering.PDFRenderer renderer = new org.apache.pdfbox.rendering.PDFRenderer(document);
-            // 以 150DPI 渲染，平衡清晰度与体积
-            java.awt.image.BufferedImage bim = renderer.renderImageWithDPI(pageIndex, 150);
+            
+            try {
+                // 以 150DPI 渲染，平衡清晰度与体积
+                java.awt.image.BufferedImage bim = renderer.renderImageWithDPI(pageIndex, 150);
 
-            // 可选缩放（保持原尺寸），使用 Thumbnailator 以确保高质量输出
-            java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-            javax.imageio.ImageIO.write(bim, "png", baos);
-            return baos.toByteArray();
+                // 可选缩放（保持原尺寸），使用 Thumbnailator 以确保高质量输出
+                java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+                javax.imageio.ImageIO.write(bim, "png", baos);
+                return baos.toByteArray();
+            } catch (Exception e) {
+                log.error("PDF页面渲染失败，文件ID: {}, 页码: {}, 错误: {}", fileId, pageNumber, e.getMessage());
+                if (e.getMessage() != null && e.getMessage().contains("JPEG2000")) {
+                    log.error("JPEG2000图像处理错误，请确保已安装JAI Image I/O Tools依赖");
+                    throw new BusinessException("PDF包含JPEG2000图像，需要额外的图像处理组件支持");
+                }
+                throw new BusinessException("PDF页面渲染失败: " + e.getMessage());
+            }
         } finally {
             // 清理临时文件
             if (tempPdf.exists()) {

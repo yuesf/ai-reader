@@ -22,22 +22,18 @@ Page({
     // 页面浏览埋点
     tracking.trackPageView('/pages/reportList/reportList', '报告列表页')
     
-    // 检查登录状态
-    this.checkLoginStatus()
+    // 移除登录检查，允许游客浏览
+    console.log('[报告列表页] 允许游客模式浏览')
     // 页面加载时获取报告列表
     this.loadReports()
   },
 
+  // 检查登录状态（保留方法但不强制跳转）
   checkLoginStatus() {
     const app = getApp()
-    if (!app.globalData.isLoggedIn) {
-      wx.reLaunch({
-        url: '/pages/login/login'
-      })
-      return false
-    }
-    return true
+    return app.globalData.isLoggedIn
   },
+
 
   /**
    * 加载报告列表

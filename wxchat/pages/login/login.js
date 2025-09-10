@@ -128,19 +128,34 @@ Page({
                 icon: 'success'
               })
               
-              // 登录成功后跳转到首页
+              // 登录成功后返回上一页或跳转到首页
               setTimeout(() => {
-                // 页面跳转埋点
-                tracking.trackCustomEvent('page_redirect', {
-                  from: '/pages/login/login',
-                  to: '/pages/index/index',
-                  reason: 'login_success',
-                  timestamp: Date.now()
-                })
-                
-                wx.reLaunch({
-                  url: '/pages/index/index'
-                })
+                const pages = getCurrentPages()
+                if (pages.length > 1) {
+                  // 有上一页，返回上一页
+                  // 页面跳转埋点
+                  tracking.trackCustomEvent('page_redirect', {
+                    from: '/pages/login/login',
+                    to: 'previous_page',
+                    reason: 'login_success',
+                    timestamp: Date.now()
+                  })
+                  
+                  wx.navigateBack()
+                } else {
+                  // 没有上一页，跳转到首页
+                  // 页面跳转埋点
+                  tracking.trackCustomEvent('page_redirect', {
+                    from: '/pages/login/login',
+                    to: '/pages/index/index',
+                    reason: 'login_success',
+                    timestamp: Date.now()
+                  })
+                  
+                  wx.reLaunch({
+                    url: '/pages/index/index'
+                  })
+                }
               }, 1500)
             } else {
               // 登录失败埋点
@@ -345,9 +360,16 @@ Page({
               })
               
               setTimeout(() => {
-                wx.reLaunch({
-                  url: '/pages/index/index'
-                })
+                const pages = getCurrentPages()
+                if (pages.length > 1) {
+                  // 有上一页，返回上一页
+                  wx.navigateBack()
+                } else {
+                  // 没有上一页，跳转到首页
+                  wx.reLaunch({
+                    url: '/pages/index/index'
+                  })
+                }
               }, 1500)
             } else {
               tracking.trackCustomEvent('old_version_login_failed', {
