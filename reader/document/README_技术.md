@@ -336,7 +336,90 @@ app:
 - 文件上传限制配置
 - JWT密钥配置
 
-## 10. 注意事项
+## 10. PDF图像处理技术
+
+### 10.1 JPEG2000图像处理
+
+#### 10.1.1 技术背景
+PDF文件可能包含JPEG2000格式的图像，Apache PDFBox默认不支持此格式，需要额外的依赖支持。
+
+#### 10.1.2 技术实现
+在`pom.xml`中添加JPEG2000支持依赖：
+
+```xml
+<!-- JPEG2000 图像处理支持 -->
+<dependency>
+    <groupId>com.github.jai-imageio</groupId>
+    <artifactId>jai-imageio-jpeg2000</artifactId>
+    <version>1.4.0</version>
+</dependency>
+<dependency>
+    <groupId>com.github.jai-imageio</groupId>
+    <artifactId>jai-imageio-core</artifactId>
+    <version>1.4.0</version>
+</dependency>
+```
+
+#### 10.1.3 影响范围
+- PDF页面渲染为图片 (`/v1/pdf/page/{fileId}/{page}`)
+- PDF缩略图生成 (`ReportProcessingService.generateAndUploadThumbnailFromPdf()`)
+- 任何涉及PDF图像渲染的功能
+
+#### 10.1.4 错误处理
+已在以下服务中添加了更好的错误处理：
+- `PdfStreamService.renderPdfPageAsImage()`
+- `ReportProcessingService.generateAndUploadThumbnailFromPdf()`
+
+#### 10.1.5 性能考虑
+- JPEG2000处理可能比标准JPEG处理更耗时
+- 大尺寸JPEG2000图像可能消耗更多内存
+- 确保所有部署环境都包含相同的依赖版本
+
+## 11. SSL证书配置技术
+
+### 11.1 本地开发SSL证书
+
+#### 11.1.1 证书生成技术
+使用Java keytool工具生成自签名SSL证书：
+
+```bash
+keytool -genkeypair -alias yuesf.cn -keyalg RSA -keysize 2048 -storetype JKS -keystore yuesf.cn.jks -validity 3650 -storepass changeit -keypass changeit -dname "CN=yuesf.cn, OU=Local Development, O=AI Reader, L=City, ST=State, C=CN" -ext "SAN=dns:localhost,ip:127.0.0.1"
+```
+
+#### 11.1.2 技术参数说明
+- `-alias yuesf.cn`: 证书别名
+- `-keyalg RSA`: 使用RSA算法
+- `-keysize 2048`: 密钥长度
+- `-storetype JKS`: 密钥库类型
+- `-keystore yuesf.cn.jks`: 生成的密钥库文件名
+- `-validity 3650`: 证书有效期（10年）
+- `-storepass changeit`: 密钥库密码
+- `-keypass changeit`: 私钥密码
+- `-dname`: 证书的专有名称（DN）
+- `-ext "SAN=dns:localhost,ip:127.0.0.1"`: 主题备用名称扩展
+
+#### 11.1.3 SSL配置实现
+在`application.yml`中配置SSL：
+
+```yaml
+server:
+  port: 443
+  ssl:
+    key-store: classpath:yuesf.cn.jks
+    key-store-password: changeit
+    key-store-type: JKS
+    key-alias: yuesf.cn
+    enabled: true
+```
+
+#### 11.1.4 证书验证技术
+使用以下命令验证证书：
+
+```bash
+keytool -list -keystore yuesf.cn.jks -storepass changeit
+```
+
+## 12. 注意事项
 
 1. 查询接口必须具备条件：`keyword` 或显式 `startDate/endDate`；若都未提供，则默认按近 30 天范围查询。
 2. `page` 从 1 开始；`pageSize` 最大 50，避免大结果集。
@@ -350,3 +433,12 @@ app:
    - 新建报告时必须提供`reportFileId`，关联文件信息表
    - 文件信息包含：文件名称、大小、URL、类型、上传时间等
    - 支持文件状态管理（ACTIVE/DELETED）
+9. **JPEG2000图像处理注意事项**：
+   - 确保JAI Image I/O Tools依赖正确安装
+   - 监控PDF渲染相关日志，及时发现图像处理问题
+   - 考虑JPEG2000处理的性能影响
+10. **SSL证书配置注意事项**：
+    - 自签名证书仅用于本地开发测试
+    - 生产环境应使用正式的SSL证书
+    - 证书文件应放置在`src/main/resources`目录下
+    - 浏览器会对自签名证书显示安全警告
