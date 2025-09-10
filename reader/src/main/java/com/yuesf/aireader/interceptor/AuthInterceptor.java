@@ -36,7 +36,6 @@ public class AuthInterceptor implements HandlerInterceptor {
                 || uri.startsWith("/health")
                 || "/v1/mini/reports".equals(uri)
                 || ("GET".equals(method) && uri.startsWith("/v1/images/"))) {
-            System.out.println("公开接口，直接放行");
             return true;
         }
 
