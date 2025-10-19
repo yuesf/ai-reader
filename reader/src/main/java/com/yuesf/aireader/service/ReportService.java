@@ -57,10 +57,10 @@ public class ReportService {
         String keyword = request.getKeyword();
         LocalDate defaultStart = null;
         LocalDate defaultEnd = null;
-        if (keyword == null || keyword.trim().isEmpty()) {
-            defaultEnd = LocalDate.now();
-            defaultStart = defaultEnd.minusDays(30);
-        }
+//        if (keyword == null || keyword.trim().isEmpty()) {
+//            defaultEnd = LocalDate.now();
+//            defaultStart = defaultEnd.minusDays(30);
+//        }
 
         List<Report> list = reportMapper.selectReports(
                 keyword,
