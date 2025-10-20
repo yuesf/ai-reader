@@ -41,9 +41,9 @@
                         )
                     )
                 </when>
-                <otherwise>
-                    r.publish_date between date('now', '-30 day') and date('now')
-                </otherwise>
+<!--                <otherwise>-->
+<!--                    r.publish_date between date('now', '-30 day') and date('now')-->
+<!--                </otherwise>-->
             </choose>
 
             <if test="category != null and category != ''">
