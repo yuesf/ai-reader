@@ -201,6 +201,21 @@ export function generateSummary(id: string) {
   return axios.post<ApiResponse<string>>(BASE_URL+`/v1/reports/${id}/generate-summary`);
 }
 
+// 微信公众号发布相关接口
+export interface WeChatDraftResponse {
+  mediaId: string;
+  errcode?: number;
+  errmsg?: string;
+}
+
+export function publishToWeChat(id: string) {
+  return axios.post<ApiResponse<WeChatDraftResponse>>(BASE_URL+`/v1/reports/${id}/publish-wechat`);
+}
+
+export function checkPublishStatus(id: string) {
+  return axios.get<ApiResponse<string>>(BASE_URL+`/v1/reports/${id}/publish-status`);
+}
+
 // 文件上传相关接口
 export function uploadReportFile(file: File) {
   console.log('uploadReportFile 被调用，文件信息:', {

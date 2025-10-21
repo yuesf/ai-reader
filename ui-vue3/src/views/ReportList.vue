@@ -40,10 +40,13 @@
         <el-table-column prop="publishDate" label="发布日期" width="120" />
         <el-table-column prop="viewCount" label="浏览" width="90" />
         <el-table-column prop="downloadCount" label="下载" width="90" />
-        <el-table-column label="操作" width="280" fixed="right">
+        <el-table-column label="操作" width="380" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link @click="onGenerateSummary(row)" :loading="generatingSummaryIds.has(row.id)">
               生成摘要
+            </el-button>
+            <el-button type="success" link @click="onPublishToWeChat(row)" :loading="publishingIds.has(row.id)">
+              发布公众号
             </el-button>
             <el-button type="warning" link @click="onEdit(row)">
               编辑
@@ -148,7 +151,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
-import { fetchReports, deleteReport, batchDelete, generateSummary, updateReport, type ReportItem, type ReportListRequest } from '../api';
+import { fetchReports, deleteReport, batchDelete, generateSummary, updateReport, publishToWeChat, checkPublishStatus, type ReportItem, type ReportListRequest } from '../api';
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
 
 const query = reactive<ReportListRequest>({ page: 1, pageSize: 10, sortBy: 'publishDate', sortOrder: 'desc' });
@@ -156,6 +159,7 @@ const rows = ref<ReportItem[]>([]);
 const total = ref(0);
 const selection = ref<ReportItem[]>([]);
 const generatingSummaryIds = ref<Set<string>>(new Set());
+const publishingIds = ref<Set<string>>(new Set());
 
 // 编辑相关状态
 const editDialogVisible = ref(false);
@@ -238,6 +242,42 @@ async function onGenerateSummary(row: ReportItem) {
   } finally {
     // 清除加载状态
     generatingSummaryIds.value.delete(row.id);
+  }
+}
+
+async function onPublishToWeChat(row: ReportItem) {
+  try {
+    // 先检查发布状态
+    const statusResult = await checkPublishStatus(row.id);
+    if (statusResult.data.code !== 200) {
+      ElMessage.error(statusResult.data.message || '报告状态检查失败');
+      return;
+    }
+    
+    // 设置加载状态
+    publishingIds.value.add(row.id);
+    
+    const { data } = await publishToWeChat(row.id);
+    if (data.code === 200) {
+      ElMessage.success(`发布成功！草稿媒体ID: ${data.data.mediaId}`);
+    } else {
+      ElMessage.error(data.message || '发布到公众号失败');
+    }
+  } catch (error: any) {
+    console.error('发布到公众号失败:', error);
+    
+    // 尝试从错误响应中获取更详细的错误信息
+    let errorMessage = '发布到公众号失败';
+    if (error?.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error?.message) {
+      errorMessage = error.message;
+    }
+    
+    ElMessage.error(errorMessage);
+  } finally {
+    // 清除加载状态
+    publishingIds.value.delete(row.id);
   }
 }
 

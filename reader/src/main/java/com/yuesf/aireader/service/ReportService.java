@@ -510,4 +510,45 @@ public class ReportService {
         log.info("批量删除完成，成功删除 {} 个报告，共 {} 个", totalDeleted, request.getIds().size());
         return totalDeleted;
     }
+
+    /**
+     * 验证报告是否可以发布到公众号
+     * 检查报告存在性和摘要完整性
+     */
+    public void validateReportForPublish(String reportId) {
+        if (reportId == null || reportId.trim().isEmpty()) {
+            throw new IllegalArgumentException("报告ID不能为空");
+        }
+
+        // 检查报告是否存在
+        Report report = reportMapper.selectById(reportId);
+        if (report == null) {
+            throw new IllegalArgumentException("报告不存在，请检查报告ID");
+        }
+
+        // 检查报告摘要是否存在
+        if (report.getSummary() == null || report.getSummary().trim().isEmpty()) {
+            throw new IllegalArgumentException("报告摘要不存在，请先生成报告摘要后再发布到公众号");
+        }
+
+        // 检查报告标题是否存在
+        if (report.getTitle() == null || report.getTitle().trim().isEmpty()) {
+            throw new IllegalArgumentException("报告标题不能为空");
+        }
+
+        // 检查报告封面是否存在
+        if (report.getThumbnail() == null || report.getThumbnail().trim().isEmpty()) {
+            throw new IllegalArgumentException("报告封面不存在，无法发布到公众号");
+        }
+
+        log.info("报告验证通过，可以发布到公众号，报告ID: {}, 标题: {}", reportId, report.getTitle());
+    }
+
+    /**
+     * 获取报告用于发布公众号
+     */
+    public Report getReportForPublish(String reportId) {
+        validateReportForPublish(reportId);
+        return reportMapper.selectById(reportId);
+    }
 }

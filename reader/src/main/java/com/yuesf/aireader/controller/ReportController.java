@@ -9,6 +9,9 @@ import com.yuesf.aireader.dto.ReportListResponse;
 import com.yuesf.aireader.dto.ReportUpdateRequest;
 import com.yuesf.aireader.entity.Report;
 import com.yuesf.aireader.service.ReportService;
+import com.yuesf.aireader.service.ReportPublishService;
+import com.yuesf.aireader.dto.wechat.WeChatDraftResponse;
+import com.yuesf.aireader.exception.WeChatPublicException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,6 +33,9 @@ public class ReportController {
 
     @Autowired
     private ReportService reportService;
+
+    @Autowired
+    private ReportPublishService reportPublishService;
 
     /**
      * 获取/搜索报告列表
@@ -227,6 +233,74 @@ public class ReportController {
             
         } catch (Exception e) {
             log.error("后台报告摘要生成失败，ID: {}", id, e);
+            return ApiResponse.error(500, "服务器内部错误: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 发布报告到微信公众号
+     * POST /reports/{id}/publish-wechat
+     */
+    @PostMapping("/reports/{id}/publish-wechat")
+    public ApiResponse<WeChatDraftResponse> publishReportToWeChat(@PathVariable String id) {
+        try {
+            log.info("后台发布报告到微信公众号，ID: {}", id);
+            
+            if (id == null || id.trim().isEmpty()) {
+                return ApiResponse.error(400, "报告ID不能为空");
+            }
+            
+            WeChatDraftResponse response = reportPublishService.publishReportToWeChat(id);
+            log.info("后台报告发布到微信公众号成功，ID: {}, 草稿媒体ID: {}", id, response.getMediaId());
+            
+            return ApiResponse.success(response);
+            
+        } catch (IllegalArgumentException e) {
+            log.warn("后台报告发布到微信公众号参数错误: {}", e.getMessage());
+            return ApiResponse.error(400, e.getMessage());
+        } catch (RuntimeException e) {
+            // 检查是否是由WeChatPublicException引起的
+            Throwable cause = e.getCause();
+            if (cause instanceof WeChatPublicException) {
+                WeChatPublicException weChatEx = (WeChatPublicException) cause;
+                log.error("后台微信公众号API调用失败，ID: {}, 错误码: {}", id, weChatEx.getErrorCode(), e);
+                return ApiResponse.error(500, weChatEx.getFriendlyMessage());
+            } else {
+                log.error("后台报告发布到微信公众号失败，ID: {}", id, e);
+                return ApiResponse.error(500, e.getMessage());
+            }
+        } catch (Exception e) {
+            log.error("后台报告发布到微信公众号失败，ID: {}", id, e);
+            return ApiResponse.error(500, "服务器内部错误: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 检查报告是否可以发布到微信公众号
+     * GET /reports/{id}/publish-status
+     */
+    @GetMapping("/reports/{id}/publish-status")
+    public ApiResponse<String> checkPublishStatus(@PathVariable String id) {
+        try {
+            log.info("后台检查报告发布状态，ID: {}", id);
+            
+            if (id == null || id.trim().isEmpty()) {
+                return ApiResponse.error(400, "报告ID不能为空");
+            }
+            
+            String statusMessage = reportPublishService.getPublishStatusMessage(id);
+            boolean canPublish = reportPublishService.canPublishReport(id);
+            
+            if (canPublish) {
+                log.info("后台报告可以发布到微信公众号，ID: {}", id);
+                return ApiResponse.success(statusMessage);
+            } else {
+                log.warn("后台报告无法发布到微信公众号，ID: {}, 原因: {}", id, statusMessage);
+                return ApiResponse.error(400, statusMessage);
+            }
+            
+        } catch (Exception e) {
+            log.error("后台检查报告发布状态失败，ID: {}", id, e);
             return ApiResponse.error(500, "服务器内部错误: " + e.getMessage());
         }
     }
