@@ -1,7 +1,7 @@
 package com.yuesf.aireader.entity;
 
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+//import jakarta.persistence.Id;
+//import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,12 +13,12 @@ import java.util.Date;
  */
 @Setter
 @Getter
-@Table(name = "wechat_user")
+//@Table(name = "wechat_user")
 public class WechatUser {
     /**
      * 主键ID
      */
-    @Id
+//    @Id
     private Long id;
 
     /**

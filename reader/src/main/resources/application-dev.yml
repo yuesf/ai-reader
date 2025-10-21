@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    # 统一数据源配置（主业务 + 埋点数据） - 已迁移到 MySQL 5.7（开发环境）
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://120.27.156.11:33070/reader-dev?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: root
+    password: mysql147
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema-mysql.sql
+      data-locations: classpath:data-mysql.sql
+      continue-on-error: true

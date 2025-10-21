@@ -15,24 +15,14 @@ spring:
       file-size-threshold: 2KB
       location: ${java.io.tmpdir}
   
-  datasource:
-    # 统一数据源配置（主业务 + 埋点数据）
-    driver-class-name: org.sqlite.JDBC
-    url: jdbc:sqlite:reader.db
-    username: 
-    password: 
+
   
   jackson:
     date-format: yyyy-MM-dd
     time-zone: GMT+8
     default-property-inclusion: non_null
 
-  sql:
-    init:
-      mode: always
-      schema-locations: classpath:schema.sql
-      data-locations: classpath:data.sql
-      continue-on-error: true
+
 
 mybatis:
   mapper-locations: classpath*:mappers/**/*.xml
@@ -72,3 +62,12 @@ wechat:
   mini:
     appid: ${WECHAT_MINI_APPID:your_mini_program_appid}
     secret: ${WECHAT_MINI_SECRET:your_mini_program_secret}
+  # 微信公众号配置
+  public:
+    appid: ${WECHAT_PUBLIC_APPID:your_public_account_appid}
+    secret: ${WECHAT_PUBLIC_SECRET:your_public_account_secret}
+    # 小程序相关配置
+    miniprogram:
+      appid: ${WECHAT_MINI_APPID:your_mini_program_appid}
+      # 报告详情页路径
+      report-detail-path: pages/reportDetail/reportDetail

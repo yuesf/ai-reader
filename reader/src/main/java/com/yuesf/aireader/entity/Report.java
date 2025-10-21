@@ -1,6 +1,5 @@
 package com.yuesf.aireader.entity;
 
-import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -14,68 +13,68 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 /**
  * 报告实体类
  */
-@Entity
-@Table(name = "reports")
+//@Entity
+//@Table(name = "reports")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Report {
-    @Id
+//    @Id
     private String id;
     
-    @Column(nullable = false, length = 500)
+//    @Column(nullable = false, length = 500)
     private String title;
     
-    @Column(columnDefinition = "TEXT")
+//    @Column(columnDefinition = "TEXT")
     private String summary;
     
-    @Column(length = 100)
+//    @Column(length = 100)
     private String source;
     
-    @Column(length = 50)
+//    @Column(length = 50)
     private String category;
     
     private Integer pages;
     
-    @Column(name = "file_size")
+//    @Column(name = "file_size")
     private Long fileSize;
     
-    @Column(name = "publish_date")
+//    @Column(name = "publish_date")
     private LocalDate publishDate;
     
-    @Column(name = "update_date")
+//    @Column(name = "update_date")
     private LocalDate updateDate;
     
-    @Column(length = 500)
+//    @Column(length = 500)
     private String thumbnail;
     
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "report_tags", joinColumns = @JoinColumn(name = "report_id"))
-    @Column(name = "tag")
+//    @ElementCollection(fetch = FetchType.EAGER)
+//    @CollectionTable(name = "report_tags", joinColumns = @JoinColumn(name = "report_id"))
+//    @Column(name = "tag")
     private List<String> tags;
     
-    @Column(name = "download_count")
+//    @Column(name = "download_count")
     private Integer downloadCount;
     
-    @Column(name = "view_count")
+//    @Column(name = "view_count")
     private Integer viewCount;
     
-    @Column(name = "is_free")
+//    @Column(name = "is_free")
     private Boolean isFree;
     
     private Integer price;
     
     // 文件上传相关字段
-    @Column(name = "report_file_id")
+//    @Column(name = "report_file_id")
     private String reportFileId;
     
-    @Column(name = "report_file_url")
+//    @Column(name = "report_file_url")
     private String reportFileUrl;
     
-    @Column(name = "report_file_name")
+//    @Column(name = "report_file_name")
     private String reportFileName;
     
-    @Column(name = "report_file_size")
+//    @Column(name = "report_file_size")
     private String reportFileSize;
 
     /**
