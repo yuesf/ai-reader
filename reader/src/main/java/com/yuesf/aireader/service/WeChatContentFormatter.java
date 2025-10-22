@@ -26,14 +26,14 @@ public class WeChatContentFormatter {
         StringBuilder content = new StringBuilder();
         
         // 1. 添加报告封面图片
-        if (report.getThumbnail() != null && !report.getThumbnail().trim().isEmpty()) {
-            content.append("<p style=\"text-align: center;\">");
-            content.append("<img src=\"").append(getFullImageUrl(report.getThumbnail())).append("\" ");
-            content.append("alt=\"").append(report.getTitle()).append("\" ");
-            content.append("style=\"max-width: 100%; height: auto;\" />");
-            content.append("</p>");
-            content.append("<br/>");
-        }
+//        if (report.getThumbnail() != null && !report.getThumbnail().trim().isEmpty()) {
+//            content.append("<p style=\"text-align: center;\">");
+//            content.append("<img src=\"").append(getFullImageUrl(report.getThumbnail())).append("\" ");
+//            content.append("alt=\"").append(report.getTitle()).append("\" ");
+//            content.append("style=\"max-width: 100%; height: auto;\" />");
+//            content.append("</p>");
+//            content.append("<br/>");
+//        }
         
         // 2. 添加报告摘要
         content.append("<div style=\"margin: 20px 0;\">");
@@ -169,7 +169,7 @@ public class WeChatContentFormatter {
         // 假设图片通过 /v1/images/{fileId} 接口访问
         if (thumbnailPath.startsWith("/v1/images/")) {
             // 这里需要配置实际的域名
-            return "https://your-domain.com" + thumbnailPath;
+            return "https:\\//yuesf.cn" + thumbnailPath;
         }
         
         return thumbnailPath;

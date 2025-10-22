@@ -12,3 +12,6 @@ spring:
       schema-locations: classpath:schema-mysql.sql
       data-locations: classpath:data-mysql.sql
       continue-on-error: true
+
+app:
+  base-url: http://localhost:5173

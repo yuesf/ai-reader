@@ -57,6 +57,14 @@ public class WeChatPublicException extends RuntimeException {
             case 85024:
                 return "文章标题包含违规信息，请修改后重试";
             default:
+                // 检查是否是IP白名单问题
+                if (getMessage() != null && getMessage().contains("invalid ip")) {
+                    return "服务器IP地址不在微信公众号白名单中，请联系管理员配置";
+                }
+                // 检查是否是412错误
+                if (getMessage() != null && getMessage().contains("412 Precondition Failed")) {
+                    return "请求内容不符合微信API要求，请检查文章标题、内容等字段是否符合规范";
+                }
                 return String.format("微信公众号API错误 [%d]: %s", errorCode, getMessage());
         }
     }
