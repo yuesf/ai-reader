@@ -109,9 +109,7 @@ CREATE TABLE IF NOT EXISTS tracking_events (
     timestamp BIGINT NOT NULL,
     device_info TEXT,
     network_type VARCHAR(16),
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_tracking_events_session
-      FOREIGN KEY (session_id) REFERENCES user_sessions(session_id)
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='埋点事件表';
 
 -- 索引（MySQL 5.7 不支持 IF NOT EXISTS；默认空库初始化不重复执行）

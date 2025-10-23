@@ -123,11 +123,6 @@ public class AliyunDocumentIntelligenceService {
                   .replaceAll("[ \\t]+", " ")     // 合并多个空格
                   .trim();
         
-        // 如果内容太长，截取前面部分
-        if (text.length() > 50000) {
-            text = text.substring(0, 50000) + "\n...(内容已截断)";
-            log.info("PDF内容过长，已截断到50000字符");
-        }
         
         return text;
     }

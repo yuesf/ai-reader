@@ -92,7 +92,8 @@ public class AITextSummaryService {
             String prompt = "作为专业的研究报告分析师，请深入理解以下文档内容，提炼出核心观点和主要信息，形成一份结构清晰的概述。" +
                            "请确保涵盖文档的主要议题、关键发现和重要结论。请用中文回答，内容要简洁明了：\n\n" + documentContent;
             
-            return callDashScopeAPI(prompt);
+            // 调用API并检查完整性
+            return callDashScopeAPIWithContinuation(prompt, "general");
             
         } catch (Exception e) {
             log.error("生成整体摘要失败: {}", e.getMessage(), e);
@@ -124,35 +125,211 @@ public class AITextSummaryService {
     }
     
     /**
-     * 调用阿里云百炼平台通义API
+     * 调用阿里云百炼平台通义API（带续写功能）
+     * 检测生成结果是否完整，如果未完整则继续生成
+     * 
+     * @param prompt 初始提示词
+     * @param summaryType 摘要类型（用于日志）
+     * @return 完整的摘要内容
      */
-    private String callDashScopeAPI(String prompt) throws ApiException, NoApiKeyException, InputRequiredException {
-        Generation gen = new Generation();
-
-        Message userMsg = Message.builder()
-                .role(Role.USER.getValue())
-                .content(prompt)
-                .build();
-        
-        GenerationParam param = GenerationParam.builder()
-                .apiKey(aiConfig.getApiKey())
-                .model(aiConfig.getSummarize().getModel())
-                .messages(Arrays.asList(userMsg))
-                .resultFormat(GenerationParam.ResultFormat.MESSAGE)
-                .topP(aiConfig.getSummarize().getTopP())
-                .maxTokens(aiConfig.getSummarize().getMaxTokens())
-                .temperature(aiConfig.getSummarize().getTemperature())
-                .build();
-        
-        GenerationResult result = gen.call(param);
-        
-        if (result != null && result.getOutput() != null && result.getOutput().getChoices() != null 
-            && !result.getOutput().getChoices().isEmpty()) {
-            return result.getOutput().getChoices().get(0).getMessage().getContent();
+    private String callDashScopeAPIWithContinuation(String prompt, String summaryType) {
+        try {
+            StringBuilder fullSummary = new StringBuilder();
+            String currentPrompt = prompt;
+            int maxContinuations = 3; // 最多续写3次
+            int continuationCount = 0;
+            
+            while (continuationCount <= maxContinuations) {
+                // 调用API生成内容
+                String partialResult = callDashScopeAPI(currentPrompt);
+                
+                if (partialResult == null || partialResult.isBlank()) {
+                    log.warn("第 {} 次生成结果为空，{} 摘要", continuationCount + 1, summaryType);
+                    break;
+                }
+                
+                fullSummary.append(partialResult);
+                
+                // 检测是否完整
+                if (isContentComplete(partialResult)) {
+                    log.info("{} 摘要生成完整，总长度: {} 字符", summaryType, fullSummary.length());
+                    break;
+                }
+                
+                // 如果未完整，准备续写
+                continuationCount++;
+                if (continuationCount > maxContinuations) {
+                    log.warn("{} 摘要达到最大续写次数，停止续写，当前长度: {}", 
+                            summaryType, fullSummary.length());
+                    break;
+                }
+                
+                log.info("{} 摘要未完整，进行第 {} 次续写，当前长度: {}", 
+                        summaryType, continuationCount, fullSummary.length());
+                
+                // 构造续写提示词，保持上下文连贯性
+                currentPrompt = buildContinuationPrompt(fullSummary.toString());
+            }
+            
+            return fullSummary.toString();
+            
+        } catch (Exception e) {
+            log.error("调用通义API失败 ({}): {}", summaryType, e.getMessage(), e);
+            return null;
+        }
+    }
+    
+    /**
+     * 检测内容是否完整
+     * 通过多种启发式规则判断
+     */
+    private boolean isContentComplete(String content) {
+        if (content == null || content.isBlank()) {
+            return true; // 空内容视为完整
         }
         
-        log.warn("通义API返回结果为空");
-        return null;
+        String trimmed = content.trim();
+        
+        // 1. 检测是否以完整的结束符号结尾
+        String[] endMarkers = {
+            "。", ".", "\uff01", "!", "\uff1f", "?", 
+            "】", "]", ")", "）",
+            "结论", "总结", "综上所述", "综上"
+        };
+        
+        boolean endsWithMarker = false;
+        for (String marker : endMarkers) {
+            if (trimmed.endsWith(marker)) {
+                endsWithMarker = true;
+                break;
+            }
+        }
+        
+        // 2. 检测是否以未完成的标志结尾（说明被截断）
+        String[] incompleteMarkers = {
+            "...", "…", ",", "，", ";", "；", ":", "：",
+            "、", "-", "—", "——"
+        };
+        
+        boolean endsWithIncomplete = false;
+        for (String marker : incompleteMarkers) {
+            if (trimmed.endsWith(marker)) {
+                endsWithIncomplete = true;
+                break;
+            }
+        }
+        
+        // 3. 检测最后一句话是否完整
+        String lastSentence = getLastSentence(trimmed);
+        boolean lastSentenceComplete = lastSentence != null && 
+                                        lastSentence.length() > 10 && 
+                                        !lastSentence.matches(".*[,，;；:：、]$");
+        
+        // 4. 检测内容长度（如果接近最大token限制，可能被截断）
+        // 假设每个字符约2个token，最大token为aiConfig配置值
+        int estimatedTokens = content.length() * 2;
+        int maxTokens = aiConfig.getSummarize().getMaxTokens();
+        boolean nearMaxTokens = estimatedTokens >= (maxTokens * 0.95); // 超过95%认为可能被截断
+        
+        // 综合判断：
+        // - 如果以完整符号结尾且最后一句完整，且未超token限制 -> 完整
+        // - 如果以未完成标志结尾 -> 未完整
+        // - 如果接近token限制 -> 可能未完整
+        
+        if (endsWithIncomplete) {
+            log.debug("检测到内容以未完成标志结尾，判定为未完整");
+            return false;
+        }
+        
+        if (nearMaxTokens) {
+            log.debug("检测到内容接近token限制 ({}/{})，判定为可能未完整", estimatedTokens, maxTokens);
+            return false;
+        }
+        
+        if (endsWithMarker && lastSentenceComplete) {
+            log.debug("检测到内容以完整符号结尾且最后一句完整，判定为完整");
+            return true;
+        }
+        
+        // 默认情况：如果以句号结尾则认为完整
+        return endsWithMarker;
+    }
+    
+    /**
+     * 获取最后一句话
+     */
+    private String getLastSentence(String content) {
+        if (content == null || content.isBlank()) {
+            return null;
+        }
+        
+        String[] sentenceEnders = {"。", ".", "\uff01", "!", "\uff1f", "?"};
+        int lastIndex = -1;
+        
+        for (String ender : sentenceEnders) {
+            int index = content.lastIndexOf(ender);
+            if (index > lastIndex) {
+                lastIndex = index;
+            }
+        }
+        
+        if (lastIndex >= 0 && lastIndex < content.length() - 1) {
+            return content.substring(lastIndex + 1).trim();
+        }
+        
+        return content; // 没有句号，返回整个内容
+    }
+    
+    /**
+     * 构造续写提示词，保持上下文连贯性
+     */
+    private String buildContinuationPrompt(String previousContent) {
+        // 提取最后200个字符作为上下文
+        String context = previousContent.length() > 200 
+                ? previousContent.substring(previousContent.length() - 200) 
+                : previousContent;
+        
+        return "以下是之前生成的摘要内容的末尾部分：\n\n" + 
+               context + 
+               "\n\n请继续完成剩余的摘要内容，保持上下文连贯性和内容的完整性。请直接继续书写，不要重复之前的内容。";
+    }
+    
+    /**
+     * 调用阿里云百炼平台通义API（基础方法）
+     */
+    private String callDashScopeAPI(String prompt) {
+        try {
+            Generation gen = new Generation();
+
+            Message userMsg = Message.builder()
+                    .role(Role.USER.getValue())
+                    .content(prompt)
+                    .build();
+            
+            GenerationParam param = GenerationParam.builder()
+                    .apiKey(aiConfig.getApiKey())
+                    .model(aiConfig.getSummarize().getModel())
+                    .messages(Arrays.asList(userMsg))
+                    .resultFormat(GenerationParam.ResultFormat.MESSAGE)
+                    .topP(aiConfig.getSummarize().getTopP())
+                    .maxTokens(aiConfig.getSummarize().getMaxTokens())
+                    .temperature(aiConfig.getSummarize().getTemperature())
+                    .build();
+            
+            GenerationResult result = gen.call(param);
+            
+            if (result != null && result.getOutput() != null && result.getOutput().getChoices() != null 
+                && !result.getOutput().getChoices().isEmpty()) {
+                return result.getOutput().getChoices().get(0).getMessage().getContent();
+            }
+            
+            log.warn("通义API返回结果为空");
+            return null;
+            
+        } catch (Exception e) {
+            log.error("调用通义API异常: {}", e.getMessage(), e);
+            throw new RuntimeException("调用通义API失败", e);
+        }
     }
     
     /**
