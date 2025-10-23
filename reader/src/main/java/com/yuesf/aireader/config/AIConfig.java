@@ -45,7 +45,7 @@ public class AIConfig {
         /**
          * 最大输出token数
          */
-        private Integer maxTokens = 2000;
+        private Integer maxTokens;
         
         /**
          * 温度参数，控制生成的随机性

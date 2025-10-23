@@ -98,15 +98,7 @@ public class TrackingService {
                 validateTrackingRequest(eventRequest);
             }
 
-            // 转换为实体对象列表
-            List<TrackingEvent> events = request.getEvents().stream()
-                    .map(this::convertToTrackingEvent)
-                    .collect(Collectors.toList());
-
-            // 批量插入埋点事件
-            int result = trackingEventMapper.batchInsert(events);
-
-            // 更新会话统计（按会话ID分组更新）
+            // 先创建或更新会话（确保外键约束满足）
             Map<String, String> sessionUserMap = request.getEvents().stream()
                     .collect(Collectors.toMap(
                             TrackingReportRequest::getSessionId,
@@ -125,11 +117,24 @@ public class TrackingService {
                         .orElse(null);
                 
                 if (firstEvent != null) {
+                    // 先创建或更新会话，确保session_id存在
                     createOrUpdateSession(sessionId, userId, 
                                         convertToJson(firstEvent.getDeviceInfo()), 
                                         firstEvent.getNetworkType());
-                    updateSessionStats(sessionId);
                 }
+            }
+
+            // 转换为实体对象列表
+            List<TrackingEvent> events = request.getEvents().stream()
+                    .map(this::convertToTrackingEvent)
+                    .collect(Collectors.toList());
+
+            // 批量插入埋点事件（此时session_id已存在）
+            int result = trackingEventMapper.batchInsert(events);
+
+            // 更新会话统计
+            for (String sessionId : sessionUserMap.keySet()) {
+                updateSessionStats(sessionId);
             }
 
             log.info("批量埋点事件上报成功: batchId={}, eventCount={}", 
