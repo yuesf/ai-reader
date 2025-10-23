@@ -18,15 +18,6 @@ import java.util.UUID;
 @Service
 public class AliyunDocumentIntelligenceService {
 
-    @Value("${app.aliyun.access-key-id}")
-    private String accessKeyId;
-
-    @Value("${app.aliyun.access-key-secret}")
-    private String accessKeySecret;
-
-    @Value("${app.aliyun.docmind.endpoint:docmind-api.cn-hangzhou.aliyuncs.com}")
-    private String endpoint;
-
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
     /**
