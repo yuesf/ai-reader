@@ -169,7 +169,7 @@ public class WeChatContentFormatter {
         // 假设图片通过 /v1/images/{fileId} 接口访问
         if (thumbnailPath.startsWith("/v1/images/")) {
             // 这里需要配置实际的域名
-            return "https://yuesf.cn" + thumbnailPath;
+            return "https://yuesf.cn/reader" + thumbnailPath;
         }
         
         return thumbnailPath;
@@ -214,7 +214,7 @@ public class WeChatContentFormatter {
             content.append("暂无摘要\n\n");
         }
         
-        content.append("──────────────────\n\n");
+        content.append("\n──────────────────\n\n");
         
         // 4. 添加小程序跳转链接说明
         // String miniProgramPath = String.format("%s?id=%s", 

@@ -59,7 +59,7 @@ public class AITextSummaryService {
             String generalSummary = generateGeneralSummary(documentContent);
             
             // 生成章节详细摘要
-            String chapterSummary = generateChapterSummary(documentContent);
+            // String chapterSummary = generateChapterSummary(documentContent);
 
             // 合并摘要结果
             StringBuilder finalSummary = new StringBuilder();
@@ -67,12 +67,12 @@ public class AITextSummaryService {
                 finalSummary.append("【文档总览摘要】\n").append(generalSummary);
             }
             
-            if (chapterSummary != null && !chapterSummary.isBlank()) {
-                if (finalSummary.length() > 0) {
-                    finalSummary.append("\n\n");
-                }
-                finalSummary.append("【章节详细摘要】\n").append(chapterSummary);
-            }
+            // if (chapterSummary != null && !chapterSummary.isBlank()) {
+            //     if (finalSummary.length() > 0) {
+            //         finalSummary.append("\n\n");
+            //     }
+            //     finalSummary.append("【章节详细摘要】\n").append(chapterSummary);
+            // }
             
             String result = finalSummary.toString();
             log.info("摘要生成成功，长度: {}", result.length());
