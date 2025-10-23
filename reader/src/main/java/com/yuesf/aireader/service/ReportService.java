@@ -213,8 +213,8 @@ public class ReportService {
         existingReport.setPrice(request.getPrice() != null ? request.getPrice() : existingReport.getPrice());
 
         // 如果提供了新的文件ID，更新文件信息
-        if (existingReport.getReportFileId() != null && !existingReport.getReportFileId().isBlank()) {
-            FileInfo fileInfo = fileInfoService.getFileInfoById(existingReport.getReportFileId());
+        if (request.getReportFileId() != null && !request.getReportFileId().isBlank()) {
+            FileInfo fileInfo = fileInfoService.getFileInfoById(request.getReportFileId());
             if (fileInfo == null || !"ACTIVE".equals(fileInfo.getStatus())) {
                 throw new IllegalArgumentException("报告文件信息不存在或已失效，请重新上传文件");
             }
@@ -224,17 +224,24 @@ public class ReportService {
             existingReport.setReportFileName(fileInfo.getOriginalName());
             existingReport.setReportFileSize(String.valueOf(fileInfo.getFileSize()));
 
-
-            // 重新生成缩略图
-            try {
-                FileInfo newFileInfo = reportProcessingService.generateAndUploadThumbnailFromPdf(fileInfo);
-                String newThumbnailKey = "/v1/images/" + newFileInfo.getId();
-                existingReport.setThumbnail(newThumbnailKey);
-                existingReport.setPages(newFileInfo.getPageNums());
-                fileInfo.setPageNums(newFileInfo.getPageNums());
-                fileInfoService.updateFileInfo(fileInfo);
-            } catch (Exception e) {
-                log.error("重新生成缩略图失败: " + e.getMessage());
+            // 根据 regenerateThumbnail 参数决定是否重新生成封面
+            Boolean shouldRegenerate = request.getRegenerateThumbnail();
+            if (shouldRegenerate == null || shouldRegenerate) {
+                // 默认生成封面，或明确要求生成
+                log.info("开始重新生成封面，报告ID: {}", existingReport.getId());
+                try {
+                    FileInfo newFileInfo = reportProcessingService.generateAndUploadThumbnailFromPdf(fileInfo);
+                    String newThumbnailKey = "/v1/images/" + newFileInfo.getId();
+                    existingReport.setThumbnail(newThumbnailKey);
+                    existingReport.setPages(newFileInfo.getPageNums());
+                    fileInfo.setPageNums(newFileInfo.getPageNums());
+                    fileInfoService.updateFileInfo(fileInfo);
+                    log.info("重新生成封面成功，报告ID: {}, 封面: {}", existingReport.getId(), newThumbnailKey);
+                } catch (Exception e) {
+                    log.error("重新生成缩略图失败: " + e.getMessage());
+                }
+            } else {
+                log.info("用户选择不重新生成封面，保留原封面，报告ID: {}", existingReport.getId());
             }
         }
 

@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS reports (
     report_file_url VARCHAR(500),
     report_file_name VARCHAR(255),
     report_file_size VARCHAR(50)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='报告表';
 
 -- 报告标签表
 CREATE TABLE IF NOT EXISTS report_tags (
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS report_tags (
     CONSTRAINT fk_report_tags_report
       FOREIGN KEY (report_id) REFERENCES reports(id)
       ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='报告标签表';
 
 -- 文件信息表
 CREATE TABLE IF NOT EXISTS file_info (
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS file_info (
     status VARCHAR(20) DEFAULT 'ACTIVE',
     request_id VARCHAR(100),
     page_nums INT DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='文件信息表';
 
 -- 后台用户表
 CREATE TABLE IF NOT EXISTS admin_users (
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS admin_users (
     display_name VARCHAR(100),
     status TINYINT(1) DEFAULT 1,
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='后台用户表';
 
 -- 微信小程序用户表
 CREATE TABLE IF NOT EXISTS wechat_user (
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS wechat_user (
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     last_login_time DATETIME,
     status TINYINT(1) DEFAULT 1
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='微信小程序用户表';
 
 -- ========== 埋点数据表 ==========
 
@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS user_sessions (
     network_type VARCHAR(16),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户会话表';
 
 -- 埋点事件表
 CREATE TABLE IF NOT EXISTS tracking_events (
@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS tracking_events (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_tracking_events_session
       FOREIGN KEY (session_id) REFERENCES user_sessions(session_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='埋点事件表';
 
 -- 索引（MySQL 5.7 不支持 IF NOT EXISTS；默认空库初始化不重复执行）
 CREATE INDEX idx_tracking_events_user_id ON tracking_events(user_id);

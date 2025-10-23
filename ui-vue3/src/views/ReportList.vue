@@ -40,10 +40,13 @@
         <el-table-column prop="publishDate" label="发布日期" width="120" />
         <el-table-column prop="viewCount" label="浏览" width="90" />
         <el-table-column prop="downloadCount" label="下载" width="90" />
-        <el-table-column label="操作" width="380" fixed="right">
+        <el-table-column label="操作" width="420" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link @click="onGenerateSummary(row)" :loading="generatingSummaryIds.has(row.id)">
               生成摘要
+            </el-button>
+            <el-button type="info" link @click="onCopyContent(row)" :loading="copyingIds.has(row.id)">
+              复制正文
             </el-button>
             <el-button type="success" link @click="onPublishToWeChat(row)" :loading="publishingIds.has(row.id)">
               发布公众号
@@ -75,7 +78,7 @@
     </el-card>
 
     <!-- 编辑报告对话框 -->
-    <el-dialog v-model="editDialogVisible" title="编辑报告" width="800px" :close-on-click-modal="false">
+    <el-dialog v-model="editDialogVisible" title="编辑报告" width="80%" :close-on-click-modal="false" @close="onDialogClose">
       <el-form :model="editForm" :rules="editRules" ref="editFormRef" label-width="100px">
         <el-row :gutter="20">
           <el-col :span="12">
@@ -137,6 +140,22 @@
             <el-option v-for="tag in editForm.tags" :key="tag" :label="tag" :value="tag" />
           </el-select>
         </el-form-item>
+        
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="报告文件" prop="reportFileId">
+              <el-input 
+                v-model="editForm.reportFileId" 
+                placeholder="请上传新文件后填写文件ID"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="重新生成封面" prop="regenerateThumbnail">
+              <el-switch v-model="editForm.regenerateThumbnail" />
+            </el-form-item>
+          </el-col>
+        </el-row>
       </el-form>
       
       <template #footer>
@@ -151,7 +170,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
-import { fetchReports, deleteReport, batchDelete, generateSummary, updateReport, publishToWeChat, checkPublishStatus, type ReportItem, type ReportListRequest } from '../api';
+import { fetchReports, deleteReport, batchDelete, generateSummary, updateReport, publishToWeChat, checkPublishStatus, getWeChatContent, type ReportItem, type ReportListRequest } from '../api';
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
 
 const query = reactive<ReportListRequest>({ page: 1, pageSize: 10, sortBy: 'publishDate', sortOrder: 'desc' });
@@ -160,12 +179,13 @@ const total = ref(0);
 const selection = ref<ReportItem[]>([]);
 const generatingSummaryIds = ref<Set<string>>(new Set());
 const publishingIds = ref<Set<string>>(new Set());
+const copyingIds = ref<Set<string>>(new Set());
 
 // 编辑相关状态
 const editDialogVisible = ref(false);
 const editFormRef = ref<FormInstance>();
 const saving = ref(false);
-const editForm = reactive<Partial<ReportItem>>({});
+const editForm = reactive<Partial<ReportItem> & { reportFileId?: string; regenerateThumbnail?: boolean }>({});
 
 // 表单验证规则
 const editRules: FormRules = {
@@ -281,6 +301,55 @@ async function onPublishToWeChat(row: ReportItem) {
   }
 }
 
+async function onCopyContent(row: ReportItem) {
+  try {
+    // 设置加载状态
+    copyingIds.value.add(row.id);
+    
+    const { data } = await getWeChatContent(row.id);
+    if (data.code === 200) {
+      // 复制到剪贴板
+      try {
+        await navigator.clipboard.writeText(data.data);
+        ElMessage.success('公众号正文已复制到剪贴板！');
+      } catch (clipboardError) {
+        // 如果剪贴板 API 失败，使用备用方法
+        const textarea = document.createElement('textarea');
+        textarea.value = data.data;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          document.execCommand('copy');
+          ElMessage.success('公众号正文已复制到剪贴板！');
+        } catch (e) {
+          ElMessage.error('复制到剪贴板失败，请手动复制');
+          console.error('复制到剪贴板失败:', e);
+        } finally {
+          document.body.removeChild(textarea);
+        }
+      }
+    } else {
+      ElMessage.error(data.message || '获取公众号正文失败');
+    }
+  } catch (error: any) {
+    console.error('获取公众号正文失败:', error);
+    
+    let errorMessage = '获取公众号正文失败';
+    if (error?.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error?.message) {
+      errorMessage = error.message;
+    }
+    
+    ElMessage.error(errorMessage);
+  } finally {
+    // 清除加载状态
+    copyingIds.value.delete(row.id);
+  }
+}
+
 async function onEdit(row: ReportItem) {
   // 复制数据到编辑表单
   Object.assign(editForm, {
@@ -296,7 +365,9 @@ async function onEdit(row: ReportItem) {
     thumbnail: row.thumbnail,
     tags: row.tags ? [...row.tags] : [],
     isFree: row.isFree,
-    price: row.price
+    price: row.price,
+    reportFileId: '', // 初始为空，用户需要更换文件时才填写
+    regenerateThumbnail: true // 默认生成封面
   });
   
   editDialogVisible.value = true;
@@ -327,6 +398,14 @@ async function onSaveEdit() {
   } finally {
     saving.value = false;
   }
+}
+
+function onDialogClose() {
+  // 对话框关闭时重置表单
+  editFormRef.value?.resetFields();
+  Object.keys(editForm).forEach(key => {
+    delete (editForm as any)[key];
+  });
 }
 
 onMounted(loadData);

@@ -304,4 +304,31 @@ public class ReportController {
             return ApiResponse.error(500, "服务器内部错误: " + e.getMessage());
         }
     }
+    
+    /**
+     * 获取报告公众号正文内容（用于手动复制）
+     * GET /reports/{id}/wechat-content
+     */
+    @GetMapping("/reports/{id}/wechat-content")
+    public ApiResponse<String> getWeChatContent(@PathVariable String id) {
+        try {
+            log.info("后台获取报告公众号正文内容，ID: {}", id);
+            
+            if (id == null || id.trim().isEmpty()) {
+                return ApiResponse.error(400, "报告ID不能为空");
+            }
+            
+            String content = reportPublishService.getWeChatContentForCopy(id);
+            log.info("后台报告公众号正文内容获取成功，ID: {}, 内容长度: {}", id, content.length());
+            
+            return ApiResponse.success(content);
+            
+        } catch (IllegalArgumentException e) {
+            log.warn("后台报告公众号正文内容获取参数错误: {}", e.getMessage());
+            return ApiResponse.error(400, e.getMessage());
+        } catch (Exception e) {
+            log.error("后台报告公众号正文内容获取失败，ID: {}", id, e);
+            return ApiResponse.error(500, "服务器内部错误: " + e.getMessage());
+        }
+    }
 }

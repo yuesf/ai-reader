@@ -216,6 +216,11 @@ export function checkPublishStatus(id: string) {
   return axios.get<ApiResponse<string>>(BASE_URL+`/v1/reports/${id}/publish-status`);
 }
 
+// 获取报告公众号正文内容（用于复制）
+export function getWeChatContent(id: string) {
+  return axios.get<ApiResponse<string>>(BASE_URL+`/v1/reports/${id}/wechat-content`);
+}
+
 // 文件上传相关接口
 export function uploadReportFile(file: File) {
   console.log('uploadReportFile 被调用，文件信息:', {
@@ -280,5 +285,3 @@ export function updateUser(body: UserItem) {
 export function deleteUserApi(id: number) {
   return axios.delete<ApiResponse<number>>(BASE_URL+`/v1/users/${id}`);
 }
-
-

@@ -90,4 +90,9 @@ public class ReportUpdateRequest {
      * 报告文件大小
      */
     private String reportFileSize;
+    
+    /**
+     * 是否重新生成封面（仅在更换文件时有效）
+     */
+    private Boolean regenerateThumbnail;
 }

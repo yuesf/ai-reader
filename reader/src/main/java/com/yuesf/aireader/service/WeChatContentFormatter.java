@@ -26,14 +26,14 @@ public class WeChatContentFormatter {
         StringBuilder content = new StringBuilder();
         
         // 1. 添加报告封面图片
-//        if (report.getThumbnail() != null && !report.getThumbnail().trim().isEmpty()) {
-//            content.append("<p style=\"text-align: center;\">");
-//            content.append("<img src=\"").append(getFullImageUrl(report.getThumbnail())).append("\" ");
-//            content.append("alt=\"").append(report.getTitle()).append("\" ");
-//            content.append("style=\"max-width: 100%; height: auto;\" />");
-//            content.append("</p>");
-//            content.append("<br/>");
-//        }
+        if (report.getThumbnail() != null && !report.getThumbnail().trim().isEmpty()) {
+            content.append("<p style=\"text-align: center;\">");
+            content.append("<img src=\"").append(getFullImageUrl(report.getThumbnail())).append("\" ");
+            content.append("alt=\"").append(report.getTitle()).append("\" ");
+            content.append("style=\"max-width: 100%; height: auto;\" />");
+            content.append("</p>");
+            content.append("<br/>");
+        }
         
         // 2. 添加报告摘要
         content.append("<div style=\"margin: 20px 0;\">");
@@ -43,7 +43,7 @@ public class WeChatContentFormatter {
         content.append("</div>");
         content.append("</div>");
         
-        // 3. 添加报告基本信息
+        // 3. 添加报告章节详细摘要
         content.append(formatReportInfo(report));
         
         // 4. 添加小程序跳转链接
@@ -169,7 +169,7 @@ public class WeChatContentFormatter {
         // 假设图片通过 /v1/images/{fileId} 接口访问
         if (thumbnailPath.startsWith("/v1/images/")) {
             // 这里需要配置实际的域名
-            return "https:\\//yuesf.cn" + thumbnailPath;
+            return "https://yuesf.cn" + thumbnailPath;
         }
         
         return thumbnailPath;
@@ -182,5 +182,58 @@ public class WeChatContentFormatter {
         return String.format("%s?id=%s", 
             weChatConfig.getMiniprogram().getReportDetailPath(), 
             reportId);
+    }
+    
+    /**
+     * 格式化报告为微信公众号可用的富文本格式(用于手动复制到公众号)
+     * 生成简洁、易读、美观的纯文本内容
+     * 
+     * @param report 报告对象
+     * @return 格式化后的富文本内容
+     */
+    public String formatReportContentForCopy(Report report) {
+        StringBuilder content = new StringBuilder();
+        
+        // 1. 添加报告封面图片说明
+        if (report.getThumbnail() != null && !report.getThumbnail().trim().isEmpty()) {
+            content.append("🖼️ 图片地址：").append(getFullImageUrl(report.getThumbnail())).append("\n\n");
+            content.append("──────────────────\n\n");
+        }
+        
+        // 2. 添加报告概览总结
+        content.append("📋 报告概览\n\n");
+        if (report.getSummary() != null && !report.getSummary().trim().isEmpty()) {
+            // 将摘要按段落分割，每段前加项目符号
+            String[] paragraphs = report.getSummary().split("\\n+");
+            for (String para : paragraphs) {
+                if (!para.trim().isEmpty()) {
+                    content.append(para.trim()).append("\n");
+                }
+            }
+        } else {
+            content.append("暂无摘要\n\n");
+        }
+        
+        content.append("──────────────────\n\n");
+        
+        // 4. 添加小程序跳转链接说明
+        // String miniProgramPath = String.format("%s?id=%s", 
+        //     weChatConfig.getMiniprogram().getReportDetailPath(), 
+        //     report.getId());
+        
+        content.append("🔍 查看完整报告\n\n");
+        content.append("点击下方小程序卡片，即可查看报告全文\n\n");
+        
+        content.append("──────────────────\n\n");
+        
+        // 5. 添加结尾
+        content.append("✨ 结语\n");
+        content.append("📚 更多精彩报告，尽在 AI 在线阅读助手\n\n");
+        content.append("🤖 AI 驱动，智能解读，让阅读更高效\n\n");
+        content.append("──────────────────\n\n");
+        content.append("\n感谢阅读！\n");
+        
+        log.info("生成微信公众号格式的报告内容，报告ID: {}, 内容长度: {}", report.getId(), content.length());
+        return content.toString();
     }
 }

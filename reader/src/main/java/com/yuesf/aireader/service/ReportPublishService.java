@@ -207,6 +207,20 @@ public class ReportPublishService {
             return e.getMessage();
         }
     }
+    
+    /**
+     * 获取报告的公众号正文内容（用于手动复制）
+     * 
+     * @param reportId 报告ID
+     * @return 格式化后的纯文本内容
+     */
+    public String getWeChatContentForCopy(String reportId) {
+        // 验证报告并获取报告信息
+        Report report = reportService.getReportForPublish(reportId);
+        
+        // 使用内容格式化器生成纯文本内容
+        return contentFormatter.formatReportContentForCopy(report);
+    }
 
 //    /**
 //     * 根据对象键获取图片数据
