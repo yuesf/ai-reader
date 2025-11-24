@@ -210,11 +210,11 @@ public class ReportController {
     }
 
     /**
-     * 生成报告摘要
+     * 生成报告摘要（异步）
      * POST /reports/{id}/generate-summary
      */
     @PostMapping("/reports/{id}/generate-summary")
-    public ApiResponse<String> generateReportSummary(@PathVariable String id) {
+    public ApiResponse<Void> generateReportSummary(@PathVariable String id) {
         try {
             log.info("后台生成报告摘要，ID: {}", id);
             
@@ -222,14 +222,10 @@ public class ReportController {
                 return ApiResponse.error(400, "报告ID不能为空");
             }
             
-            String summary = reportService.generateReportSummary(id);
-            if (summary != null && !summary.trim().isEmpty()) {
-                log.info("后台报告摘要生成成功，ID: {}", id);
-                return ApiResponse.success(summary);
-            } else {
-                log.warn("后台报告摘要生成失败，ID: {}", id);
-                return ApiResponse.error(500, "摘要生成失败，请检查报告文件是否存在");
-            }
+            // 异步调用，立即返回
+            reportService.generateReportSummary(id);
+            log.info("后台报告摘要异步生成已启动，ID: {}", id);
+            return ApiResponse.success(null);
             
         } catch (Exception e) {
             log.error("后台报告摘要生成失败，ID: {}", id, e);

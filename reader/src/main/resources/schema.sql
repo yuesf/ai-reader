@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS reports (
     report_file_id VARCHAR(50),
     report_file_url VARCHAR(500),
     report_file_name VARCHAR(255),
-    report_file_size VARCHAR(50)
+    report_file_size VARCHAR(50),
+    summary_status VARCHAR(20) DEFAULT 'NONE' -- NONE:未生成, GENERATING:生成中, COMPLETED:已完成, FAILED:生成失败
 );
 
 -- 报告标签表

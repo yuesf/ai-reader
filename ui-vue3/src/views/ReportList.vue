@@ -38,6 +38,22 @@
         <el-table-column prop="category" label="分类" width="120" />
         <el-table-column prop="source" label="来源" width="140" />
         <el-table-column prop="publishDate" label="发布日期" width="120" />
+        <el-table-column prop="summaryStatus" label="摘要状态" width="110">
+          <template #default="{ row }">
+            <el-tag v-if="row.summaryStatus === 'GENERATING'" type="warning" effect="plain">
+              生成中
+            </el-tag>
+            <el-tag v-else-if="row.summaryStatus === 'COMPLETED'" type="success" effect="plain">
+              已完成
+            </el-tag>
+            <el-tag v-else-if="row.summaryStatus === 'FAILED'" type="danger" effect="plain">
+              失败
+            </el-tag>
+            <el-tag v-else type="info" effect="plain">
+              未生成
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="viewCount" label="浏览" width="90" />
         <el-table-column prop="downloadCount" label="下载" width="90" />
         <el-table-column label="操作" width="420" fixed="right">
@@ -248,11 +264,12 @@ async function onGenerateSummary(row: ReportItem) {
     
     const { data } = await generateSummary(row.id);
     if (data.code === 200) {
-      ElMessage.success('摘要生成成功');
-      // 更新本地数据
-      row.summary = data.data;
-      // 重新加载数据以确保数据同步
-      loadData();
+      ElMessage.success('摘要生成已启动，请稍后查看状态');
+      // 更新本地状态
+      row.summaryStatus = 'GENERATING';
+      
+      // 启动轮询检查状态
+      startPollingStatus(row.id);
     } else {
       ElMessage.error(data.message || '摘要生成失败');
     }
@@ -263,6 +280,43 @@ async function onGenerateSummary(row: ReportItem) {
     // 清除加载状态
     generatingSummaryIds.value.delete(row.id);
   }
+}
+
+// 轮询检查报告状态
+function startPollingStatus(reportId: string) {
+  const pollInterval = setInterval(async () => {
+    try {
+      const { data } = await fetchReports({ page: 1, pageSize: 1000 }); // 获取全部报告
+      if (data.code === 200) {
+        const report = data.data.list.find((r: ReportItem) => r.id === reportId);
+        if (report) {
+          // 更新本地数据
+          const localReport = rows.value.find(r => r.id === reportId);
+          if (localReport) {
+            localReport.summaryStatus = report.summaryStatus;
+            localReport.summary = report.summary;
+          }
+          
+          // 如果状态不是生成中，停止轮询
+          if (report.summaryStatus !== 'GENERATING') {
+            clearInterval(pollInterval);
+            if (report.summaryStatus === 'COMPLETED') {
+              ElMessage.success('摘要生成完成！');
+            } else if (report.summaryStatus === 'FAILED') {
+              ElMessage.error('摘要生成失败！');
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('轮询状态失败:', error);
+    }
+  }, 3000); // 每3秒轮询一次
+  
+  // 5分钟后停止轮询
+  setTimeout(() => {
+    clearInterval(pollInterval);
+  }, 300000);
 }
 
 async function onPublishToWeChat(row: ReportItem) {

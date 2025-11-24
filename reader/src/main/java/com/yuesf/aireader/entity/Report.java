@@ -76,6 +76,10 @@ public class Report {
     
 //    @Column(name = "report_file_size")
     private String reportFileSize;
+    
+    // 摘要生成状态字段
+//    @Column(name = "summary_status")
+    private String summaryStatus; // NONE:未生成, GENERATING:生成中, COMPLETED:已完成, FAILED:生成失败
 
     /**
      * 获取报告标题，如果为空则返回默认值

@@ -5,6 +5,7 @@
         <div class="brand" @click="$router.push('/')">AI Reader 管理后台</div>
         <el-menu mode="horizontal" :default-active="topActive" class="top-menu" @select="onTopSelect">
           <el-menu-item index="content">内容管理</el-menu-item>
+          <el-menu-item index="tracking">埋点监控</el-menu-item>
           <el-menu-item index="system">系统管理</el-menu-item>
         </el-menu>
       </div>
@@ -31,6 +32,13 @@
             <el-menu-item index="/reports">报告列表</el-menu-item>
             <el-menu-item index="/reports/create">新建报告</el-menu-item>
             <el-menu-item index="/upload">文件上传</el-menu-item>
+          </el-sub-menu>
+          <el-sub-menu index="tracking">
+            <template #title>埋点监控</template>
+            <el-menu-item index="/tracker/dashboard">监控面板</el-menu-item>
+            <el-menu-item index="/tracker/user-behavior">用户行为</el-menu-item>
+            <el-menu-item index="/tracker/heatmap">页面热力图</el-menu-item>
+            <el-menu-item index="/tracker/statistics">数据报表</el-menu-item>
           </el-sub-menu>
           <el-sub-menu index="system">
             <template #title>系统管理</template>
@@ -72,9 +80,15 @@ const username = computed(() => jwt.value?.username ?? '');
 const displayName = computed(() => jwt.value?.displayName ?? '');
 const initials = computed(() => (displayName.value || username.value || 'U').slice(0, 1).toUpperCase());
 
-const topActive = computed(() => route.path.startsWith('/profile') ? 'system' : 'content');
+const topActive = computed(() => {
+  if (route.path.startsWith('/profile')) return 'system';
+  if (route.path.startsWith('/tracker')) return 'tracking';
+  return 'content';
+});
+
 function onTopSelect(key: string) {
   if (key === 'content') router.push('/reports');
+  if (key === 'tracking') router.push('/tracker/dashboard');
   if (key === 'system') router.push('/profile');
 }
 
@@ -102,5 +116,3 @@ function goLogout() {
 .aside { background: #fff; border-right: 1px solid #ebeef5; }
 .main { background: #f5f7fa; }
 </style>
-
-

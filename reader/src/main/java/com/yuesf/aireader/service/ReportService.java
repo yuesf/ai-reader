@@ -11,6 +11,7 @@ import com.yuesf.aireader.mapper.ReportMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -274,44 +275,52 @@ public class ReportService {
     }
 
     /**
-     * 生成报告摘要
-     * 使用阿里云文档智能服务进行PDF解析，然后使用通义API生成摘要
+     * 生成报告摘要(异步)
+     * 使用阿里云文档智能服务进行PDF解析,然后使用通义API生成摘要
      */
     @Transactional
-    public String generateReportSummary(String reportId) {
+    @Async
+    public void generateReportSummary(String reportId) {
         try {
             Report report = reportMapper.selectById(reportId);
             if (report == null) {
                 log.error("报告不存在，ID: {}", reportId);
-                return null;
+                return;
             }
 
             // 检查是否有报告文件
             if (report.getReportFileId() == null || report.getReportFileId().isBlank()) {
                 log.error("报告没有关联文件，无法生成摘要，ID: {}", reportId);
-                return null;
+                updateSummaryStatus(reportId, "FAILED");
+                return;
             }
 
             FileInfo fileInfo = fileInfoService.getFileInfoById(report.getReportFileId());
             if (fileInfo == null) {
                 log.error("报告文件信息不存在，ID: {}", reportId);
-                return null;
+                updateSummaryStatus(reportId, "FAILED");
+                return;
             }
 
             log.info("开始为报告生成摘要，ID: {}, 文件名: {}", reportId, fileInfo.getOriginalName());
+            
+            // 更新状态为生成中
+            updateSummaryStatus(reportId, "GENERATING");
 
             // 步骤1: 从OSS获取PDF文件URL
             String ossFileUrl = getOssFileUrl(fileInfo);
             if (ossFileUrl == null) {
                 log.error("无法获取OSS文件URL，报告ID: {}", reportId);
-                return null;
+                updateSummaryStatus(reportId, "FAILED");
+                return;
             }
 
             // 步骤2: 使用阿里云文档智能服务解析PDF内容
             String documentContent = parseDocumentWithAliyun(ossFileUrl, reportId);
             if (documentContent == null || documentContent.isBlank()) {
                 log.error("PDF文档解析失败或内容为空，报告ID: {}", reportId);
-                return null;
+                updateSummaryStatus(reportId, "FAILED");
+                return;
             }
 
             log.info("PDF文档解析成功，内容长度: {}, 报告ID: {}", documentContent.length(), reportId);
@@ -321,17 +330,30 @@ public class ReportService {
             if (summary != null && !summary.isBlank()) {
                 // 更新报告摘要
                 report.setSummary(summary);
+                report.setSummaryStatus("COMPLETED");
                 reportMapper.updateReport(report);
                 log.info("报告摘要生成并更新成功，摘要长度: {}, 报告ID: {}", summary.length(), reportId);
-                return summary;
             } else {
                 log.error("AI摘要生成失败，报告ID: {}", reportId);
-                return null;
+                updateSummaryStatus(reportId, "FAILED");
             }
 
         } catch (Exception e) {
             log.error("生成报告摘要失败，报告ID: {}", reportId, e);
-            return null;
+            updateSummaryStatus(reportId, "FAILED");
+        }
+    }
+    
+    /**
+     * 更新摘要生成状态
+     */
+    @Transactional
+    public void updateSummaryStatus(String reportId, String status) {
+        Report report = reportMapper.selectById(reportId);
+        if (report != null) {
+            report.setSummaryStatus(status);
+            reportMapper.updateReport(report);
+            log.info("更新报告摘要状态: {}, 报告ID: {}", status, reportId);
         }
     }
 

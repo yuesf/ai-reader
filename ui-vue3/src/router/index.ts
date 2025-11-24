@@ -11,6 +11,12 @@ const routes: Array<RouteRecordRaw> = [
       { path: 'upload', component: () => import('../views/FileUpload.vue'), meta: { requiresAuth: true } },
       { path: 'users', component: () => import('../views/UserList.vue'), meta: { requiresAuth: true } },
       { path: 'profile', component: () => import('../views/Profile.vue'), meta: { requiresAuth: true } },
+      
+      // 埋点监控路由
+      { path: 'tracker/dashboard', component: () => import('../views/tracker/Dashboard.vue'), meta: { requiresAuth: true } },
+      { path: 'tracker/user-behavior', component: () => import('../views/tracker/UserBehavior.vue'), meta: { requiresAuth: true } },
+      { path: 'tracker/heatmap', component: () => import('../views/tracker/Heatmap.vue'), meta: { requiresAuth: true } },
+      { path: 'tracker/statistics', component: () => import('../views/tracker/Statistics.vue'), meta: { requiresAuth: true } },
     ]
   },
   {
@@ -43,5 +49,3 @@ router.beforeEach((to, _from, next) => {
 });
 
 export default router;
-
-

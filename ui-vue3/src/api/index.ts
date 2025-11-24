@@ -84,6 +84,7 @@ export interface ReportItem {
   id: string;
   title: string;
   summary?: string;
+  summaryStatus?: string; // NONE:未生成, GENERATING:生成中, COMPLETED:已完成, FAILED:失败
   source?: string;
   category?: string;
   pages?: string;
@@ -198,7 +199,7 @@ export function batchDelete(ids: string[]) {
 }
 
 export function generateSummary(id: string) {
-  return axios.post<ApiResponse<string>>(BASE_URL+`/v1/reports/${id}/generate-summary`);
+  return axios.post<ApiResponse<void>>(BASE_URL+`/v1/reports/${id}/generate-summary`);
 }
 
 // 微信公众号发布相关接口
